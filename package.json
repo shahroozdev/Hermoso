@@ -1,12 +1,8 @@
 {
   "name": "hermoso",
-  "private": true,
   "type": "module",
-  "workspaces": ["client", "server"],
   "scripts": {
-    "lint": "pnpm -r lint",
-    "lint:client": "pnpm --filter hermoso-client lint",
-    "lint:server": "pnpm --filter hermoso-server lint",
+    "lint": "eslint client/src/ && eslint server/",
     "prepare": "husky"
   },
   "devDependencies": {
