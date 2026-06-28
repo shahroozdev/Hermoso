@@ -2,7 +2,15 @@ const ACCESS_COOKIE = "hermoso_access_token";
 const REFRESH_COOKIE = "hermoso_refresh_token";
 
 const setCookie = (name: string, value: string, maxAgeSeconds: number) => {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax`;
+  document.cookie = [
+    `${name}=${encodeURIComponent(value)}`,
+    `Max-Age=${maxAgeSeconds}`,
+    "Path=/",
+    "SameSite=Strict",
+    location.protocol === "https:" ? "Secure" : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
 };
 
 const getCookie = (name: string) => {
@@ -19,7 +27,7 @@ const clearCookie = (name: string) => {
 
 export const tokenCookies = {
   set(accessToken: string, refreshToken: string) {
-    setCookie(ACCESS_COOKIE, accessToken, 15 * 60);
+    setCookie(ACCESS_COOKIE, accessToken, 7 * 24 * 60 * 60);
     setCookie(REFRESH_COOKIE, refreshToken, 30 * 24 * 60 * 60);
   },
   getAccessToken() {
@@ -31,5 +39,5 @@ export const tokenCookies = {
   clear() {
     clearCookie(ACCESS_COOKIE);
     clearCookie(REFRESH_COOKIE);
-  }
+  },
 };
