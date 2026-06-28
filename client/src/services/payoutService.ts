@@ -15,5 +15,9 @@ export const payoutService = {
   request: async (amount: number) => {
     const { data } = await api.post('/payouts/request', { amount });
     return data;
+  },
+  update: async (id: string, payload: { status: string }) => {
+    const { data } = await api.patch(`/payouts/${id}`, payload);
+    return data;
   }
 };

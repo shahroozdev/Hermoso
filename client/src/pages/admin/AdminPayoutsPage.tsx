@@ -43,18 +43,19 @@ const AdminPayoutsPage = () => {
 
   const revenueBySalonId = new Map(revenueRows.map((r) => [String(r._id), r]));
 
-  const rows = payouts.map((p) => {
-    const revenue = revenueBySalonId.get(String(p.salonId?._id || p.salonId)) || {};
+  const rows = payouts.map((p: Record<string, unknown>) => {
+    const salonRef = p.salonId as Record<string, unknown> | null;
+    const revenue = (revenueBySalonId.get(String(salonRef?._id || p.salonId)) || {}) as Record<string, unknown>;
     const gross = Number(revenue.grossRevenue || 0);
     const commission = Number(revenue.platformRevenue || 0);
     return {
       id: p._id,
-      salon: p.salonId?.name || 'Unknown Salon',
+      salon: (salonRef?.name as string) || 'Unknown Salon',
       period: periodLabel(p.createdAt),
       gross,
       commission,
       net: Number(p.amount || 0),
-      bank: fakeAccount(p.salonId?.name || ''),
+      bank: fakeAccount((salonRef?.name as string) || ''),
       status: p.status,
       payoutDate: p.payoutDate
     };
@@ -89,7 +90,6 @@ const AdminPayoutsPage = () => {
     setActionError('');
     try {
       for (const r of pendingRows) {
-        // eslint-disable-next-line no-await-in-loop
         await payoutService.update(r.id, { status: 'completed' });
       }
       setReloadKey((v) => v + 1);
@@ -155,8 +155,8 @@ const AdminPayoutsPage = () => {
                   <td>PKR {compactMoney(r.gross)}</td>
                   <td style={{ color: 'var(--rose)', fontWeight: 700 }}>-PKR {compactMoney(r.commission)}</td>
                   <td>
-                    <div style={{ fontSize: 32 ? 14 : 14, fontWeight: 800, color: 'var(--gold-light)' }}>PKR {Math.round(r.net).toLocaleString()}</div>
-                    <div className="ha-salon-sub">{r.status === 'completed' ? `Paid: ${new Date(r.payoutDate || Date.now()).toLocaleDateString()}` : `Due: ${nextCycle.date}`}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--gold-light)' }}>PKR {Math.round(r.net).toLocaleString()}</div>
+                    <div className="ha-salon-sub">{r.status === 'completed' ? `Paid: ${r.payoutDate ? new Date(r.payoutDate).toLocaleDateString() : '-'}` : `Due: ${nextCycle.date}`}</div>
                   </td>
                   <td className="ha-salon-sub">{r.bank}</td>
                   <td>
