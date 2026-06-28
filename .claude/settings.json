@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm install *)",
+      "Bash(pnpm build *)",
+      "Bash(npx tsc *)",
+      "Bash(pnpm run *)",
+      "Bash(cd \"c:\\\\projects\\\\uk-yasir\\\\Hermoso\\\\server\" && rm -f controllers/*.js middleware/*.js models/*.js routes/*.js services/*.js utils/*.js scripts/*.js)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm dev *)",
+      "Bash(curl -s http://localhost:3000/health)"
+    ],
+    "additionalDirectories": [
+      "C:\\projects\\uk-yasir\\Hermoso\\controllers"
+    ]
+  }
+}

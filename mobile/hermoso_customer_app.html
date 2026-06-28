@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermoso — Customer App</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --plum: #7c3aed;
+  --plum-light: #a855f7;
+  --plum-pale: #f3e8ff;
+  --plum-dark: #4c1d95;
+  --plum-deeper: #2e1065;
+  --rose: #ec4899;
+  --cream: #fdf8ff;
+  --text: #1a0f2e;
+  --text-muted: #7c6890;
+  --white: #ffffff;
+  --gold: #f59e0b;
+  --green: #10b981;
+  --card-shadow: 0 4px 24px rgba(124,58,237,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #1a0f2e;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 30px 16px 50px;
+}
+
+/* ── header ── */
+.app-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: #a855f7;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.app-subtitle {
+  font-size: 11px;
+  color: #4a3060;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ── nav tabs ── */
+.nav-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.nav-tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid #3a1f60;
+  background: transparent;
+  color: #6040a0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-tab:hover, .nav-tab.active {
+  background: var(--plum);
+  border-color: var(--plum);
+  color: #fff;
+}
+
+/* ── phone ── */
+.phone {
+  width: 375px;
+  background: var(--cream);
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px #3a1f60, 0 0 0 6px #1a0f2e, 0 40px 100px rgba(124,58,237,0.5), 0 20px 40px rgba(0,0,0,0.7);
+  display: none;
+  position: relative;
+}
+.phone.active { display: block; }
+
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sb-purple { background: var(--plum-deeper); color: #d8b4fe; }
+.sb-dark { background: #0f0a1a; color: #d8b4fe; }
+.sb-white { background: #fff; color: var(--text); }
+.sb-cream { background: var(--cream); color: var(--text); }
+
+.screen { overflow-y: auto; }
+
+/* scrollbar hide */
+.screen::-webkit-scrollbar, .pills::-webkit-scrollbar,
+.hscroll::-webkit-scrollbar { display: none; }
+.screen { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ═══════════════════════
+   SCREEN: HOME
+═══════════════════════ */
+.home-hero {
+  background: linear-gradient(155deg, var(--plum-deeper) 0%, var(--plum-dark) 50%, var(--plum) 100%);
+  padding: 20px 22px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::after {
+  content: '';
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(168,85,247,0.2);
+  top: -60px; right: -60px;
+  pointer-events: none;
+}
+.hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.hero-brand { display: flex; align-items: center; gap: 9px; }
+.hero-brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; letter-spacing: 4px;
+  color: #fff; font-weight: 300; text-transform: uppercase;
+}
+.hero-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--rose), var(--plum-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #fff;
+  border: 2px solid rgba(255,255,255,0.25);
+}
+.hero-greeting { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 3px; }
+.hero-heading { color: #fff; font-size: 21px; font-weight: 700; line-height: 1.3; margin-bottom: 18px; }
+.hero-heading em { color: #e9d5ff; font-style: normal; }
+
+.search-box {
+  background: rgba(255,255,255,0.13);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.search-box input {
+  background: none; border: none; outline: none;
+  color: #fff; font-family: 'DM Sans',sans-serif; font-size: 14px; flex: 1;
+}
+.search-box input::placeholder { color: rgba(255,255,255,0.45); }
+
+/* AI strip */
+.ai-strip {
+  display: flex; gap: 10px;
+  padding: 16px 18px;
+  background: #fff;
+  border-bottom: 1px solid #f0e8ff;
+  overflow-x: auto;
+}
+.ai-strip::-webkit-scrollbar { display: none; }
+.ai-chip {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 7px;
+  background: var(--plum-pale);
+  border: 1px solid #ddd0ff;
+  border-radius: 24px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ai-chip:hover { background: var(--plum); border-color: var(--plum); }
+.ai-chip:hover .ai-chip-label { color: #fff; }
+.ai-chip-icon { font-size: 16px; }
+.ai-chip-label { font-size: 12px; font-weight: 600; color: var(--plum); white-space: nowrap; }
+
+/* sections */
+.sec { padding: 18px 18px 0; }
+.sec-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.sec-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.sec-link { font-size: 12px; color: var(--plum); font-weight: 600; }
+
+.pills { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.pill {
+  flex-shrink: 0; padding: 7px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+}
+.pill-on { background: var(--plum); color: #fff; }
+.pill-off { background: #f3e8ff; color: var(--plum); border: 1px solid #e0d0ff; }
+
+/* salon cards horizontal */
+.hscroll { display: flex; gap: 14px; overflow-x: auto; padding: 14px 18px 4px; }
+.salon-card {
+  flex-shrink: 0; width: 190px;
+  background: #fff; border-radius: 18px; overflow: hidden;
+  box-shadow: var(--card-shadow); cursor: pointer;
+  transition: transform 0.2s;
+}
+.salon-card:hover { transform: translateY(-3px); }
+.salon-thumb {
+  height: 110px; position: relative;
+  display: flex; align-items: flex-end; padding: 10px;
+}
+.salon-thumb-bg { position: absolute; inset: 0; }
+.salon-badge {
+  position: relative;
+  background: rgba(255,255,255,0.92);
+  border-radius: 8px; padding: 3px 8px;
+  font-size: 11px; font-weight: 700; color: var(--plum);
+}
+.salon-body { padding: 11px 13px; }
+.salon-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.salon-meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+.stars { color: #f59e0b; }
+
+/* event cards */
+.event-card {
+  flex-shrink: 0; width: 210px;
+  border-radius: 18px; padding: 16px; cursor: pointer;
+}
+.ev-tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.15); color: #e9d5ff;
+  font-size: 10px; padding: 3px 9px; border-radius: 6px;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 9px;
+}
+.ev-name { color: #fff; font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.ev-desc { color: rgba(255,255,255,0.6); font-size: 11px; }
+
+/* bottom nav */
+.bnav {
+  background: #fff;
+  border-top: 1px solid #f0e8ff;
+  display: flex; padding: 10px 0 16px;
+  position: sticky; bottom: 0;
+}
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px; cursor: pointer;
+}
+.bnav-icon { font-size: 20px; }
+.bnav-label { font-size: 10px; color: var(--text-muted); }
+.bnav-item.on .bnav-label { color: var(--plum); font-weight: 700; }
+
+/* ═══════════════════════
+   SCREEN: AI SKIN SCAN
+═══════════════════════ */
+.scan-screen { background: #0a0614; min-height: 736px; }
+
+.scan-topbar {
+  background: #0f0a1a;
+  padding: 56px 20px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.back-circle {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; cursor: pointer; flex-shrink: 0;
+}
+.scan-topbar h2 { color: #fff; font-size: 18px; font-weight: 700; }
+.scan-topbar p { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 2px; }
+
+/* camera frame */
+.cam-area {
+  margin: 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1.5px dashed rgba(168,85,247,0.35);
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-align: center;
+  position: relative;
+}
+.face-frame {
+  width: 160px; height: 200px;
+  border-radius: 80px;
+  border: 1.5px solid rgba(168,85,247,0.45);
+  margin: 0 auto 18px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(124,58,237,0.08);
+}
+.corner { position: absolute; width: 22px; height: 22px; border-color: var(--plum-light); border-style: solid; }
+.corner.tl { top: -1px; left: -1px; border-width: 3px 0 0 3px; border-radius: 5px 0 0 0; }
+.corner.tr { top: -1px; right: -1px; border-width: 3px 3px 0 0; border-radius: 0 5px 0 0; }
+.corner.bl { bottom: -1px; left: -1px; border-width: 0 0 3px 3px; border-radius: 0 0 0 5px; }
+.corner.br { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; border-radius: 0 0 5px 0; }
+.scan-line {
+  position: absolute;
+  width: 130px; height: 2px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--plum-light), transparent);
+  animation: scanMove 2.2s ease-in-out infinite;
+}
+@keyframes scanMove {
+  0% { top: 18px; opacity: 0.6; }
+  50% { top: 170px; opacity: 1; }
+  100% { top: 18px; opacity: 0.6; }
+}
+.face-emoji { font-size: 64px; }
+
+.scan-dots { display: flex; justify-content: center; gap: 6px; margin: 6px 0 14px; }
+.scan-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--plum-light);
+  animation: blink 1.5s ease-in-out infinite;
+}
+.scan-dot:nth-child(2) { animation-delay: 0.3s; }
+.scan-dot:nth-child(3) { animation-delay: 0.6s; }
+@keyframes blink {
+  0%,100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+.scan-hint { color: rgba(255,255,255,0.4); font-size: 12px; }
+
+/* ai steps */
+.ai-steps {
+  display: flex; gap: 8px;
+  padding: 0 20px 20px;
+}
+.ai-step {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border-radius: 14px; padding: 12px 8px;
+  text-align: center; border: 1px solid rgba(255,255,255,0.06);
+}
+.ai-step-icon { font-size: 20px; margin-bottom: 5px; }
+.ai-step-label { font-size: 10px; color: rgba(255,255,255,0.45); line-height: 1.4; }
+
+/* results */
+.results-area { padding: 0 20px 20px; }
+.results-title { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+.metric-row {
+  display: flex; align-items: center; gap: 13px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px; padding: 13px 15px;
+  margin-bottom: 9px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.m-icon { font-size: 22px; }
+.m-info { flex: 1; }
+.m-name { color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 500; margin-bottom: 5px; }
+.m-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.m-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--plum), var(--plum-light)); }
+.m-fill.warn { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.m-fill.good { background: linear-gradient(90deg, #10b981, #34d399); }
+.m-val { font-size: 12px; font-weight: 700; color: #d8b4fe; }
+
+.rec-box {
+  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(76,29,149,0.2));
+  border: 1px solid rgba(168,85,247,0.25);
+  border-radius: 18px; padding: 16px; margin-bottom: 14px;
+}
+.rec-title { color: #e9d5ff; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.rec-tag {
+  display: inline-block;
+  background: rgba(168,85,247,0.2);
+  color: #d8b4fe; border-radius: 8px;
+  padding: 5px 12px; font-size: 11px; margin: 3px;
+}
+.primary-btn {
+  width: 100%; background: linear-gradient(135deg, var(--plum), var(--plum-light));
+  color: #fff; border: none; border-radius: 24px;
+  padding: 16px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans',sans-serif;
+  transition: opacity 0.2s;
+}
+.primary-btn:hover { opacity: 0.9; }
+
+/* ═══════════════════════
+   SCREEN: RECOMMENDATIONS
+═══════════════════════ */
+.rec-screen { background: var(--cream); min-height: 736px; }
+
+.rec-header {
+  background: linear-gradient(135deg, var(--plum-dark), var(--plum));
+  padding: 56px 20px 24px;
+}
+.rec-header h2 { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.rec-header p { color: rgba(255,255,255,0.6); font-size: 13px; }
+
+.skin-summary-card {
+  margin: 18px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+  display: flex; align-items: center; gap: 14px;
+}
+.skin-score-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: conic-gradient(var(--plum) 75%, #f0e8ff 0);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.skin-score-inner {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: var(--plum);
+}
+.skin-summary-text h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.skin-summary-text p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+.treatment-list { padding: 0 18px; }
+.treatment-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--card-shadow);
+  display: flex; gap: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.treatment-card:hover { transform: translateX(3px); }
+.treat-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.treat-info { flex: 1; }
+.treat-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.treat-why { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
+.treat-meta { display: flex; align-items: center; gap: 10px; }
+.treat-price { font-size: 13px; font-weight: 700; color: var(--plum); }
+.treat-dur { font-size: 11px; color: var(--text-muted); }
+.treat-ai-badge {
+  margin-left: auto;
+  background: var(--plum-pale); color: var(--plum);
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════
+   SCREEN: SALON MATCH
+═══════════════════════ */
+.match-screen { background: var(--cream); min-height: 736px; }
+
+.match-header {
+  background: linear-gradient(135deg, #1a0f2e, var(--plum-dark));
+  padding: 56px 20px 20px;
+}
+.match-header h2 { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.match-header p { color: rgba(255,255,255,0.55); font-size: 13px; }
+
+.match-filter-row {
+  display: flex; gap: 8px;
+  padding: 16px 18px;
+  background: #fff;
+  border-bottom: 1px solid #f0e8ff;
+  overflow-x: auto;
+}
+.match-filter-row::-webkit-scrollbar { display: none; }
+.mfilter {
+  flex-shrink: 0;
+  padding: 7px 14px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border: 1px solid #e0d0ff; color: var(--plum);
+  background: #fff;
+}
+.mfilter.active { background: var(--plum); color: #fff; border-color: var(--plum); }
+
+.match-list { padding: 14px 18px; }
+
+.match-salon-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+}
+.match-card-top {
+  display: flex; align-items: flex-start;
+  gap: 13px; margin-bottom: 12px;
+}
+.match-thumb {
+  width: 64px; height: 64px; border-radius: 14px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.match-info { flex: 1; }
+.match-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.match-loc { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+.match-stars { color: #f59e0b; font-size: 12px; }
+
+.ai-match-bar {
+  background: var(--plum-pale);
+  border-radius: 12px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.ai-match-label { font-size: 11px; color: var(--plum); font-weight: 600; flex: 1; }
+.ai-match-pct { font-size: 14px; font-weight: 800; color: var(--plum); }
+.ai-match-track { flex: 2; height: 6px; background: #e9d5ff; border-radius: 3px; overflow: hidden; }
+.ai-match-fill { height: 100%; background: linear-gradient(90deg, var(--plum), var(--plum-light)); border-radius: 3px; }
+
+.match-services { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.match-service-tag {
+  background: #f3e8ff; color: var(--plum);
+  font-size: 10px; font-weight: 600;
+  padding: 4px 10px; border-radius: 8px;
+}
+.match-book-btn {
+  width: 100%; background: linear-gradient(135deg, var(--plum), var(--plum-light));
+  color: #fff; border: none; border-radius: 14px;
+  padding: 12px; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans',sans-serif;
+}
+
+/* ═══════════════════════
+   SCREEN: PROGRESS TRACKER
+═══════════════════════ */
+.progress-screen { background: var(--cream); min-height: 736px; }
+
+.prog-header {
+  background: linear-gradient(135deg, #0f0a1a, #2e1065);
+  padding: 56px 20px 20px;
+}
+.prog-header h2 { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.prog-header p { color: rgba(255,255,255,0.5); font-size: 13px; }
+
+.timeline-strip {
+  display: flex; gap: 8px;
+  padding: 14px 18px;
+  background: #fff; border-bottom: 1px solid #f0e8ff;
+  overflow-x: auto;
+}
+.timeline-strip::-webkit-scrollbar { display: none; }
+.t-chip {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.t-chip.active { background: var(--plum); color: #fff; }
+.t-chip.inactive { background: #f3e8ff; color: var(--plum); }
+
+.before-after {
+  display: flex; gap: 12px;
+  padding: 16px 18px;
+}
+.ba-card {
+  flex: 1; background: #fff;
+  border-radius: 18px; overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+.ba-img {
+  height: 140px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px;
+}
+.ba-label {
+  padding: 10px 12px;
+  font-size: 12px; font-weight: 700;
+  color: var(--text-muted); text-align: center;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.ba-date { font-size: 10px; color: #ccc; text-align: center; padding-bottom: 10px; }
+
+.progress-metrics { padding: 0 18px 20px; }
+.prog-metric-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+.prog-metric-row {
+  background: #fff; border-radius: 16px;
+  padding: 14px 16px; margin-bottom: 10px;
+  box-shadow: var(--card-shadow);
+}
+.prog-metric-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.prog-metric-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.prog-metric-change { font-size: 12px; font-weight: 700; color: var(--green); }
+.prog-metric-change.down { color: #ef4444; }
+.prog-bar-track { height: 8px; background: #f0e8ff; border-radius: 4px; overflow: hidden; position: relative; }
+.prog-bar-before { height: 100%; border-radius: 4px; background: #e0d0ff; position: absolute; }
+.prog-bar-after { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--plum), var(--plum-light)); position: absolute; }
+
+.journey-card {
+  margin: 0 18px 20px;
+  background: linear-gradient(135deg, var(--plum-dark), var(--plum));
+  border-radius: 18px; padding: 18px;
+}
+.journey-title { color: #fff; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.journey-stat-row { display: flex; gap: 0; }
+.journey-stat { flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); }
+.journey-stat:last-child { border-right: none; }
+.journey-stat-num { color: #fff; font-size: 20px; font-weight: 800; }
+.journey-stat-lbl { color: rgba(255,255,255,0.55); font-size: 10px; text-transform: uppercase; }
+
+/* ═══════════════════════
+   SCREEN: BOOKING FLOW
+═══════════════════════ */
+.booking-screen { background: var(--cream); min-height: 736px; }
+
+.booking-topbar {
+  background: #fff;
+  padding: 56px 20px 16px;
+  border-bottom: 1px solid #f0e8ff;
+}
+.booking-topbar h2 { font-size: 19px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.booking-topbar p { font-size: 12px; color: var(--text-muted); }
+
+.progress-steps {
+  display: flex; align-items: center;
+  padding: 14px 20px;
+  background: #fff; margin-bottom: 10px;
+}
+.pstep { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+.pstep::after {
+  content: ''; position: absolute;
+  top: 13px; left: 60%; right: -40%;
+  height: 2px; background: #e9d5ff;
+}
+.pstep:last-child::after { display: none; }
+.pstep.done::after { background: var(--plum); }
+.pdot {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; margin-bottom: 4px;
+  position: relative; z-index: 1;
+}
+.pdot.done { background: var(--plum); color: #fff; }
+.pdot.active { background: #fff; color: var(--plum); border: 2px solid var(--plum); }
+.pdot.pending { background: #f0e8ff; color: #ccc; }
+.plabel { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.booking-sec { padding: 14px 18px; }
+.booking-sec-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+
+.type-toggle {
+  display: flex; background: #f0e8ff; border-radius: 12px; padding: 4px; margin-bottom: 14px;
+}
+.ttype {
+  flex: 1; padding: 10px; border-radius: 9px; border: none;
+  background: transparent; font-family: 'DM Sans',sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+  transition: all 0.2s;
+}
+.ttype.active { background: #fff; color: var(--plum); box-shadow: 0 2px 8px rgba(124,58,237,0.12); }
+
+/* calendar */
+.cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-month { font-size: 15px; font-weight: 700; color: var(--text); }
+.cal-arr { background: #f3e8ff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; color: var(--plum); }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; text-align: center; }
+.cal-lbl { font-size: 10px; color: var(--text-muted); padding: 3px 0; }
+.cday {
+  aspect-ratio: 1; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; cursor: pointer; transition: all 0.15s;
+}
+.cday:hover { background: #f3e8ff; }
+.cday.sel { background: var(--plum); color: #fff; font-weight: 700; }
+.cday.tod { border: 2px solid var(--plum); color: var(--plum); font-weight: 700; }
+.cday.dim { color: #d8c8f0; }
+
+/* time slots */
+.tslots { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.tslot {
+  background: #fff; border: 1px solid #e9d5ff;
+  border-radius: 10px; padding: 10px;
+  text-align: center; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; color: var(--text);
+}
+.tslot:hover { border-color: var(--plum); color: var(--plum); }
+.tslot.sel { background: var(--plum); color: #fff; border-color: var(--plum); }
+.tslot.unavail { opacity: 0.3; cursor: not-allowed; }
+
+/* summary */
+.booking-summary {
+  background: #fff; border-radius: 18px;
+  padding: 16px; margin: 0 18px 14px;
+  box-shadow: var(--card-shadow);
+}
+.bsum-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f0ff; }
+.bsum-row:last-child { border-bottom: none; }
+.bsum-key { font-size: 12px; color: var(--text-muted); }
+.bsum-val { font-size: 12px; font-weight: 600; color: var(--text); }
+.bsum-val.price { color: var(--plum); font-size: 14px; font-weight: 800; }
+
+.confirm-btn {
+  margin: 0 18px 20px;
+  width: calc(100% - 36px);
+  background: linear-gradient(135deg, var(--plum), var(--plum-light));
+  color: #fff; border: none; border-radius: 24px;
+  padding: 16px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans',sans-serif;
+}
+</style>
+</head>
+<body>
+
+<div class="app-label">Hermoso — Customer App</div>
+<div class="app-subtitle">AI Beauty · Booking · Wellness</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="show('home',this)">🏠 Home</button>
+  <button class="nav-tab" onclick="show('scan',this)">✨ AI Skin Scan</button>
+  <button class="nav-tab" onclick="show('recs',this)">💊 AI Recommendations</button>
+  <button class="nav-tab" onclick="show('match',this)">🎯 AI Salon Match</button>
+  <button class="nav-tab" onclick="show('tracker',this)">📈 Skin Progress</button>
+  <button class="nav-tab" onclick="show('booking',this)">📅 Booking</button>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="phone active" id="ph-home">
+  <div class="status-bar sb-purple"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen">
+    <div class="home-hero">
+      <div class="hero-top">
+        <div class="hero-brand">
+          <svg width="24" height="24" viewBox="0 0 68 68" fill="none">
+            <defs><radialGradient id="hg" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#e8b4f8"/><stop offset="100%" stop-color="#7b2d8b"/></radialGradient></defs>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#hg)" opacity="0.9" transform="rotate(0 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#hg)" opacity="0.8" transform="rotate(72 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#hg)" opacity="0.75" transform="rotate(144 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#hg)" opacity="0.8" transform="rotate(216 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#hg)" opacity="0.85" transform="rotate(288 34 34)"/>
+            <circle cx="34" cy="34" r="7" fill="#fce4ff"/>
+            <circle cx="34" cy="34" r="4" fill="#e8b4f8"/>
+          </svg>
+          <span class="hero-brand-name">Hermoso</span>
+        </div>
+        <div class="hero-av">A</div>
+      </div>
+      <div class="hero-greeting">Good morning, Ayesha 👋</div>
+      <div class="hero-heading">Your <em>AI beauty</em> companion is ready</div>
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" placeholder="Search salons, treatments...">
+      </div>
+    </div>
+
+    <!-- AI quick access -->
+    <div class="ai-strip">
+      <div class="ai-chip" onclick="show('scan',document.querySelectorAll('.nav-tab')[1])">
+        <span class="ai-chip-icon">✨</span>
+        <span class="ai-chip-label">Skin Scan</span>
+      </div>
+      <div class="ai-chip" onclick="show('recs',document.querySelectorAll('.nav-tab')[2])">
+        <span class="ai-chip-icon">💊</span>
+        <span class="ai-chip-label">AI Recs</span>
+      </div>
+      <div class="ai-chip" onclick="show('match',document.querySelectorAll('.nav-tab')[3])">
+        <span class="ai-chip-icon">🎯</span>
+        <span class="ai-chip-label">Salon Match</span>
+      </div>
+      <div class="ai-chip" onclick="show('tracker',document.querySelectorAll('.nav-tab')[4])">
+        <span class="ai-chip-icon">📈</span>
+        <span class="ai-chip-label">Progress</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-row"><span class="sec-title">Browse by Category</span></div>
+      <div class="pills">
+        <div class="pill pill-on">All</div>
+        <div class="pill pill-off">Hair</div>
+        <div class="pill pill-off">Skin</div>
+        <div class="pill pill-off">Nails</div>
+        <div class="pill pill-off">Bridal</div>
+        <div class="pill pill-off">Events</div>
+        <div class="pill pill-off">Laser</div>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top:14px;">
+      <div class="sec-row"><span class="sec-title">Top Salons Near You ⭐</span><span class="sec-link">See all</span></div>
+    </div>
+    <div class="hscroll">
+      <div class="salon-card" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">
+        <div class="salon-thumb"><div class="salon-thumb-bg" style="background:linear-gradient(135deg,#4c1d95,#a855f7);"></div><div class="salon-badge">⭐ 4.9</div></div>
+        <div class="salon-body"><div class="salon-name">Glam Studio Lahore</div><div class="salon-meta"><span class="stars">★★★★★</span>· 0.8 km</div></div>
+      </div>
+      <div class="salon-card">
+        <div class="salon-thumb"><div class="salon-thumb-bg" style="background:linear-gradient(135deg,#be185d,#f472b6);"></div><div class="salon-badge">⭐ 4.7</div></div>
+        <div class="salon-body"><div class="salon-name">Velvet Beauty Lounge</div><div class="salon-meta"><span class="stars">★★★★☆</span>· 1.2 km</div></div>
+      </div>
+      <div class="salon-card">
+        <div class="salon-thumb"><div class="salon-thumb-bg" style="background:linear-gradient(135deg,#065f46,#34d399);"></div><div class="salon-badge">⭐ 4.8</div></div>
+        <div class="salon-body"><div class="salon-name">Serenity Aesthetics</div><div class="salon-meta"><span class="stars">★★★★★</span>· 2.1 km</div></div>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top:16px;">
+      <div class="sec-row"><span class="sec-title">Book for Events 🎉</span><span class="sec-link">See all</span></div>
+    </div>
+    <div class="hscroll" style="padding-bottom:10px;">
+      <div class="event-card" style="background:linear-gradient(135deg,#2e1065,#6b21a8);">
+        <div class="ev-tag">Bridal</div>
+        <div class="ev-name">Complete Bridal Package</div>
+        <div class="ev-desc">Hair · Makeup · Skin · Nails</div>
+      </div>
+      <div class="event-card" style="background:linear-gradient(135deg,#831843,#db2777);">
+        <div class="ev-tag">Party</div>
+        <div class="ev-name">Party Glam Makeover</div>
+        <div class="ev-desc">Makeup · Hair · Touch-up</div>
+      </div>
+      <div class="event-card" style="background:linear-gradient(135deg,#1e3a5f,#3b82f6);">
+        <div class="ev-tag">Eid Special</div>
+        <div class="ev-name">Eid Glow Package</div>
+        <div class="ev-desc">Facial · Waxing · Threading</div>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <div class="bnav">
+      <div class="bnav-item on"><span class="bnav-icon">🏠</span><span class="bnav-label">Home</span></div>
+      <div class="bnav-item"><span class="bnav-icon">✨</span><span class="bnav-label">AI Scan</span></div>
+      <div class="bnav-item"><span class="bnav-icon">📅</span><span class="bnav-label">Bookings</span></div>
+      <div class="bnav-item"><span class="bnav-icon">📈</span><span class="bnav-label">Progress</span></div>
+      <div class="bnav-item"><span class="bnav-icon">👤</span><span class="bnav-label">Profile</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI SKIN SCAN ══ -->
+<div class="phone" id="ph-scan">
+  <div class="status-bar sb-dark"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen scan-screen">
+    <div class="scan-topbar">
+      <div class="back-circle">←</div>
+      <div><h2>AI Skin Scan</h2><p>Powered by Hermoso AI · South Asian calibrated</p></div>
+    </div>
+    <div class="cam-area">
+      <div class="face-frame">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="scan-line"></div>
+        <div class="face-emoji">🧖‍♀️</div>
+      </div>
+      <div class="scan-dots">
+        <div class="scan-dot"></div><div class="scan-dot"></div><div class="scan-dot"></div>
+      </div>
+      <div class="scan-hint">Position your face · Hold still · Good lighting</div>
+    </div>
+    <div class="ai-steps">
+      <div class="ai-step"><div class="ai-step-icon">🔍</div><div class="ai-step-label">Detect skin tone & type</div></div>
+      <div class="ai-step"><div class="ai-step-icon">📊</div><div class="ai-step-label">Analyse concerns</div></div>
+      <div class="ai-step"><div class="ai-step-icon">✨</div><div class="ai-step-label">Generate recs</div></div>
+    </div>
+    <div class="results-area">
+      <div class="results-title">Your Skin Analysis Results</div>
+      <div class="metric-row"><span class="m-icon">💧</span><div class="m-info"><div class="m-name">Hydration Level</div><div class="m-bar"><div class="m-fill" style="width:62%;"></div></div></div><div class="m-val">62%</div></div>
+      <div class="metric-row"><span class="m-icon">☀️</span><div class="m-info"><div class="m-name">Sun Damage</div><div class="m-bar"><div class="m-fill warn" style="width:28%;"></div></div></div><div class="m-val">Low</div></div>
+      <div class="metric-row"><span class="m-icon">✨</span><div class="m-info"><div class="m-name">Skin Clarity</div><div class="m-bar"><div class="m-fill good" style="width:78%;"></div></div></div><div class="m-val">Good</div></div>
+      <div class="metric-row"><span class="m-icon">🌑</span><div class="m-info"><div class="m-name">Pigmentation</div><div class="m-bar"><div class="m-fill" style="width:44%;"></div></div></div><div class="m-val">Mild</div></div>
+      <div class="metric-row"><span class="m-icon">🛡️</span><div class="m-info"><div class="m-name">Skin Barrier</div><div class="m-bar"><div class="m-fill good" style="width:70%;"></div></div></div><div class="m-val">Strong</div></div>
+      <div class="rec-box">
+        <div class="rec-title">🎯 AI Treatment Recommendations</div>
+        <span class="rec-tag">Hydra Facial</span>
+        <span class="rec-tag">Vitamin C Glow</span>
+        <span class="rec-tag">Pigmentation Peel</span>
+        <span class="rec-tag">LED Therapy</span>
+        <span class="rec-tag">Deep Moisturising</span>
+      </div>
+      <button class="primary-btn" onclick="show('recs',document.querySelectorAll('.nav-tab')[2])">View Full Recommendations →</button>
+      <div style="height:16px;"></div>
+      <button class="primary-btn" style="background:rgba(255,255,255,0.08); margin-top:0;" onclick="show('match',document.querySelectorAll('.nav-tab')[3])">Find Matching Salons →</button>
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI RECOMMENDATIONS ══ -->
+<div class="phone" id="ph-recs">
+  <div class="status-bar sb-white"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen rec-screen">
+    <div class="rec-header">
+      <h2>💊 AI Recommendations</h2>
+      <p>Based on your skin scan · Updated today</p>
+    </div>
+    <div class="skin-summary-card">
+      <div class="skin-score-circle"><div class="skin-score-inner">75</div></div>
+      <div class="skin-summary-text">
+        <h3>Good Skin Health</h3>
+        <p>Mild pigmentation & slight dehydration detected. 4 targeted treatments recommended for your skin profile.</p>
+      </div>
+    </div>
+    <div class="treatment-list">
+      <div class="treatment-card" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">
+        <div class="treat-icon" style="background:#fef3c7;">💧</div>
+        <div class="treat-info">
+          <div class="treat-name">Hydra Facial</div>
+          <div class="treat-why">Your scan shows 62% hydration — below optimal. This treatment delivers deep hydration at the cellular level, ideal for your skin type.</div>
+          <div class="treat-meta">
+            <span class="treat-price">PKR 4,500</span>
+            <span class="treat-dur">60 min</span>
+            <span class="treat-ai-badge">AI #1 Pick</span>
+          </div>
+        </div>
+      </div>
+      <div class="treatment-card" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">
+        <div class="treat-icon" style="background:#fce7f3;">✨</div>
+        <div class="treat-info">
+          <div class="treat-name">Vitamin C Glow Treatment</div>
+          <div class="treat-why">Mild pigmentation detected. Vitamin C brightens and evens skin tone — highly effective on South Asian skin types like yours.</div>
+          <div class="treat-meta">
+            <span class="treat-price">PKR 3,200</span>
+            <span class="treat-dur">45 min</span>
+            <span class="treat-ai-badge">AI Matched</span>
+          </div>
+        </div>
+      </div>
+      <div class="treatment-card" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">
+        <div class="treat-icon" style="background:#ede9fe;">🌙</div>
+        <div class="treat-info">
+          <div class="treat-name">Pigmentation Chemical Peel</div>
+          <div class="treat-why">Targets the mild pigmentation around your T-zone. Recommended every 3-4 weeks for best results.</div>
+          <div class="treat-meta">
+            <span class="treat-price">PKR 5,000</span>
+            <span class="treat-dur">50 min</span>
+            <span class="treat-ai-badge">AI Matched</span>
+          </div>
+        </div>
+      </div>
+      <div class="treatment-card" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">
+        <div class="treat-icon" style="background:#d1fae5;">💡</div>
+        <div class="treat-info">
+          <div class="treat-name">LED Light Therapy</div>
+          <div class="treat-why">Boosts collagen and reduces inflammation. Perfect as a finishing treatment after your facial or peel.</div>
+          <div class="treat-meta">
+            <span class="treat-price">PKR 2,500</span>
+            <span class="treat-dur">30 min</span>
+            <span class="treat-ai-badge">AI Matched</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+
+<!-- ══ SALON MATCH ══ -->
+<div class="phone" id="ph-match">
+  <div class="status-bar sb-cream"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen match-screen">
+    <div class="match-header">
+      <h2>🎯 AI Salon Match</h2>
+      <p>Salons matched to your skin profile</p>
+    </div>
+    <div class="match-filter-row">
+      <div class="mfilter active">All</div>
+      <div class="mfilter">Skin Clinics</div>
+      <div class="mfilter">Salons</div>
+      <div class="mfilter">Near Me</div>
+      <div class="mfilter">Open Now</div>
+    </div>
+    <div class="match-list">
+
+      <div class="match-salon-card">
+        <div class="match-card-top">
+          <div class="match-thumb" style="background:linear-gradient(135deg,#4c1d95,#a855f7);">💅</div>
+          <div class="match-info">
+            <div class="match-name">Serenity Aesthetics Clinic</div>
+            <div class="match-loc">📍 Gulberg III, Lahore · 1.4 km</div>
+            <div class="match-stars">★★★★★ 4.9 · 312 reviews</div>
+          </div>
+        </div>
+        <div class="ai-match-bar">
+          <span class="ai-match-label">🤖 AI Skin Match Score</span>
+          <div class="ai-match-track"><div class="ai-match-fill" style="width:94%;"></div></div>
+          <span class="ai-match-pct">94%</span>
+        </div>
+        <div class="match-services">
+          <span class="match-service-tag">Hydra Facial ✓</span>
+          <span class="match-service-tag">Vitamin C ✓</span>
+          <span class="match-service-tag">LED Therapy ✓</span>
+          <span class="match-service-tag">Chemical Peel ✓</span>
+        </div>
+        <button class="match-book-btn" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">Book This Salon →</button>
+      </div>
+
+      <div class="match-salon-card">
+        <div class="match-card-top">
+          <div class="match-thumb" style="background:linear-gradient(135deg,#065f46,#10b981);">🌿</div>
+          <div class="match-info">
+            <div class="match-name">Glam Studio Lahore</div>
+            <div class="match-loc">📍 DHA Phase 5, Lahore · 0.8 km</div>
+            <div class="match-stars">★★★★★ 4.8 · 847 reviews</div>
+          </div>
+        </div>
+        <div class="ai-match-bar">
+          <span class="ai-match-label">🤖 AI Skin Match Score</span>
+          <div class="ai-match-track"><div class="ai-match-fill" style="width:87%;"></div></div>
+          <span class="ai-match-pct">87%</span>
+        </div>
+        <div class="match-services">
+          <span class="match-service-tag">Hydra Facial ✓</span>
+          <span class="match-service-tag">Vitamin C ✓</span>
+          <span class="match-service-tag">Hair Care</span>
+        </div>
+        <button class="match-book-btn" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">Book This Salon →</button>
+      </div>
+
+      <div class="match-salon-card">
+        <div class="match-card-top">
+          <div class="match-thumb" style="background:linear-gradient(135deg,#831843,#ec4899);">💎</div>
+          <div class="match-info">
+            <div class="match-name">Velvet Beauty Lounge</div>
+            <div class="match-loc">📍 Model Town, Lahore · 2.3 km</div>
+            <div class="match-stars">★★★★☆ 4.6 · 521 reviews</div>
+          </div>
+        </div>
+        <div class="ai-match-bar">
+          <span class="ai-match-label">🤖 AI Skin Match Score</span>
+          <div class="ai-match-track"><div class="ai-match-fill" style="width:74%;"></div></div>
+          <span class="ai-match-pct">74%</span>
+        </div>
+        <div class="match-services">
+          <span class="match-service-tag">LED Therapy ✓</span>
+          <span class="match-service-tag">Facial</span>
+          <span class="match-service-tag">Bridal</span>
+        </div>
+        <button class="match-book-btn" onclick="show('booking',document.querySelectorAll('.nav-tab')[5])">Book This Salon →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROGRESS TRACKER ══ -->
+<div class="phone" id="ph-tracker">
+  <div class="status-bar sb-dark"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen progress-screen">
+    <div class="prog-header">
+      <h2>📈 Skin Progress Tracker</h2>
+      <p>Your journey · 8 scans completed</p>
+    </div>
+    <div class="timeline-strip">
+      <div class="t-chip active">3 Months</div>
+      <div class="t-chip inactive">1 Month</div>
+      <div class="t-chip inactive">2 Weeks</div>
+      <div class="t-chip inactive">All Time</div>
+    </div>
+    <div class="before-after">
+      <div class="ba-card">
+        <div class="ba-img" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);">😐</div>
+        <div class="ba-label">Before</div>
+        <div class="ba-date">Dec 5, 2025</div>
+      </div>
+      <div class="ba-card">
+        <div class="ba-img" style="background:linear-gradient(135deg,#f3e8ff,#ddd6fe);">✨</div>
+        <div class="ba-label">After</div>
+        <div class="ba-date">Mar 5, 2026</div>
+      </div>
+    </div>
+    <div class="journey-card">
+      <div class="journey-title">Your 3-Month Journey</div>
+      <div class="journey-stat-row">
+        <div class="journey-stat"><div class="journey-stat-num">8</div><div class="journey-stat-lbl">Scans</div></div>
+        <div class="journey-stat"><div class="journey-stat-num">12</div><div class="journey-stat-lbl">Treatments</div></div>
+        <div class="journey-stat"><div class="journey-stat-num">+23%</div><div class="journey-stat-lbl">Glow Score</div></div>
+      </div>
+    </div>
+    <div class="progress-metrics">
+      <div class="prog-metric-title">Skin Metric Improvements</div>
+      <div class="prog-metric-row">
+        <div class="prog-metric-top"><span class="prog-metric-name">💧 Hydration</span><span class="prog-metric-change">↑ +18%</span></div>
+        <div class="prog-bar-track">
+          <div class="prog-bar-before" style="width:44%;"></div>
+          <div class="prog-bar-after" style="width:62%;"></div>
+        </div>
+      </div>
+      <div class="prog-metric-row">
+        <div class="prog-metric-top"><span class="prog-metric-name">✨ Clarity</span><span class="prog-metric-change">↑ +22%</span></div>
+        <div class="prog-bar-track">
+          <div class="prog-bar-before" style="width:56%;"></div>
+          <div class="prog-bar-after" style="width:78%;"></div>
+        </div>
+      </div>
+      <div class="prog-metric-row">
+        <div class="prog-metric-top"><span class="prog-metric-name">🌑 Pigmentation</span><span class="prog-metric-change down">↓ -15%</span></div>
+        <div class="prog-bar-track">
+          <div class="prog-bar-before" style="width:59%;"></div>
+          <div class="prog-bar-after" style="width:44%; background:linear-gradient(90deg,#10b981,#34d399);"></div>
+        </div>
+      </div>
+      <div class="prog-metric-row">
+        <div class="prog-metric-top"><span class="prog-metric-name">🛡️ Skin Barrier</span><span class="prog-metric-change">↑ +12%</span></div>
+        <div class="prog-bar-track">
+          <div class="prog-bar-before" style="width:58%;"></div>
+          <div class="prog-bar-after" style="width:70%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOOKING ══ -->
+<div class="phone" id="ph-booking">
+  <div class="status-bar sb-white"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen booking-screen">
+    <div class="booking-topbar">
+      <h2>Book Appointment</h2>
+      <p>Serenity Aesthetics · Hydra Facial · PKR 4,500</p>
+    </div>
+    <div class="progress-steps">
+      <div class="pstep done"><div class="pdot done">✓</div><div class="plabel">Service</div></div>
+      <div class="pstep done"><div class="pdot done">✓</div><div class="plabel">Staff</div></div>
+      <div class="pstep"><div class="pdot active">3</div><div class="plabel">Date</div></div>
+      <div class="pstep"><div class="pdot pending">4</div><div class="plabel">Confirm</div></div>
+    </div>
+    <div class="booking-sec">
+      <div class="booking-sec-title">Booking Type</div>
+      <div class="type-toggle">
+        <button class="ttype active">👤 Appointment</button>
+        <button class="ttype">🎉 Event / Party</button>
+      </div>
+    </div>
+    <div class="booking-sec">
+      <div class="booking-sec-title">Select Date</div>
+      <div class="cal-nav-row">
+        <button class="cal-arr">‹</button>
+        <span class="cal-month">March 2026</span>
+        <button class="cal-arr">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-lbl">Su</div><div class="cal-lbl">Mo</div><div class="cal-lbl">Tu</div>
+        <div class="cal-lbl">We</div><div class="cal-lbl">Th</div><div class="cal-lbl">Fr</div><div class="cal-lbl">Sa</div>
+        <div class="cday dim">23</div><div class="cday dim">24</div><div class="cday dim">25</div>
+        <div class="cday dim">26</div><div class="cday dim">27</div><div class="cday dim">28</div><div class="cday">1</div>
+        <div class="cday">2</div><div class="cday">3</div><div class="cday">4</div>
+        <div class="cday tod">5</div><div class="cday">6</div><div class="cday">7</div><div class="cday">8</div>
+        <div class="cday">9</div><div class="cday">10</div><div class="cday">11</div>
+        <div class="cday sel">12</div><div class="cday">13</div><div class="cday">14</div><div class="cday">15</div>
+        <div class="cday">16</div><div class="cday">17</div><div class="cday">18</div>
+        <div class="cday">19</div><div class="cday">20</div><div class="cday">21</div><div class="cday">22</div>
+        <div class="cday">23</div><div class="cday">24</div><div class="cday">25</div>
+        <div class="cday">26</div><div class="cday">27</div><div class="cday">28</div><div class="cday">29</div>
+        <div class="cday">30</div><div class="cday">31</div>
+      </div>
+    </div>
+    <div class="booking-sec">
+      <div class="booking-sec-title">Available Times · Thu 12 Mar</div>
+      <div class="tslots">
+        <div class="tslot unavail">9:00 AM</div>
+        <div class="tslot">10:00 AM</div>
+        <div class="tslot sel">11:00 AM</div>
+        <div class="tslot unavail">12:00 PM</div>
+        <div class="tslot">1:00 PM</div>
+        <div class="tslot">2:00 PM</div>
+        <div class="tslot">3:00 PM</div>
+        <div class="tslot unavail">4:00 PM</div>
+        <div class="tslot">5:00 PM</div>
+      </div>
+    </div>
+    <div class="booking-summary">
+      <div class="bsum-row"><span class="bsum-key">Salon</span><span class="bsum-val">Serenity Aesthetics</span></div>
+      <div class="bsum-row"><span class="bsum-key">Treatment</span><span class="bsum-val">Hydra Facial</span></div>
+      <div class="bsum-row"><span class="bsum-key">AI Recommended</span><span class="bsum-val">✅ Yes — #1 Pick</span></div>
+      <div class="bsum-row"><span class="bsum-key">Date & Time</span><span class="bsum-val">Thu 12 Mar, 11:00 AM</span></div>
+      <div class="bsum-row"><span class="bsum-key">Duration</span><span class="bsum-val">60 min</span></div>
+      <div class="bsum-row"><span class="bsum-key">Total</span><span class="bsum-val price">PKR 4,500</span></div>
+    </div>
+    <button class="confirm-btn">Confirm Booking →</button>
+    <div style="height:10px;"></div>
+  </div>
+</div>
+
+<script>
+function show(id, tab) {
+  document.querySelectorAll('.phone').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const ph = document.getElementById('ph-' + id);
+  if (ph) ph.classList.add('active');
+  if (tab && tab.classList) tab.classList.add('active');
+
+  // Interactive elements
+  document.querySelectorAll('.cday:not(.dim)').forEach(d => {
+    d.onclick = function() { document.querySelectorAll('.cday').forEach(x => x.classList.remove('sel')); this.classList.add('sel'); };
+  });
+  document.querySelectorAll('.tslot:not(.unavail)').forEach(s => {
+    s.onclick = function() { document.querySelectorAll('.tslot').forEach(x => x.classList.remove('sel')); this.classList.add('sel'); };
+  });
+  document.querySelectorAll('.ttype').forEach(b => {
+    b.onclick = function() { document.querySelectorAll('.ttype').forEach(x => x.classList.remove('active')); this.classList.add('active'); };
+  });
+  document.querySelectorAll('.pill').forEach(p => {
+    p.onclick = function() { document.querySelectorAll('.pill').forEach(x => { x.classList.remove('pill-on'); x.classList.add('pill-off'); }); this.classList.add('pill-on'); this.classList.remove('pill-off'); };
+  });
+  document.querySelectorAll('.mfilter').forEach(f => {
+    f.onclick = function() { document.querySelectorAll('.mfilter').forEach(x => x.classList.remove('active')); this.classList.add('active'); };
+  });
+  document.querySelectorAll('.t-chip').forEach(c => {
+    c.onclick = function() { document.querySelectorAll('.t-chip').forEach(x => { x.classList.remove('active'); x.classList.add('inactive'); }); this.classList.remove('inactive'); this.classList.add('active'); };
+  });
+}
+document.addEventListener('DOMContentLoaded', () => show('home', document.querySelector('.nav-tab')));
+</script>
+</body>
+</html>

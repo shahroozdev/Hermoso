@@ -1,0 +1,52 @@
+import DataTable from "../../components/DataTable";
+import ErrorBlock from "../../components/ErrorBlock";
+import { useApi } from "../../hooks/useApi";
+import { bookingService } from "../../services/bookingService";
+import BookingPage from "./BookingPage";
+import { formatTimeAMPM } from "@/utils/format";
+
+const BookingHistoryPage = () => {
+  const { data, loading, error } = useApi(
+    () => bookingService.list({ page: 1, limit: 50 }),
+    [],
+  );
+
+  if (error) return <ErrorBlock text={error} />;
+
+  return (
+    <div className="mx-auto container space-y-4">
+      <BookingPage />
+      <h2 className="text-xl font-semibold">Booking History</h2>
+      <div className="p-6">
+        <DataTable
+          loading={loading}
+          loadingRows={6}
+          columns={["Salon", "Service", "Date", "Status", "Amount", "Action"]}
+          rows={(data?.data || []).map((item) => [
+            item.salonId?.name || "-",
+            item.serviceId?.name || "-",
+            <p>
+              {new Date(item.bookingDate).toLocaleDateString()} <br />
+              <span className="text-gray-400">
+                {formatTimeAMPM(item.bookingTime)}
+              </span>
+            </p>,
+            <p
+              className={`w-20 text-center rounded-full px-2.5 py-0.5 text-xs capitalize font-medium ${item.status === "confirmed" ? "bg-green-100 text-green-800" : item.status === "cancelled" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}
+            >
+              {item.status}
+            </p>,
+            `$${item.price}`,
+            <div className="ha-actions">
+              {item?.status !== "cancelled" && (
+                <button className="ha-act-btn">Cancel</button>
+              )}
+            </div>,
+          ])}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default BookingHistoryPage;

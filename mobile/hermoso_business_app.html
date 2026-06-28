@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermoso — Business App</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0d1b2a;
+  --navy-mid: #162032;
+  --navy-light: #1e2f45;
+  --navy-card: #1a2a3e;
+  --gold: #d4a843;
+  --gold-light: #f0c96a;
+  --gold-pale: #fdf3dc;
+  --gold-dark: #a07820;
+  --teal: #0ea5e9;
+  --green: #10b981;
+  --rose: #f43f5e;
+  --amber: #f59e0b;
+  --text-light: #e2eaf4;
+  --text-muted: #6b84a0;
+  --border: rgba(212,168,67,0.15);
+  --card-glow: 0 4px 24px rgba(212,168,67,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #060e18;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 30px 16px 50px;
+}
+
+.app-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; letter-spacing: 6px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 6px; text-align: center;
+}
+.app-subtitle {
+  font-size: 11px; color: #1e3050;
+  letter-spacing: 2px; text-transform: uppercase;
+  text-align: center; margin-bottom: 24px;
+}
+
+.nav-tabs {
+  display: flex; gap: 6px;
+  flex-wrap: wrap; justify-content: center;
+  margin-bottom: 24px;
+}
+.nav-tab {
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid #1e3050; background: transparent;
+  color: #2a4060; font-family: 'DM Sans', sans-serif;
+  font-size: 11px; letter-spacing: 1px;
+  text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+}
+.nav-tab:hover, .nav-tab.active {
+  background: var(--gold); border-color: var(--gold); color: #0d1b2a;
+}
+
+.phone {
+  width: 375px; background: var(--navy);
+  border-radius: 44px; overflow: hidden;
+  box-shadow: 0 0 0 2px #1e3050, 0 0 0 6px #060e18,
+    0 40px 100px rgba(212,168,67,0.2), 0 20px 40px rgba(0,0,0,0.8);
+  display: none;
+}
+.phone.active { display: block; }
+
+.status-bar {
+  height: 44px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 24px;
+  font-size: 12px; font-weight: 600;
+  background: var(--navy); color: var(--gold);
+}
+
+.screen { overflow-y: auto; }
+.screen::-webkit-scrollbar { display: none; }
+.screen { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ════════════════════
+   DASHBOARD
+════════════════════ */
+.dash-header {
+  background: linear-gradient(160deg, #060e18 0%, var(--navy-mid) 100%);
+  padding: 20px 20px 24px;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.dash-header::after {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,67,0.08), transparent);
+  pointer-events: none;
+}
+.dash-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.dash-brand { display: flex; align-items: center; gap: 10px; }
+.brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; letter-spacing: 3px;
+  color: var(--gold); font-weight: 300; text-transform: uppercase;
+}
+.brand-tag { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+.notif-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(212,168,67,0.08);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; position: relative; cursor: pointer;
+}
+.notif-dot {
+  position: absolute; top: 7px; right: 7px;
+  width: 8px; height: 8px; background: var(--rose);
+  border-radius: 50%; border: 2px solid var(--navy);
+}
+
+/* Revenue hero card */
+.rev-card {
+  background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 18px 20px;
+  position: relative; overflow: hidden;
+}
+.rev-card::before {
+  content: '✦';
+  position: absolute; right: 16px; top: 12px;
+  font-size: 40px; color: rgba(212,168,67,0.06);
+}
+.rev-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.rev-amount { font-size: 34px; font-weight: 800; color: var(--gold-light); margin-bottom: 8px; line-height: 1; }
+.rev-amount span { font-size: 18px; font-weight: 400; }
+.rev-row { display: flex; align-items: center; gap: 14px; }
+.rev-badge {
+  background: rgba(16,185,129,0.15); color: var(--green);
+  font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 8px;
+}
+.rev-sub { font-size: 12px; color: var(--text-muted); }
+
+/* stat grid */
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; padding: 16px 18px;
+}
+.stat-card {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: 18px; padding: 16px;
+  box-shadow: var(--card-glow);
+}
+.stat-icon { font-size: 22px; margin-bottom: 10px; }
+.stat-num { font-size: 26px; font-weight: 800; color: var(--text-light); margin-bottom: 2px; }
+.stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-change { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 4px; }
+.stat-change.down { color: var(--rose); }
+
+/* bar chart */
+.chart-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  margin: 0 18px 16px; border-radius: 20px; padding: 18px;
+}
+.chart-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.chart-title { font-size: 14px; font-weight: 700; color: var(--text-light); }
+.chart-legend { font-size: 10px; color: var(--text-muted); }
+
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bar-col {
+  width: 100%; border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, rgba(212,168,67,0.3), rgba(212,168,67,0.1));
+  transition: height 0.6s ease; min-height: 4px;
+}
+.bar-col.hi { background: linear-gradient(180deg, var(--gold-light), var(--gold)); }
+.bar-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+
+/* upcoming */
+.section { padding: 0 18px 16px; }
+.section-title { font-size: 14px; font-weight: 700; color: var(--text-light); margin-bottom: 12px; }
+.booking-item {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 13px 15px;
+  display: flex; align-items: center; gap: 13px;
+  margin-bottom: 10px; box-shadow: var(--card-glow);
+}
+.btime-box {
+  background: rgba(212,168,67,0.1);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 7px 10px;
+  text-align: center; min-width: 50px;
+}
+.btime { font-size: 14px; font-weight: 800; color: var(--gold-light); }
+.bampm { font-size: 10px; color: var(--text-muted); }
+.bclient { font-size: 13px; font-weight: 600; color: var(--text-light); }
+.bservice { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.bstatus {
+  margin-left: auto; padding: 4px 10px;
+  border-radius: 8px; font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.s-confirm { background: rgba(16,185,129,0.15); color: var(--green); }
+.s-pending { background: rgba(245,158,11,0.15); color: var(--amber); }
+
+/* bottom nav */
+.bnav {
+  background: var(--navy-mid); border-top: 1px solid var(--border);
+  display: flex; padding: 10px 0 16px;
+  position: sticky; bottom: 0;
+}
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px; cursor: pointer;
+}
+.bnav-icon { font-size: 19px; }
+.bnav-label { font-size: 10px; color: var(--text-muted); }
+.bnav-item.on .bnav-label { color: var(--gold); font-weight: 700; }
+
+/* ════════════════════
+   CALENDAR
+════════════════════ */
+.cal-header {
+  background: linear-gradient(160deg, #060e18, var(--navy-mid));
+  padding: 20px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.cal-header-top {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.cal-header h2 { font-size: 20px; font-weight: 700; color: var(--text-light); }
+.add-btn {
+  background: var(--gold); color: var(--navy);
+  border: none; border-radius: 20px;
+  padding: 8px 16px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+}
+
+.week-strip { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.wday {
+  flex-shrink: 0; width: 46px; padding: 8px 0;
+  border-radius: 12px; text-align: center; cursor: pointer;
+  transition: all 0.2s; border: 1px solid transparent;
+}
+.wday.sel { background: rgba(212,168,67,0.15); border-color: var(--border); }
+.wday-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.wday-num { font-size: 16px; font-weight: 700; color: var(--text-muted); }
+.wday.sel .wday-num { color: var(--gold-light); }
+.wday.tod .wday-num { color: var(--gold); }
+
+/* time blocks */
+.time-grid { padding: 14px 18px; }
+.trow { display: flex; gap: 12px; margin-bottom: 8px; align-items: flex-start; }
+.tlabel { font-size: 10px; color: var(--text-muted); width: 44px; flex-shrink: 0; padding-top: 6px; }
+.slot-empty {
+  flex: 1; min-height: 34px; border-radius: 10px;
+  border: 1px dashed rgba(212,168,67,0.1);
+  background: rgba(255,255,255,0.01);
+}
+.slot-booking {
+  flex: 1; border-radius: 10px; padding: 8px 13px;
+  cursor: pointer; transition: opacity 0.2s;
+  border-left-width: 3px; border-left-style: solid;
+}
+.slot-booking:hover { opacity: 0.85; }
+.slot-booking.gold { background: rgba(212,168,67,0.1); border-left-color: var(--gold); }
+.slot-booking.teal { background: rgba(14,165,233,0.1); border-left-color: var(--teal); }
+.slot-booking.green { background: rgba(16,185,129,0.1); border-left-color: var(--green); }
+.slot-booking.rose { background: rgba(244,63,94,0.1); border-left-color: var(--rose); }
+.slot-client { font-size: 12px; font-weight: 700; color: var(--text-light); }
+.slot-svc { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* ════════════════════
+   CLIENT CRM
+════════════════════ */
+.crm-header {
+  background: linear-gradient(160deg, #060e18, var(--navy-mid));
+  padding: 20px 20px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.crm-header h2 { font-size: 20px; font-weight: 700; color: var(--text-light); margin-bottom: 4px; }
+.crm-header p { font-size: 12px; color: var(--text-muted); }
+
+.crm-search {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 11px 15px;
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 18px;
+}
+.crm-search input {
+  background: none; border: none; outline: none;
+  color: var(--text-light); font-family: 'DM Sans', sans-serif; font-size: 13px; flex: 1;
+}
+.crm-search input::placeholder { color: var(--text-muted); }
+
+.client-list { padding: 0 18px 20px; }
+.client-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 15px 16px;
+  margin-bottom: 10px; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.client-card:hover { border-color: rgba(212,168,67,0.35); }
+.client-top { display: flex; align-items: center; gap: 13px; margin-bottom: 10px; }
+.client-av {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  border: 1.5px solid var(--border);
+}
+.client-name { font-size: 14px; font-weight: 700; color: var(--text-light); margin-bottom: 2px; }
+.client-since { font-size: 11px; color: var(--text-muted); }
+.client-badge {
+  margin-left: auto; padding: 4px 10px; border-radius: 8px;
+  font-size: 10px; font-weight: 700;
+}
+.badge-gold { background: rgba(212,168,67,0.15); color: var(--gold-light); }
+.badge-silver { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.badge-new { background: rgba(16,185,129,0.15); color: var(--green); }
+
+.client-stats { display: flex; gap: 0; }
+.cstat { flex: 1; text-align: center; border-right: 1px solid var(--border); }
+.cstat:last-child { border-right: none; }
+.cstat-num { font-size: 16px; font-weight: 800; color: var(--gold-light); }
+.cstat-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.client-last { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); }
+.client-last span { color: var(--text-light); font-weight: 500; }
+
+/* ════════════════════
+   AI INSIGHTS
+════════════════════ */
+.ai-header {
+  background: linear-gradient(160deg, #060e18, #0d1b2a);
+  padding: 20px 20px 24px;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.ai-header::before {
+  content: '';
+  position: absolute; right: -40px; bottom: -40px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,67,0.06), transparent);
+}
+.ai-header h2 { font-size: 20px; font-weight: 700; color: var(--text-light); margin-bottom: 4px; }
+.ai-header p { font-size: 12px; color: var(--text-muted); }
+.ai-powered-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(212,168,67,0.1); border: 1px solid var(--border);
+  color: var(--gold); border-radius: 20px;
+  padding: 5px 12px; font-size: 11px; font-weight: 600;
+  margin-top: 10px;
+}
+
+.ai-section { padding: 16px 18px 0; }
+.ai-section-title { font-size: 13px; font-weight: 700; color: var(--gold-light); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* heatmap */
+.heatmap-grid {
+  display: grid; grid-template-columns: 40px repeat(7,1fr);
+  gap: 5px; margin-bottom: 6px;
+}
+.hm-lbl { font-size: 9px; color: var(--text-muted); text-align: right; padding-right: 6px; display: flex; align-items: center; justify-content: flex-end; }
+.hm-day-lbl { font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px; }
+.hm-cell {
+  aspect-ratio: 1; border-radius: 5px;
+  background: rgba(212,168,67,0.05);
+}
+.hm-cell.l1 { background: rgba(212,168,67,0.15); }
+.hm-cell.l2 { background: rgba(212,168,67,0.3); }
+.hm-cell.l3 { background: rgba(212,168,67,0.55); }
+.hm-cell.l4 { background: rgba(212,168,67,0.8); }
+
+/* insight cards */
+.insight-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px; margin-bottom: 12px;
+  box-shadow: var(--card-glow);
+}
+.insight-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.insight-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: rgba(212,168,67,0.1); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.insight-title { font-size: 14px; font-weight: 700; color: var(--text-light); margin-bottom: 4px; }
+.insight-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+.insight-bar-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+.insight-bar-label { font-size: 11px; color: var(--text-muted); width: 80px; flex-shrink: 0; }
+.insight-track { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+.insight-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); }
+.insight-fill.teal { background: linear-gradient(90deg, #0369a1, var(--teal)); }
+.insight-fill.green { background: linear-gradient(90deg, #059669, var(--green)); }
+.insight-pct { font-size: 11px; font-weight: 700; color: var(--gold-light); width: 32px; text-align: right; }
+
+/* top services donut placeholder */
+.top-services { display: flex; flex-direction: column; gap: 10px; }
+.ts-row { display: flex; align-items: center; gap: 12px; }
+.ts-rank {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(212,168,67,0.1); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; color: var(--gold); flex-shrink: 0;
+}
+.ts-info { flex: 1; }
+.ts-name { font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 3px; }
+.ts-track { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+.ts-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold-dark), var(--gold-light)); }
+.ts-rev { font-size: 12px; font-weight: 700; color: var(--gold-light); flex-shrink: 0; }
+
+/* prediction card */
+.prediction-card {
+  background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
+  border: 1px solid var(--border); border-radius: 18px; padding: 18px;
+  margin-bottom: 20px;
+}
+.pred-title { font-size: 14px; font-weight: 700; color: var(--gold-light); margin-bottom: 4px; }
+.pred-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+.pred-row { display: flex; gap: 10px; }
+.pred-stat {
+  flex: 1; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px;
+  text-align: center; border: 1px solid var(--border);
+}
+.pred-num { font-size: 20px; font-weight: 800; color: var(--gold-light); }
+.pred-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+/* ════ SERVICES SCREEN ════ */
+.svc-topbar {
+  background: linear-gradient(160deg,#060e18,var(--navy-mid));
+  padding: 20px 20px 0; border-bottom: 1px solid var(--border);
+}
+.svc-topbar-row { display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; }
+.svc-topbar h2 { font-size:20px; font-weight:700; color:var(--text-light); }
+.svc-topbar p { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.add-svc-btn {
+  background:var(--gold); color:var(--navy); border:none; border-radius:20px;
+  padding:9px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif;
+}
+.svc-stats-bar {
+  display:flex; border-top:1px solid var(--border);
+}
+.svc-stat { flex:1; padding:11px 0; text-align:center; border-right:1px solid var(--border); }
+.svc-stat:last-child { border-right:none; }
+.svc-stat-n { font-size:17px; font-weight:800; color:var(--gold-light); }
+.svc-stat-l { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.cat-strip {
+  display:flex; gap:8px; overflow-x:auto; padding:12px 18px;
+  background:var(--navy-mid); border-bottom:1px solid var(--border); scrollbar-width:none;
+}
+.cat-strip::-webkit-scrollbar { display:none; }
+.cat-pill {
+  flex-shrink:0; padding:7px 15px; border-radius:20px; font-size:11px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; border:1px solid var(--border);
+  color:var(--text-muted); background:transparent; font-family:'DM Sans',sans-serif;
+}
+.cat-pill.on { background:var(--gold); color:var(--navy); border-color:var(--gold); }
+.cat-pill:hover:not(.on) { border-color:rgba(212,168,67,0.4); color:var(--gold-light); }
+.svc-cards { padding:14px 18px; display:flex; flex-direction:column; gap:11px; }
+.svc-card {
+  background:var(--navy-card); border:1px solid var(--border);
+  border-radius:16px; padding:14px 15px; box-shadow:var(--card-glow);
+}
+.svc-card-top { display:flex; gap:12px; align-items:flex-start; margin-bottom:10px; }
+.svc-icon {
+  width:46px; height:46px; border-radius:13px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; border:1px solid var(--border);
+}
+.svc-body { flex:1; }
+.svc-n { font-size:14px; font-weight:700; color:var(--text-light); margin-bottom:3px; }
+.svc-d { font-size:11px; color:var(--text-muted); line-height:1.4; }
+.svc-rhs { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+.svc-price { font-size:16px; font-weight:800; color:var(--gold-light); }
+.svc-tog { display:flex; align-items:center; gap:5px; }
+.svc-tog-lbl { font-size:10px; color:var(--text-muted); }
+.svc-foot {
+  display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+  padding-top:10px; border-top:1px solid var(--border);
+}
+.svc-chip {
+  display:flex; align-items:center; gap:4px;
+  background:rgba(255,255,255,0.04); border:1px solid var(--border);
+  border-radius:8px; padding:4px 9px; font-size:11px; color:var(--text-muted);
+}
+.svc-badge {
+  background:rgba(212,168,67,0.12); border:1px solid rgba(212,168,67,0.2);
+  border-radius:8px; padding:4px 9px;
+  font-size:10px; font-weight:700; color:var(--gold-light);
+}
+.svc-badge.top { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.2); color:var(--green); }
+.svc-badge.off { background:rgba(244,63,94,0.1); border-color:rgba(244,63,94,0.2); color:var(--rose); }
+.svc-btns { display:flex; gap:6px; margin-left:auto; }
+.svc-btn {
+  padding:5px 11px; border-radius:8px; font-size:11px; font-weight:600;
+  cursor:pointer; border:1px solid var(--border); background:transparent;
+  color:var(--text-muted); font-family:'DM Sans',sans-serif; transition:all 0.15s;
+}
+.svc-btn:hover { border-color:var(--gold); color:var(--gold-light); }
+.svc-btn.del:hover { border-color:var(--rose); color:var(--rose); }
+
+/* ════ ADD/EDIT MODAL ════ */
+.modal-bg {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.78); backdrop-filter:blur(5px);
+  z-index:999; align-items:center; justify-content:center;
+}
+.modal-bg.open { display:flex; }
+.modal-box {
+  background:var(--navy-card); border:1px solid var(--border);
+  border-radius:24px; padding:24px; width:345px;
+  max-height:90vh; overflow-y:auto;
+  box-shadow:0 30px 80px rgba(0,0,0,0.7);
+  scrollbar-width:none;
+}
+.modal-box::-webkit-scrollbar { display:none; }
+.modal-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:16px; font-weight:700; color:var(--text-light); margin-bottom:20px;
+}
+.modal-x {
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  color:var(--text-muted); font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.fg { margin-bottom:14px; }
+.fl { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; display:block; margin-bottom:6px; font-weight:600; }
+.fi {
+  width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border);
+  border-radius:10px; padding:10px 13px; font-size:13px;
+  color:var(--text-light); font-family:'DM Sans',sans-serif;
+  outline:none; transition:border-color 0.15s; resize:none;
+}
+.fi:focus { border-color:rgba(212,168,67,0.5); }
+.fi::placeholder { color:var(--text-muted); }
+.frow { display:flex; gap:10px; }
+.frow .fg { flex:1; }
+.ep { display:flex; gap:7px; flex-wrap:wrap; }
+.ep-btn {
+  width:36px; height:36px; border-radius:9px; font-size:18px; cursor:pointer;
+  background:rgba(255,255,255,0.04); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+}
+.ep-btn:hover,.ep-btn.on { background:rgba(212,168,67,0.15); border-color:var(--gold); }
+.modal-ft { display:flex; gap:10px; margin-top:20px; }
+.m-cancel {
+  flex:1; padding:12px; border-radius:12px;
+  background:transparent; border:1px solid var(--border);
+  color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+}
+.m-save {
+  flex:2; padding:12px; border-radius:12px;
+  background:var(--gold); color:var(--navy); border:none;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:800; cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="app-label">Hermoso — Business App</div>
+<div class="app-subtitle">For Salons & Aesthetic Clinics</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="show('dash',this)">📊 Dashboard</button>
+  <button class="nav-tab" onclick="show('cal',this)">🗓 Calendar</button>
+  <button class="nav-tab" onclick="show('services',this)">✂️ Services</button>
+  <button class="nav-tab" onclick="show('crm',this)">👥 Clients</button>
+  <button class="nav-tab" onclick="show('ai',this)">🤖 AI Insights</button>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="phone active" id="ph-dash">
+  <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen" style="min-height:736px; background:var(--navy);">
+    <div class="dash-header">
+      <div class="dash-top">
+        <div class="dash-brand">
+          <svg width="26" height="26" viewBox="0 0 68 68" fill="none">
+            <defs><radialGradient id="bg" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#f0c96a"/><stop offset="100%" stop-color="#a07820"/></radialGradient></defs>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#bg)" opacity="0.9" transform="rotate(0 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#bg)" opacity="0.8" transform="rotate(72 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#bg)" opacity="0.75" transform="rotate(144 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#bg)" opacity="0.8" transform="rotate(216 34 34)"/>
+            <ellipse cx="34" cy="18" rx="9" ry="15" fill="url(#bg)" opacity="0.85" transform="rotate(288 34 34)"/>
+            <circle cx="34" cy="34" r="7" fill="#fdf3dc"/>
+            <circle cx="34" cy="34" r="4" fill="#f0c96a"/>
+          </svg>
+          <div>
+            <div class="brand-name">Hermoso</div>
+            <div class="brand-tag">Business · Owner Portal</div>
+          </div>
+        </div>
+        <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-label">Today's Revenue</div>
+        <div class="rev-amount"><span>PKR </span>28,750</div>
+        <div class="rev-row">
+          <div class="rev-badge">↑ 24% vs yesterday</div>
+          <div class="rev-sub">16 bookings completed</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-num">16</div>
+        <div class="stat-lbl">Today's Bookings</div>
+        <div class="stat-change">↑ 4 new since morning</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-num">4.9</div>
+        <div class="stat-lbl">Avg Rating</div>
+        <div class="stat-change">+3 reviews today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-num">1,284</div>
+        <div class="stat-lbl">Total Clients</div>
+        <div class="stat-change">↑ 18 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-num">214K</div>
+        <div class="stat-lbl">This Month PKR</div>
+        <div class="stat-change">↑ 31% MoM</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-top">
+        <div class="chart-title">Revenue This Week</div>
+        <div class="chart-legend">PKR (thousands)</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-wrap"><div class="bar-col" style="height:42px;"></div><div class="bar-lbl">Mon</div></div>
+        <div class="bar-wrap"><div class="bar-col" style="height:58px;"></div><div class="bar-lbl">Tue</div></div>
+        <div class="bar-wrap"><div class="bar-col" style="height:35px;"></div><div class="bar-lbl">Wed</div></div>
+        <div class="bar-wrap"><div class="bar-col hi" style="height:74px;"></div><div class="bar-lbl">Thu</div></div>
+        <div class="bar-wrap"><div class="bar-col" style="height:18px; opacity:.3;"></div><div class="bar-lbl">Fri</div></div>
+        <div class="bar-wrap"><div class="bar-col" style="height:8px; opacity:.2;"></div><div class="bar-lbl">Sat</div></div>
+        <div class="bar-wrap"><div class="bar-col" style="height:8px; opacity:.2;"></div><div class="bar-lbl">Sun</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Today's Schedule</div>
+      <div class="booking-item">
+        <div class="btime-box"><div class="btime">10:00</div><div class="bampm">AM</div></div>
+        <div><div class="bclient">Fatima Rizvi</div><div class="bservice">Hydra Facial · Hina</div></div>
+        <div class="bstatus s-confirm">Done ✓</div>
+      </div>
+      <div class="booking-item">
+        <div class="btime-box"><div class="btime">11:30</div><div class="bampm">AM</div></div>
+        <div><div class="bclient">Huma Sheikh</div><div class="bservice">Keratin Treatment · Sara</div></div>
+        <div class="bstatus s-confirm">Done ✓</div>
+      </div>
+      <div class="booking-item">
+        <div class="btime-box"><div class="btime">1:00</div><div class="bampm">PM</div></div>
+        <div><div class="bclient">Zainab Khan</div><div class="bservice">Bridal Package · Zara</div></div>
+        <div class="bstatus s-pending">Upcoming</div>
+      </div>
+      <div class="booking-item">
+        <div class="btime-box"><div class="btime">3:30</div><div class="bampm">PM</div></div>
+        <div><div class="bclient">Sana Butt</div><div class="bservice">Highlights + Toner · Hina</div></div>
+        <div class="bstatus s-pending">Upcoming</div>
+      </div>
+    </div>
+
+    <div class="bnav">
+      <div class="bnav-item on"><span class="bnav-icon">📊</span><span class="bnav-label">Dashboard</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🗓</span><span class="bnav-label">Calendar</span></div>
+      <div class="bnav-item"><span class="bnav-icon">✂️</span><span class="bnav-label">Services</span></div>
+      <div class="bnav-item"><span class="bnav-icon">👥</span><span class="bnav-label">Clients</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🤖</span><span class="bnav-label">AI</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CALENDAR ══ -->
+<div class="phone" id="ph-cal">
+  <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen" style="min-height:736px; background:var(--navy);">
+    <div class="cal-header">
+      <div class="cal-header-top">
+        <h2>Booking Calendar</h2>
+        <button class="add-btn">+ Add Slot</button>
+      </div>
+      <div class="week-strip">
+        <div class="wday"><div class="wday-lbl">Mon</div><div class="wday-num">3</div></div>
+        <div class="wday"><div class="wday-lbl">Tue</div><div class="wday-num">4</div></div>
+        <div class="wday tod sel"><div class="wday-lbl">Wed</div><div class="wday-num">5</div></div>
+        <div class="wday"><div class="wday-lbl">Thu</div><div class="wday-num">6</div></div>
+        <div class="wday"><div class="wday-lbl">Fri</div><div class="wday-num">7</div></div>
+        <div class="wday"><div class="wday-lbl">Sat</div><div class="wday-num">8</div></div>
+        <div class="wday"><div class="wday-lbl">Sun</div><div class="wday-num">9</div></div>
+      </div>
+    </div>
+    <div class="time-grid">
+      <div class="trow"><div class="tlabel">9 AM</div><div class="slot-empty"></div></div>
+      <div class="trow">
+        <div class="tlabel">10 AM</div>
+        <div class="slot-booking gold"><div class="slot-client">Fatima Rizvi</div><div class="slot-svc">Hydra Facial · Hina</div></div>
+      </div>
+      <div class="trow">
+        <div class="tlabel">11 AM</div>
+        <div class="slot-booking teal"><div class="slot-client">Huma Sheikh</div><div class="slot-svc">Keratin Treatment · Sara</div></div>
+      </div>
+      <div class="trow">
+        <div class="tlabel">12 PM</div>
+        <div class="slot-booking teal"><div class="slot-client">Huma Sheikh (cont.)</div><div class="slot-svc">Keratin Treatment</div></div>
+      </div>
+      <div class="trow">
+        <div class="tlabel">1 PM</div>
+        <div class="slot-booking rose"><div class="slot-client">Zainab Khan</div><div class="slot-svc">Bridal Package · Zara</div></div>
+      </div>
+      <div class="trow">
+        <div class="tlabel">2 PM</div>
+        <div class="slot-booking rose"><div class="slot-client">Zainab Khan (cont.)</div><div class="slot-svc">Bridal Package</div></div>
+      </div>
+      <div class="trow"><div class="tlabel">3 PM</div><div class="slot-empty"></div></div>
+      <div class="trow">
+        <div class="tlabel">3:30 PM</div>
+        <div class="slot-booking green"><div class="slot-client">Sana Butt</div><div class="slot-svc">Highlights + Toner · Hina</div></div>
+      </div>
+      <div class="trow"><div class="tlabel">5 PM</div><div class="slot-empty"></div></div>
+      <div class="trow">
+        <div class="tlabel">6 PM</div>
+        <div class="slot-booking gold"><div class="slot-client">Amna Tariq</div><div class="slot-svc">Nail Art · Maryam</div></div>
+      </div>
+      <div class="trow"><div class="tlabel">7 PM</div><div class="slot-empty"></div></div>
+    </div>
+    <div style="height:16px;"></div>
+    <div class="bnav">
+      <div class="bnav-item"><span class="bnav-icon">📊</span><span class="bnav-label">Dashboard</span></div>
+      <div class="bnav-item on"><span class="bnav-icon">🗓</span><span class="bnav-label">Calendar</span></div>
+      <div class="bnav-item"><span class="bnav-icon">✂️</span><span class="bnav-label">Services</span></div>
+      <div class="bnav-item"><span class="bnav-icon">👥</span><span class="bnav-label">Clients</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🤖</span><span class="bnav-label">AI</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SERVICES ══ -->
+<div class="phone" id="ph-services">
+  <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen" style="min-height:736px;background:var(--navy);">
+
+    <div class="svc-topbar">
+      <div class="svc-topbar-row">
+        <div>
+          <h2>Service Listings</h2>
+          <p>Glam Studio · Manage what you offer</p>
+        </div>
+        <button class="add-svc-btn" onclick="openSvcModal()">+ Add Service</button>
+      </div>
+      <div class="svc-stats-bar">
+        <div class="svc-stat"><div class="svc-stat-n">14</div><div class="svc-stat-l">Total</div></div>
+        <div class="svc-stat"><div class="svc-stat-n">12</div><div class="svc-stat-l">Active</div></div>
+        <div class="svc-stat"><div class="svc-stat-n">4.9★</div><div class="svc-stat-l">Avg Rating</div></div>
+        <div class="svc-stat"><div class="svc-stat-n">1,284</div><div class="svc-stat-l">Bookings</div></div>
+      </div>
+    </div>
+
+    <div class="cat-strip">
+      <button class="cat-pill on" onclick="filterCat(this)">All (14)</button>
+      <button class="cat-pill" onclick="filterCat(this)">💇 Hair (5)</button>
+      <button class="cat-pill" onclick="filterCat(this)">🧖 Skin (4)</button>
+      <button class="cat-pill" onclick="filterCat(this)">💅 Nails (2)</button>
+      <button class="cat-pill" onclick="filterCat(this)">💍 Bridal (2)</button>
+      <button class="cat-pill" onclick="filterCat(this)">🎉 Events (1)</button>
+    </div>
+
+    <div class="svc-cards">
+
+      <div class="svc-card">
+        <div class="svc-card-top">
+          <div class="svc-icon" style="background:rgba(212,168,67,0.1);">💇‍♀️</div>
+          <div class="svc-body">
+            <div class="svc-n">Blow Dry & Styling</div>
+            <div class="svc-d">Professional blow dry with styling. Suitable for all hair types and lengths.</div>
+          </div>
+          <div class="svc-rhs">
+            <div class="svc-price">PKR 1,200</div>
+            <div class="svc-tog">
+              <span class="svc-tog-lbl">Active</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="svc-foot">
+          <div class="svc-chip">⏱ 45 min</div>
+          <div class="svc-chip">👩 Sara</div>
+          <div class="svc-chip">💇 Hair</div>
+          <div class="svc-badge">✨ AI Recommended</div>
+          <div class="svc-btns">
+            <button class="svc-btn" onclick="openSvcModal()">Edit</button>
+            <button class="svc-btn del">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-card-top">
+          <div class="svc-icon" style="background:rgba(14,165,233,0.1);">✨</div>
+          <div class="svc-body">
+            <div class="svc-n">Keratin Smoothing Treatment</div>
+            <div class="svc-d">Frizz-free keratin for all hair lengths. Results last 3–4 months.</div>
+          </div>
+          <div class="svc-rhs">
+            <div class="svc-price">PKR 5,500</div>
+            <div class="svc-tog">
+              <span class="svc-tog-lbl">Active</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="svc-foot">
+          <div class="svc-chip">⏱ 2–3 hrs</div>
+          <div class="svc-chip">👩 Sara · Maryam</div>
+          <div class="svc-chip">💇 Hair</div>
+          <div class="svc-badge top">🏆 Top Seller</div>
+          <div class="svc-btns">
+            <button class="svc-btn" onclick="openSvcModal()">Edit</button>
+            <button class="svc-btn del">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-card-top">
+          <div class="svc-icon" style="background:rgba(124,58,237,0.1);">💧</div>
+          <div class="svc-body">
+            <div class="svc-n">Hydra Facial</div>
+            <div class="svc-d">Deep hydration using medical-grade serums. AI skin scan integration available.</div>
+          </div>
+          <div class="svc-rhs">
+            <div class="svc-price">PKR 4,500</div>
+            <div class="svc-tog">
+              <span class="svc-tog-lbl">Active</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="svc-foot">
+          <div class="svc-chip">⏱ 60 min</div>
+          <div class="svc-chip">🧖 Hina</div>
+          <div class="svc-chip">🧖 Skin</div>
+          <div class="svc-badge">✨ AI Recommended</div>
+          <div class="svc-btns">
+            <button class="svc-btn" onclick="openSvcModal()">Edit</button>
+            <button class="svc-btn del">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-card-top">
+          <div class="svc-icon" style="background:rgba(16,185,129,0.1);">💅</div>
+          <div class="svc-body">
+            <div class="svc-n">Gel Nail Art (Full Set)</div>
+            <div class="svc-d">Custom nail art with gel polish. Long-lasting, up to 3 weeks.</div>
+          </div>
+          <div class="svc-rhs">
+            <div class="svc-price">PKR 2,200</div>
+            <div class="svc-tog">
+              <span class="svc-tog-lbl">Active</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="svc-foot">
+          <div class="svc-chip">⏱ 75 min</div>
+          <div class="svc-chip">💅 Maryam</div>
+          <div class="svc-chip">💅 Nails</div>
+          <div class="svc-btns">
+            <button class="svc-btn" onclick="openSvcModal()">Edit</button>
+            <button class="svc-btn del">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-card-top">
+          <div class="svc-icon" style="background:rgba(236,72,153,0.1);">💍</div>
+          <div class="svc-body">
+            <div class="svc-n">Complete Bridal Package</div>
+            <div class="svc-d">Full bridal glam — hair, makeup, skin prep & nails. Includes trial session.</div>
+          </div>
+          <div class="svc-rhs">
+            <div class="svc-price">PKR 18,000</div>
+            <div class="svc-tog">
+              <span class="svc-tog-lbl">Active</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="svc-foot">
+          <div class="svc-chip">⏱ 4–5 hrs</div>
+          <div class="svc-chip">👰 Zara · Sara · Hina</div>
+          <div class="svc-chip">💍 Bridal</div>
+          <div class="svc-badge">🎉 Event Package</div>
+          <div class="svc-btns">
+            <button class="svc-btn" onclick="openSvcModal()">Edit</button>
+            <button class="svc-btn del">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-card-top">
+          <div class="svc-icon" style="background:rgba(245,158,11,0.08);">🌙</div>
+          <div class="svc-body">
+            <div class="svc-n">Pigmentation Chemical Peel</div>
+            <div class="svc-d">Targets dark spots & uneven tone. AI-matched for pigmentation concerns.</div>
+          </div>
+          <div class="svc-rhs">
+            <div class="svc-price">PKR 5,000</div>
+            <div class="svc-tog">
+              <span class="svc-tog-lbl">Off</span>
+              <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="svc-foot">
+          <div class="svc-chip">⏱ 50 min</div>
+          <div class="svc-chip">🧖 Hina</div>
+          <div class="svc-chip">🧖 Skin</div>
+          <div class="svc-badge off">● Inactive</div>
+          <div class="svc-btns">
+            <button class="svc-btn" onclick="openSvcModal()">Edit</button>
+            <button class="svc-btn del">Delete</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div style="height:16px;"></div>
+
+    <div class="bnav">
+      <div class="bnav-item"><span class="bnav-icon">📊</span><span class="bnav-label">Dashboard</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🗓</span><span class="bnav-label">Calendar</span></div>
+      <div class="bnav-item on"><span class="bnav-icon">✂️</span><span class="bnav-label">Services</span></div>
+      <div class="bnav-item"><span class="bnav-icon">👥</span><span class="bnav-label">Clients</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🤖</span><span class="bnav-label">AI</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Service Modal -->
+<div class="modal-bg" id="svc-modal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      Add New Service
+      <button class="modal-x" onclick="closeSvcModal()">✕</button>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Service Icon</label>
+      <div class="ep">
+        <button class="ep-btn on">💇‍♀️</button><button class="ep-btn">✨</button>
+        <button class="ep-btn">💧</button><button class="ep-btn">💅</button>
+        <button class="ep-btn">💍</button><button class="ep-btn">🌙</button>
+        <button class="ep-btn">🌿</button><button class="ep-btn">💡</button>
+        <button class="ep-btn">🎉</button><button class="ep-btn">🔬</button>
+        <button class="ep-btn">🧖</button><button class="ep-btn">💆</button>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Service Name</label>
+      <input class="fi" type="text" placeholder="e.g. Hydra Facial">
+    </div>
+
+    <div class="fg">
+      <label class="fl">Description</label>
+      <textarea class="fi" rows="2" placeholder="Brief description visible to customers..."></textarea>
+    </div>
+
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">Price (PKR)</label>
+        <input class="fi" type="number" placeholder="e.g. 4500">
+      </div>
+      <div class="fg">
+        <label class="fl">Duration</label>
+        <input class="fi" type="text" placeholder="e.g. 60 min">
+      </div>
+    </div>
+
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">Category</label>
+        <select class="fi">
+          <option>Hair</option><option>Skin</option><option>Nails</option>
+          <option>Bridal</option><option>Events</option><option>Laser</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Assigned Staff</label>
+        <select class="fi">
+          <option>Sara</option><option>Maryam</option><option>Hina</option>
+          <option>Zara</option><option>All Staff</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Booking Type</label>
+      <select class="fi">
+        <option>Regular Appointment</option>
+        <option>Event / Package (multi-hour)</option>
+        <option>Add-on (book alongside another service)</option>
+      </select>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Link to AI Skin Scan</label>
+      <select class="fi">
+        <option>Not linked to AI scan</option>
+        <option>Recommend for dehydration</option>
+        <option>Recommend for pigmentation</option>
+        <option>Recommend for acne / oiliness</option>
+        <option>Recommend for all skin concerns</option>
+      </select>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Visibility</label>
+      <select class="fi">
+        <option>Active — visible to customers</option>
+        <option>Inactive — hidden from listings</option>
+        <option>Coming Soon</option>
+      </select>
+    </div>
+
+    <div class="modal-ft">
+      <button class="m-cancel" onclick="closeSvcModal()">Cancel</button>
+      <button class="m-save" onclick="closeSvcModal()">Save Service ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLIENT CRM ══ -->
+<div class="phone" id="ph-crm">
+  <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen" style="min-height:736px; background:var(--navy);">
+    <div class="crm-header">
+      <h2>Client Management</h2>
+      <p>1,284 clients · 18 new this week</p>
+    </div>
+    <div class="crm-search">
+      <span style="font-size:16px; color:var(--text-muted);">🔍</span>
+      <input type="text" placeholder="Search clients...">
+    </div>
+    <div class="client-list">
+
+      <div class="client-card">
+        <div class="client-top">
+          <div class="client-av" style="background:rgba(212,168,67,0.1);">👩‍🦱</div>
+          <div>
+            <div class="client-name">Fatima Rizvi</div>
+            <div class="client-since">Client since Jan 2025 · Lahore</div>
+          </div>
+          <div class="client-badge badge-gold">⭐ VIP</div>
+        </div>
+        <div class="client-stats">
+          <div class="cstat"><div class="cstat-num">24</div><div class="cstat-lbl">Visits</div></div>
+          <div class="cstat"><div class="cstat-num">58K</div><div class="cstat-lbl">PKR Spent</div></div>
+          <div class="cstat"><div class="cstat-num">4.9</div><div class="cstat-lbl">Avg Rating</div></div>
+        </div>
+        <div class="client-last">Last visit: <span>Hydra Facial — 2 days ago</span></div>
+      </div>
+
+      <div class="client-card">
+        <div class="client-top">
+          <div class="client-av" style="background:rgba(14,165,233,0.1);">💅</div>
+          <div>
+            <div class="client-name">Huma Sheikh</div>
+            <div class="client-since">Client since Mar 2024 · Lahore</div>
+          </div>
+          <div class="client-badge badge-gold">⭐ VIP</div>
+        </div>
+        <div class="client-stats">
+          <div class="cstat"><div class="cstat-num">31</div><div class="cstat-lbl">Visits</div></div>
+          <div class="cstat"><div class="cstat-num">92K</div><div class="cstat-lbl">PKR Spent</div></div>
+          <div class="cstat"><div class="cstat-num">5.0</div><div class="cstat-lbl">Avg Rating</div></div>
+        </div>
+        <div class="client-last">Last visit: <span>Keratin Treatment — Today</span></div>
+      </div>
+
+      <div class="client-card">
+        <div class="client-top">
+          <div class="client-av" style="background:rgba(244,63,94,0.1);">💍</div>
+          <div>
+            <div class="client-name">Zainab Khan</div>
+            <div class="client-since">Client since Aug 2025 · Lahore</div>
+          </div>
+          <div class="client-badge badge-silver">Regular</div>
+        </div>
+        <div class="client-stats">
+          <div class="cstat"><div class="cstat-num">8</div><div class="cstat-lbl">Visits</div></div>
+          <div class="cstat"><div class="cstat-num">22K</div><div class="cstat-lbl">PKR Spent</div></div>
+          <div class="cstat"><div class="cstat-num">4.7</div><div class="cstat-lbl">Avg Rating</div></div>
+        </div>
+        <div class="client-last">Last visit: <span>Bridal Package — Today</span></div>
+      </div>
+
+      <div class="client-card">
+        <div class="client-top">
+          <div class="client-av" style="background:rgba(16,185,129,0.1);">✨</div>
+          <div>
+            <div class="client-name">Amna Tariq</div>
+            <div class="client-since">Client since Feb 2026 · Lahore</div>
+          </div>
+          <div class="client-badge badge-new">New</div>
+        </div>
+        <div class="client-stats">
+          <div class="cstat"><div class="cstat-num">2</div><div class="cstat-lbl">Visits</div></div>
+          <div class="cstat"><div class="cstat-num">4.5K</div><div class="cstat-lbl">PKR Spent</div></div>
+          <div class="cstat"><div class="cstat-num">5.0</div><div class="cstat-lbl">Avg Rating</div></div>
+        </div>
+        <div class="client-last">Last visit: <span>Nail Art — Tomorrow scheduled</span></div>
+      </div>
+
+    </div>
+    <div class="bnav">
+      <div class="bnav-item"><span class="bnav-icon">📊</span><span class="bnav-label">Dashboard</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🗓</span><span class="bnav-label">Calendar</span></div>
+      <div class="bnav-item"><span class="bnav-icon">✂️</span><span class="bnav-label">Services</span></div>
+      <div class="bnav-item on"><span class="bnav-icon">👥</span><span class="bnav-label">Clients</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🤖</span><span class="bnav-label">AI</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI INSIGHTS ══ -->
+<div class="phone" id="ph-ai">
+  <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+  <div class="screen" style="min-height:736px; background:var(--navy);">
+    <div class="ai-header">
+      <h2>🤖 AI Business Insights</h2>
+      <p>Powered by Hermoso AI · Updated hourly</p>
+      <div class="ai-powered-badge">✦ AI Predictions Active</div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="ai-section">
+      <div class="ai-section-title">Peak Hours Heatmap</div>
+      <div class="insight-card">
+        <div class="heatmap-grid">
+          <div></div>
+          <div class="hm-day-lbl">Mo</div><div class="hm-day-lbl">Tu</div>
+          <div class="hm-day-lbl">We</div><div class="hm-day-lbl">Th</div>
+          <div class="hm-day-lbl">Fr</div><div class="hm-day-lbl">Sa</div>
+          <div class="hm-day-lbl">Su</div>
+          <div class="hm-lbl">9am</div><div class="hm-cell l1"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell l3"></div><div class="hm-cell"></div>
+          <div class="hm-lbl">11am</div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell l4"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l1"></div>
+          <div class="hm-lbl">1pm</div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell l4"></div><div class="hm-cell l2"></div>
+          <div class="hm-lbl">3pm</div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l2"></div><div class="hm-cell l4"></div><div class="hm-cell l3"></div><div class="hm-cell l3"></div><div class="hm-cell l1"></div>
+          <div class="hm-lbl">5pm</div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l4"></div><div class="hm-cell l2"></div><div class="hm-cell"></div>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">🔥 Busiest: Thursday 11am–4pm & Friday 5pm</div>
+      </div>
+    </div>
+
+    <!-- Top services -->
+    <div class="ai-section">
+      <div class="ai-section-title">Top Revenue Services</div>
+      <div class="insight-card">
+        <div class="top-services">
+          <div class="ts-row">
+            <div class="ts-rank">1</div>
+            <div class="ts-info"><div class="ts-name">Keratin Treatment</div><div class="ts-track"><div class="ts-fill" style="width:88%;"></div></div></div>
+            <div class="ts-rev">PKR 82K</div>
+          </div>
+          <div class="ts-row">
+            <div class="ts-rank">2</div>
+            <div class="ts-info"><div class="ts-name">Bridal Packages</div><div class="ts-track"><div class="ts-fill" style="width:72%;"></div></div></div>
+            <div class="ts-rev">PKR 68K</div>
+          </div>
+          <div class="ts-row">
+            <div class="ts-rank">3</div>
+            <div class="ts-info"><div class="ts-name">Hydra Facial</div><div class="ts-track"><div class="ts-fill" style="width:58%;"></div></div></div>
+            <div class="ts-rev">PKR 54K</div>
+          </div>
+          <div class="ts-row">
+            <div class="ts-rank">4</div>
+            <div class="ts-info"><div class="ts-name">Highlights + Colour</div><div class="ts-track"><div class="ts-fill" style="width:44%;"></div></div></div>
+            <div class="ts-rev">PKR 41K</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI recommendations for owner -->
+    <div class="ai-section">
+      <div class="ai-section-title">AI Business Recommendations</div>
+      <div class="insight-card">
+        <div class="insight-top">
+          <div class="insight-icon">📈</div>
+          <div>
+            <div class="insight-title">Offer Friday Evening Slots</div>
+            <div class="insight-desc">Friday 5–8pm is your #1 peak hour but only 60% capacity used. AI suggests adding 3 more staff slots to capture PKR 12,000 in lost revenue.</div>
+          </div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-top">
+          <div class="insight-icon">💌</div>
+          <div>
+            <div class="insight-title">Re-engage 42 Inactive Clients</div>
+            <div class="insight-desc">42 clients haven't visited in 45+ days. AI-drafted WhatsApp message ready to send with personalised offers based on their history.</div>
+          </div>
+        </div>
+        <div class="insight-bar-row">
+          <div class="insight-bar-label">Expected return</div>
+          <div class="insight-track"><div class="insight-fill teal" style="width:68%;"></div></div>
+          <div class="insight-pct">68%</div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-top">
+          <div class="insight-icon">🎯</div>
+          <div>
+            <div class="insight-title">Promote Hydra Facial Package</div>
+            <div class="insight-desc">72% of your clients had AI Skin Scans showing dehydration. A targeted push notification could drive 15–20 additional bookings this week.</div>
+          </div>
+        </div>
+        <div class="insight-bar-row">
+          <div class="insight-bar-label">Conversion est.</div>
+          <div class="insight-track"><div class="insight-fill green" style="width:74%;"></div></div>
+          <div class="insight-pct">74%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prediction -->
+    <div class="ai-section" style="padding-bottom:18px;">
+      <div class="ai-section-title">Next Week Forecast</div>
+      <div class="prediction-card">
+        <div class="pred-title">🔮 AI Revenue Prediction</div>
+        <div class="pred-desc">Based on booking patterns, seasonal trends, and your current pipeline, Hermoso AI forecasts next week's performance:</div>
+        <div class="pred-row">
+          <div class="pred-stat"><div class="pred-num">PKR 198K</div><div class="pred-lbl">Est. Revenue</div></div>
+          <div class="pred-stat"><div class="pred-num">74</div><div class="pred-lbl">Bookings</div></div>
+          <div class="pred-stat"><div class="pred-num">+28%</div><div class="pred-lbl">vs This Week</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bnav">
+      <div class="bnav-item"><span class="bnav-icon">📊</span><span class="bnav-label">Dashboard</span></div>
+      <div class="bnav-item"><span class="bnav-icon">🗓</span><span class="bnav-label">Calendar</span></div>
+      <div class="bnav-item"><span class="bnav-icon">✂️</span><span class="bnav-label">Services</span></div>
+      <div class="bnav-item"><span class="bnav-icon">👥</span><span class="bnav-label">Clients</span></div>
+      <div class="bnav-item on"><span class="bnav-icon">🤖</span><span class="bnav-label">AI</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id, tab) {
+  document.querySelectorAll('.phone').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const ph = document.getElementById('ph-' + id);
+  if (ph) ph.classList.add('active');
+  if (tab && tab.classList) tab.classList.add('active');
+  document.querySelectorAll('.wday').forEach(d => {
+    d.onclick = function() { document.querySelectorAll('.wday').forEach(x => x.classList.remove('sel')); this.classList.add('sel'); };
+  });
+}
+function openSvcModal() {
+  document.getElementById('svc-modal').classList.add('open');
+  document.querySelectorAll('.ep-btn').forEach(b => {
+    b.onclick = function() { document.querySelectorAll('.ep-btn').forEach(x => x.classList.remove('on')); this.classList.add('on'); };
+  });
+}
+function closeSvcModal() { document.getElementById('svc-modal').classList.remove('open'); }
+function filterCat(el) { document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('on')); el.classList.add('on'); }
+document.addEventListener('DOMContentLoaded', () => show('dash', document.querySelector('.nav-tab')));
+</script>
+</body>
+</html>
