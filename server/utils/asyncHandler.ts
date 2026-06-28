@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { z, ZodSchema, ZodError } from 'zod';
+import { ZodSchema, ZodError } from 'zod';
 import { ApiError } from './ApiError.js';
 
 interface ValidationSchemas {
@@ -13,6 +13,7 @@ export const asyncHandler = (
     req: Request,
     res: Response,
     next: NextFunction
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) => Promise<any>,
   schemas?: ValidationSchemas
 ): RequestHandler => {
@@ -28,10 +29,10 @@ export const asyncHandler = (
           req.body = schemas.body.parse(req.body);
         }
         if (schemas.query) {
-          req.query = schemas.query.parse(req.query) as any;
+          req.query = schemas.query.parse(req.query) as unknown as typeof req.query;
         }
         if (schemas.params) {
-          req.params = schemas.params.parse(req.params) as any;
+          req.params = schemas.params.parse(req.params) as unknown as typeof req.params;
         }
       }
 
@@ -39,7 +40,7 @@ export const asyncHandler = (
     } catch (error: unknown) {
       // Handle Zod validation errors
       if (error instanceof ZodError) {
-        const formattedErrors = (error as ZodError<any>).issues.map(err => ({
+        const formattedErrors = (error as ZodError).issues.map(err => ({
           field: err.path.join('.'),
           message: err.message
         }));
@@ -61,7 +62,7 @@ export const asyncHandler = (
 
       if (isMongooseValidationError(error)) {
         const messages = Object.values(error.errors).map(
-          (e: any) => e.message
+          (e: { message: string }) => e.message
         );
 
         next(
@@ -136,7 +137,7 @@ function isMongooseValidationError(error: unknown): error is {
   return (
     typeof error === 'object' &&
     error !== null &&
-    (error as any).name === 'ValidationError' &&
+    (error as Record<string, unknown>).name === 'ValidationError' &&
     'errors' in error
   );
 }
@@ -148,7 +149,7 @@ function isMongooseDuplicateKeyError(error: unknown): error is {
   return (
     typeof error === 'object' &&
     error !== null &&
-    (error as any).code === 11000 &&
+    (error as Record<string, unknown>).code === 11000 &&
     'keyValue' in error
   );
 }
@@ -160,7 +161,7 @@ function isMongooseCastError(error: unknown): error is {
   return (
     typeof error === 'object' &&
     error !== null &&
-    (error as any).name === 'CastError' &&
+    (error as Record<string, unknown>).name === 'CastError' &&
     'path' in error
   );
 }

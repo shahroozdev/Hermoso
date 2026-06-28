@@ -134,7 +134,7 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
 
   const hasOverlap = existingBookings.some((existing) => {
     const existingStart = parseTimeToMinutes(existing.bookingTime);
-    const existingDuration = Number((existing.serviceId as any)?.duration || 0);
+    const existingDuration = Number((existing.serviceId as unknown as { duration?: number })?.duration || 0);
     if (existingStart === null || !existingDuration) return false;
     const existingEnd = existingStart + existingDuration;
     return startMinutes < existingEnd && existingStart < requestedEndMinutes;
@@ -153,8 +153,9 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
       price: service.price,
       status: BookingStatus.PENDING
     });
-  } catch (error: any) {
-    if (error?.code === 11000 || error?.message?.includes('Time slot is already booked')) {
+  } catch (error: unknown) {
+    const err = error as { code?: number; message?: string };
+    if (err?.code === 11000 || err?.message?.includes('Time slot is already booked')) {
       return next(new ApiError(409, 'Time slot is already booked'));
     }
     throw error;
@@ -259,7 +260,7 @@ export const getBookingAvailability = asyncHandler(async (req: AuthRequest, res:
 
   const normalizedBooked = booked.map((b) => {
     const start = parseTimeToMinutes(b.bookingTime);
-    const duration = Number((b.serviceId as any)?.duration || 0);
+    const duration = Number((b.serviceId as { duration?: number })?.duration || 0);
     if (start === null || duration <= 0) return null;
     return { start, end: start + duration };
   }).filter(Boolean) as { start: number; end: number }[];
@@ -288,7 +289,7 @@ export const getBookingAvailability = asyncHandler(async (req: AuthRequest, res:
 
 export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, salonId, status, date } = req.query;
-  const query: Record<string, any> = {};
+  const query: Record<string, unknown> = {};
 
   if (status) query.status = status;
   if (date) {
@@ -298,7 +299,7 @@ export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) 
 
   if (req.user?.role === Roles.SUPER_ADMIN) {
     if (salonId) query.salonId = salonId;
-  } else if ([Roles.SALON_OWNER, Roles.STAFF].includes(req.user?.role as any)) {
+  } else if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
     query.salonId = req.user?.salonId;
   } else {
     query.customerId = req.user?._id;
@@ -326,8 +327,9 @@ export const updateBookingStatus = asyncHandler(async (req: AuthRequest, res: Re
   const booking = await Booking.findById(req.params.id).populate('serviceId', 'name').populate('salonId', 'name') as IBooking | null;
   if (!booking) return next(new ApiError(404, 'Booking not found'));
 
+  const isOwnerOrStaff = req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF;
   const canManage = req.user?.role === Roles.SUPER_ADMIN ||
-    ([Roles.SALON_OWNER, Roles.STAFF].includes(req.user?.role as any) && String((booking.salonId as any)?._id || booking.salonId) === String(req.user?.salonId)) ||
+    (isOwnerOrStaff && String((booking.salonId as unknown as { _id?: string })?._id || booking.salonId) === String(req.user?.salonId)) ||
     (req.user?.role === Roles.CUSTOMER && String(booking.customerId) === String(req.user?._id));
 
   if (!canManage) return next(new ApiError(403, 'Forbidden'));
@@ -341,13 +343,15 @@ export const updateBookingStatus = asyncHandler(async (req: AuthRequest, res: Re
 
   const customer = await User.findById(booking.customerId).select('name email');
   if (customer) {
-    const message = `Your booking for ${(booking.serviceId as any)?.name || 'service'} at ${(booking.salonId as any)?.name || 'salon'} is now ${status}.`;
+    const serviceName = (booking.serviceId as unknown as { name?: string })?.name || 'service';
+    const salonName = (booking.salonId as unknown as { name?: string })?.name || 'salon';
+    const message = `Your booking for ${serviceName} at ${salonName} is now ${status}.`;
     await createNotification({
       title: 'Booking Status Updated',
       message,
       type: 'booking_update',
       targetRole: Roles.CUSTOMER,
-      salonId: String((booking.salonId as any)?._id || booking.salonId),
+      salonId: String((booking.salonId as unknown as { _id?: string })?._id || booking.salonId),
       userId: String(booking.customerId)
     });
 

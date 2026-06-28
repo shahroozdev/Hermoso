@@ -12,7 +12,8 @@ import type { AuthRequest } from '../middleware/auth.middleware.js';
 const metricOrder = ['hydration', 'sunDamage', 'skinClarity', 'pigmentation', 'skinBarrier'] as const;
 
 export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const file = (req as any).file as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const file: any = (req as any).file;
   if (!file?.buffer || !file?.mimetype) {
     return next(new ApiError(400, 'Image file is required as multipart field "image"'));
   }
@@ -45,7 +46,7 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
 
   const user = await User.findById(req.user?._id).select('salonId');
   const salonId = user?.salonId ? String(user.salonId) : undefined;
-  const serviceQuery: Record<string, any> = { active: true };
+  const serviceQuery: Record<string, unknown> = { active: true };
   if (salonId) serviceQuery.salonId = salonId;
   const services = await Service.find(serviceQuery).select('name price duration');
 
@@ -124,8 +125,8 @@ export const getScanImprovements = asyncHandler(async (req: AuthRequest, res: Re
     });
   }
 
-  const first:any = scans[0];
-  const latest:any = scans[scans.length - 1];
+  const first = scans[0];
+  const latest = scans[scans.length - 1];
   const firstMap = new Map(first.metrics.map((m) => [m.key, m.score]));
   const latestMap = new Map(latest.metrics.map((m) => [m.key, m.score]));
 

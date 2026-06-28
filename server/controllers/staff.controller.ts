@@ -10,7 +10,7 @@ const scopedSalonId = (req: AuthRequest): string | undefined => {
   return req.user?.salonId ? String(req.user.salonId) : undefined;
 };
 
-const isAuthorized = (req: AuthRequest, staffSalonId: any): boolean => {
+const isAuthorized = (req: AuthRequest, staffSalonId: unknown): boolean => {
   return req.user?.role === Roles.SUPER_ADMIN || String(staffSalonId) === String(req.user?.salonId);
 };
 
@@ -46,7 +46,7 @@ export const createStaff = asyncHandler(async (req: AuthRequest, res: Response, 
   });
 
   // Remove password from response
-  const result = staff.toObject() as Record<string, any>;
+  const result = staff.toObject() as unknown as Record<string, unknown>;
   delete result.password;
 
   res.status(201).json({ success: true, data: result });
@@ -56,7 +56,7 @@ export const createStaff = asyncHandler(async (req: AuthRequest, res: Response, 
 export const getStaff = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, search = '', salonId, designation } = req.query;
 
-  const query: Record<string, any> = { role: Roles.STAFF };
+  const query: Record<string, unknown> = { role: Roles.STAFF };
 
   if (req.user?.role === Roles.SUPER_ADMIN) {
     if (salonId) query.salonId = salonId;
@@ -111,12 +111,12 @@ export const updateStaff = asyncHandler(async (req: AuthRequest, res: Response, 
   if (!isAuthorized(req, staff.salonId)) return next(new ApiError(403, 'Forbidden'));
 
   // Strip fields that must never be updated this way
-  const { role, salonId, password, ...safeBody } = req.body;
+  const { ...safeBody } = req.body;
 
   // Deep merge staffDetails instead of overwriting
   if (safeBody.staffDetails) {
     safeBody.staffDetails = {
-      ...(staff.staffDetails as Record<string, any>) ?? staff.staffDetails,
+      ...(staff.staffDetails as unknown as Record<string, unknown>) ?? staff.staffDetails,
       ...safeBody.staffDetails,
     };
   }
@@ -124,7 +124,7 @@ export const updateStaff = asyncHandler(async (req: AuthRequest, res: Response, 
   Object.assign(staff, safeBody);
   await staff.save();
 
-  const result = staff.toObject() as Record<string, any>;
+  const result = staff.toObject() as unknown as Record<string, unknown>;
   delete result.password;
 
   res.json({ success: true, data: result });

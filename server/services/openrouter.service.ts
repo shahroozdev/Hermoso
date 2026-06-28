@@ -78,7 +78,7 @@ Rules:
 
   if (!response.ok) return DEFAULT_RESULT;
 
-  const json: any = await response.json();
+  const json: { choices?: { message?: { content?: string } }[] } = await response.json();
   const raw = json?.choices?.[0]?.message?.content;
   if (!raw || typeof raw !== 'string') return DEFAULT_RESULT;
 

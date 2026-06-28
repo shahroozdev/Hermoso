@@ -39,7 +39,7 @@ export const createService = asyncHandler(
 export const getServices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { page = 1, limit = 10, search = '', category, categoryId, salonId } = req.query;
-    const query: Record<string, any> = { active: true };
+    const query: Record<string, unknown> = { active: true };
 
     if (req.user?.role === Roles.SUPER_ADMIN) {
       if (salonId) query.salonId = salonId;
@@ -80,7 +80,7 @@ export const updateService = asyncHandler(
         active: true
       });
       if (!category) return next(new ApiError(400, 'Valid category is required'));
-      service.categoryId = category._id as any;
+      service.categoryId = category._id;
       service.category = category.name;
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import crypto from 'crypto';
 import { sendEmail } from './email.service.js';
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
@@ -9,8 +10,9 @@ export const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI as string, { family: 4 });
     isConnected = true;
-  } catch (error: any) {
-    if (error?.code === "ECONNREFUSED" && error?.syscall === "querySrv") {
+  } catch (error: unknown) {
+    const err = error as { code?: string; syscall?: string };
+    if (err?.code === "ECONNREFUSED" && err?.syscall === "querySrv") {
       console.error(
         "MongoDB SRV DNS lookup failed. This usually means the current network or DNS server is blocking SRV record resolution for the Atlas cluster."
       );

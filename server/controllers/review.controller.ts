@@ -26,13 +26,13 @@ export const createReview = asyncHandler(async (req: AuthRequest, res: Response)
 
 export const getReviews = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, salonId, status } = req.query;
-  const query: Record<string, any> = {};
+  const query: Record<string, unknown> = {};
 
   if (status) query.status = status;
 
   if (req.user?.role === Roles.SUPER_ADMIN) {
     if (salonId) query.salonId = salonId;
-  } else if ([Roles.SALON_OWNER, Roles.STAFF].includes(req.user?.role as any)) {
+  } else if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
     query.salonId = req.user?.salonId;
   } else {
     query.customerId = req.user?._id;
@@ -53,9 +53,11 @@ interface ModerateBody {
   status: ReviewStatusType;
 }
 
+const MODERATABLE_STATUSES = [ReviewStatus.APPROVED, ReviewStatus.FLAGGED, ReviewStatus.DELETED] as const;
+
 export const moderateReview = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { status } = req.body as ModerateBody;
-  if (![ReviewStatus.APPROVED, ReviewStatus.FLAGGED, ReviewStatus.DELETED].includes(status as any)) {
+  if (!(MODERATABLE_STATUSES as readonly string[]).includes(status)) {
     return next(new ApiError(400, 'Invalid moderation status'));
   }
 

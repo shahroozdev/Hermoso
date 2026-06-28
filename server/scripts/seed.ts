@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, no-console */
 import dotenv from 'dotenv';
 import { connectDB } from '../config/db.js';
 import { User } from '../models/User.js';

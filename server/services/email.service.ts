@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import nodemailer from 'nodemailer';
 
 let transporter: nodemailer.Transporter | undefined;

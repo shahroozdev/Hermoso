@@ -76,7 +76,7 @@ export const createEvent = asyncHandler(
 export const getEvents = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { page = 1, limit = 10, search = '', category, salonId } = req.query;
-    const query: Record<string, any> = { active: true };
+    const query: Record<string, unknown> = { active: true };
 
     if (req.user?.role === Roles.SUPER_ADMIN) {
       if (salonId) query.salonId = salonId;
@@ -188,7 +188,7 @@ export const getEventsByCategory = asyncHandler(
 
     if (!category) return res.status(400).json({ success: false, message: 'Category is required' });
 
-    const query: Record<string, any> = { active: true, category };
+    const query: Record<string, unknown> = { active: true, category };
 
     if (req.user?.role === Roles.SUPER_ADMIN) {
       if (salonId) query.salonId = salonId;

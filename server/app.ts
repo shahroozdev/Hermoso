@@ -109,7 +109,8 @@ app.use('/api/scans', scanRoutes);
 app.use((_req: Request, _res: Response, next: NextFunction) => next(new ApiError(404, 'Route not found')));
 
 app.use((err: ApiError, _req: Request, res: Response, _next: NextFunction) => {
-  const response: any = {
+  void _next;
+  const response: Record<string, unknown> = {
     success: false,
     message: err.message || 'Internal server error'
   };

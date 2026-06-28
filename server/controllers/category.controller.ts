@@ -1,6 +1,5 @@
 import { Response, NextFunction } from 'express';
 import { Category } from '../models/Category.js';
-import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';

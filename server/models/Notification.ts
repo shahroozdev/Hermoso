@@ -8,7 +8,7 @@ export interface INotification extends Document {
   salonId: mongoose.Types.ObjectId | null;
   userId: mongoose.Types.ObjectId | null;
   isRead: boolean;
-  meta: Record<string, any>;
+  meta: Record<string, unknown>;
 }
 
 const notificationSchema = new Schema<INotification>(

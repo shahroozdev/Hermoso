@@ -9,7 +9,7 @@ interface CreateNotificationParams {
   targetRole: string;
   salonId?: string | null;
   userId?: string | null;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
   sendEmailToUser?: boolean;
 }
 
@@ -56,7 +56,7 @@ interface BroadcastParams {
 }
 
 export const broadcastByRole = async ({ title, message, type = 'announcement', targetRole, salonId = null }: BroadcastParams) => {
-  const query: Record<string, any> = { role: targetRole };
+  const query: Record<string, unknown> = { role: targetRole };
   if (salonId) query.salonId = salonId;
 
   const users = await User.find(query).select('_id');

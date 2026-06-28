@@ -34,7 +34,7 @@ export const requestPayout = asyncHandler(async (req: AuthRequest, res: Response
 
 export const getPayouts = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, salonId, status } = req.query;
-  const query: Record<string, any> = {};
+  const query: Record<string, unknown> = {};
 
   if (status) query.status = status;
   if (req.user?.role === Roles.SUPER_ADMIN) {

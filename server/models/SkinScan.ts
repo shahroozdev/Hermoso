@@ -15,6 +15,8 @@ export interface ISkinScan extends Document {
   summary: string;
   recommendationNotes: string[];
   recommendedServiceIds: mongoose.Types.ObjectId[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const skinMetricSchema = new Schema<ISkinMetric>(

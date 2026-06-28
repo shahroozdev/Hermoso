@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import cron from 'node-cron';
 import { Booking, type IBooking } from '../models/Booking.js';
 import { User } from '../models/User.js';
@@ -28,7 +29,8 @@ export const runBookingReminderJob = async () => {
     const customer = await User.findById(booking.customerId).select('name email role');
     if (!customer || customer.role !== Roles.CUSTOMER) continue;
 
-    const message = `Reminder: You have an appointment on ${bookingDateTime.toLocaleString()} for ${(booking.serviceId as any)?.name || 'service'}.`;
+    const serviceName = (booking.serviceId && typeof booking.serviceId === 'object' && 'name' in booking.serviceId) ? (booking.serviceId as { name: string }).name : 'service';
+    const message = `Reminder: You have an appointment on ${bookingDateTime.toLocaleString()} for ${serviceName}.`;
 
     await createNotification({
       title: 'Upcoming Appointment Reminder',

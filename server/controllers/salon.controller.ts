@@ -1,10 +1,9 @@
 import { Response, NextFunction } from "express";
-import { Salon, type ISalon } from "../models/Salon.js";
+import { Salon } from "../models/Salon.js";
 import { User } from "../models/User.js";
 import {
   Roles,
   SalonStatus,
-  type SalonStatusType,
 } from "../utils/constants.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -25,9 +24,9 @@ export const createSalon = asyncHandler(
       throw new ApiError(400, "Owner is required");
     }
 
-    const salonData = { ...req.body };
-    delete (salonData as any).ownerId;
-    (salonData as any).ownerId = finalOwnerId;
+    const { ownerId: _ownerId, ...rest } = req.body;
+    void _ownerId;
+    const salonData = { ...rest, ownerId: finalOwnerId };
 
     const salon = await Salon.create(salonData);
 
@@ -38,7 +37,7 @@ export const createSalon = asyncHandler(
     }
 
     if (!owner.salonId) {
-      owner.salonId = salon._id as any;
+      owner.salonId = salon._id;
     }
     owner.role = Roles.SALON_OWNER;
     await owner.save();
@@ -50,7 +49,7 @@ export const createSalon = asyncHandler(
 export const getSalons = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { page = 1, limit = 10, search = "", status, city } = req.query;
-    const query: Record<string, any> = {};
+    const query: Record<string, unknown> = {};
 
     if (status) query.status = status;
     if (city) query["location.city"] = new RegExp(city as string, "i");
@@ -174,7 +173,7 @@ export const getSalons = asyncHandler(
 
 export const getSalonById = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const query: Record<string, any> = { _id: req.params.id };
+    const query: Record<string, unknown> = { _id: req.params.id };
 
     if (req.user?.role === Roles.CUSTOMER) {
       query.status = SalonStatus.APPROVED;
@@ -257,12 +256,12 @@ export const approveOrSuspendSalon = asyncHandler(
     try {
       const { status, commissionRate } = req.body;
       if (
-        ![SalonStatus.APPROVED, SalonStatus.SUSPENDED].includes(status as any)
+        ![SalonStatus.APPROVED, SalonStatus.SUSPENDED].includes(status)
       ) {
         return next(new ApiError(400, "Invalid status update"));
       }
 
-      const update: Record<string, any> = {
+      const update: Record<string, unknown> = {
         status,
         verified: status === SalonStatus.APPROVED,
       };

@@ -34,6 +34,7 @@ const normalizeEmailBase = (name: string) =>
     .replace(/[^a-z0-9]+/g, '.')
     .replace(/^\.+|\.+$/g, '') || 'owner';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serializeUser = (user: any) => ({
   _id: user._id,
   name: user.name,

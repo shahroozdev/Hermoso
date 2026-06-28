@@ -27,7 +27,7 @@ export const createAnnouncement = asyncHandler(async (req: AuthRequest, res: Res
 
 export const getNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 15, unreadOnly = 'false' } = req.query;
-  const query: Record<string, any> = {};
+  const query: Record<string, unknown> = {};
 
   if (req.user?.role === Roles.SUPER_ADMIN) {
     if (unreadOnly === 'true') query.isRead = false;
@@ -47,7 +47,7 @@ export const getNotifications = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 export const markNotificationRead = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const query: Record<string, any> = { _id: req.params.id };
+  const query: Record<string, unknown> = { _id: req.params.id };
   if (req.user?.role !== Roles.SUPER_ADMIN) query.userId = req.user?._id;
 
   const notification = await Notification.findOneAndUpdate(query, { isRead: true }, { new: true });

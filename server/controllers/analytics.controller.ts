@@ -7,7 +7,7 @@ import { Roles } from '../utils/constants.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
-const getMonthlySeries = async (match: Record<string, any> = {}) => {
+const getMonthlySeries = async (match: Record<string, unknown> = {}) => {
   return Booking.aggregate([
     { $match: match },
     {

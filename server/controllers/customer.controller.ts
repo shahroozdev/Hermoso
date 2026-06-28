@@ -7,7 +7,7 @@ import type { AuthRequest } from '../middleware/auth.middleware.js';
 
 export const getCustomers = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, search = '' } = req.query;
-  const query: Record<string, any> = { role: Roles.CUSTOMER };
+  const query: Record<string, unknown> = { role: Roles.CUSTOMER };
 
   if (search) {
     query.$or = [
@@ -33,7 +33,7 @@ export const getCustomers = asyncHandler(async (req: AuthRequest, res: Response)
 
 export const getCustomerActivity = asyncHandler(async (req: AuthRequest, res: Response) => {
   const customer = await User.findById(req.params.id).select('-password');
-  const bookingQuery: Record<string, any> = { customerId: req.params.id };
+  const bookingQuery: Record<string, unknown> = { customerId: req.params.id };
 
   if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
     bookingQuery.salonId = req.user.salonId;
