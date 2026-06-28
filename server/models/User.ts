@@ -54,6 +54,8 @@ export interface IUser extends Document {
   isVerified: boolean;
   otpCodeHash?: string | null;
   otpExpiresAt?: Date | null;
+  resetPasswordTokenHash?: string | null;
+  resetPasswordExpiresAt?: Date | null;
   comparePassword(rawPassword: string): Promise<boolean>;
 }
 
@@ -95,6 +97,8 @@ const userSchema = new Schema<IUser>(
     isVerified: { type: Boolean, default: false, index: true },
     otpCodeHash: { type: String, default: null, select: false },
     otpExpiresAt: { type: Date, default: null, select: false },
+    resetPasswordTokenHash: { type: String, default: null, select: false },
+    resetPasswordExpiresAt: { type: Date, default: null, select: false },
     staffDetails: {
       employeeId: {
         type: String,
