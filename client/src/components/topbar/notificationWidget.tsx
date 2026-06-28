@@ -19,8 +19,10 @@ const iconClass = "h-5 w-5";
 const NotificationWidget = () => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [openPathname, setOpenPathname] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const notificationsOpenDerived = notificationsOpen && openPathname === location.pathname;
   const { data, loading, error } = useApi(
     () => notificationService.list({ page: 1, limit: 5 }),
     [],
@@ -34,10 +36,6 @@ const NotificationWidget = () => {
     if (user?.role === "customer") return "/customer/notifications";
     return "/admin/notifications";
   }, [user?.role]);
-
-  useEffect(() => {
-    setNotificationsOpen(false);
-  }, [location.pathname]);
 
     useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
@@ -59,10 +57,13 @@ const NotificationWidget = () => {
     <div className="relative" ref={popoverRef}>
       <button
         type="button"
-        onClick={() => setNotificationsOpen((value) => !value)}
+        onClick={() => {
+          if (!notificationsOpen) setOpenPathname(location.pathname);
+          setNotificationsOpen((value) => !value);
+        }}
         className="relative rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-2 text-[var(--text)]"
         aria-label="Notifications"
-        aria-expanded={notificationsOpen}
+        aria-expanded={notificationsOpenDerived}
       >
         <svg
           viewBox="0 0 24 24"
@@ -81,7 +82,7 @@ const NotificationWidget = () => {
         ) : null}
       </button>
 
-      {notificationsOpen ? (
+      {notificationsOpenDerived ? (
         <div className="absolute right-0 top-[calc(100%+0.75rem)] w-80 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl shadow-black/20">
           <div className="border-b border-[var(--border)] px-4 py-3">
             <p className="text-sm font-semibold text-[var(--text)]">

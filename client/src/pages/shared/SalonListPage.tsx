@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DataTable from "../../components/DataTable";
-import LoadingBlock from "../../components/LoadingBlock";
 import ErrorBlock from "../../components/ErrorBlock";
 import { useApi } from "../../hooks/useApi";
 import { salonService } from "../../services/salonService";

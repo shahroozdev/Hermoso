@@ -44,7 +44,7 @@ const Sidebar = ({
               key={item.to}
               to={item.to}
               onClick={onClose}
-              className={({ isActive }) => {
+              className={() => {
                 return `flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition ${
                   item?.to === location?.pathname
                     ? "bg-[var(--surface-soft)] text-[var(--accent-2)] ring-1 ring-[var(--ring)]"

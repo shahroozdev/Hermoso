@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import ReactDOM from "react-dom";
 import { MultiSelectInput } from "./MultiSelectInput";
 interface FormInputProps {
   name: string;
@@ -93,9 +92,6 @@ const FormInput = ({
             <span>{label}</span>
           </label>
         );
-
-      case "textarea":
-        return <textarea {...baseInputProps} rows={rows || 3} />;
 
       case "number":
         return <input {...baseInputProps} type="number" />;

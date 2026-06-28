@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useState } from "react";
+import React from "react";
+import { z } from "zod";
 
 interface FormProps {
-  schema?: any; // Zod schema for validation
-  defaultValues?: any; // Default form values
-  onSubmit: (data: any) => Promise<any>; // Function to handle form submission
+  schema?: z.ZodType; // Zod schema for validation
+  defaultValues?: Record<string, unknown>; // Default form values
+  onSubmit: (data: Record<string, unknown>) => Promise<unknown>; // Function to handle form submission
   children: React.ReactNode; // Form fields and buttons
   className?: string; // Optional CSS class for styling
   onErrorFunc?: () => void; // Optional function to call on validation error
@@ -41,9 +42,9 @@ const Form = ({
     methods.reset(defaultValues || {});
   }, [defaultValues, methods]);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     try {
-      const res = await onSubmit(data);
+      const res = await onSubmit(data) as { status?: number; success?: boolean };
       if (res?.status === 200 || res?.success) {
         methods.reset(defaultValues || {});
       }

@@ -1,5 +1,5 @@
 import { useUIStore } from "@/store/uiStore";
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const ThemeToggleBtn = () => {
   const { theme, toggleTheme } = useUIStore();

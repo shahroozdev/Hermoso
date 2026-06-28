@@ -1,6 +1,5 @@
 import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
-import LoadingBlock from '../../components/LoadingBlock';
 import ErrorBlock from '../../components/ErrorBlock';
 import { useApi } from '../../hooks/useApi';
 import { payoutService } from '../../services/payoutService';

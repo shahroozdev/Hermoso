@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import Icon from "./Icon";
 import { NavGroup } from "./constant";
@@ -90,7 +89,7 @@ const Sidebar2 = ({
               <NavLink
                 key={item.key}
                 to={item.to}
-                className={({ isActive }) =>
+                className={() =>
                   `ha-nav-item ${item?.to === location?.pathname ? "active" : ""}`
                 }
               >

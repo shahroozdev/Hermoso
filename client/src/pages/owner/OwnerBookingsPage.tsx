@@ -1,7 +1,5 @@
 import DataTable from "../../components/DataTable";
 import ErrorBlock from "../../components/ErrorBlock";
-import TableSkeleton from "../../components/TableSkeleton";
-import NoDataFound from "../../components/NoDataFound";
 import { useApi } from "../../hooks/useApi";
 import { bookingService } from "../../services/bookingService";
 import { formatTimeAMPM } from "@/utils/format";

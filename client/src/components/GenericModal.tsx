@@ -9,7 +9,7 @@ interface GenericModalProps {
   isSubmitting?: boolean;
 }
 
-const GenericModal = ({ title, onClose, children, footer, isSubmitting }: GenericModalProps) => {
+const GenericModal = ({ title, onClose, children, footer }: GenericModalProps) => {
   const firstFocusRef = useRef<HTMLButtonElement>(null);
   const { theme } = useUIStore();
 

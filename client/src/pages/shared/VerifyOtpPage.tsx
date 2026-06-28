@@ -24,8 +24,8 @@ const VerifyOtpPage = () => {
       await authService.verifyOtp(form);
       setMessage('OTP verified successfully. You can login now.');
       setTimeout(() => navigate('/login'), 1200);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'OTP verification failed');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'OTP verification failed');
     }
   };
 
@@ -35,8 +35,8 @@ const VerifyOtpPage = () => {
     try {
       await authService.resendOtp(emailParam);
       setMessage('OTP resent successfully.');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to resend OTP');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to resend OTP');
     }
   };
 

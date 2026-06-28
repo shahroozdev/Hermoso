@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import DataTable from '../../components/DataTable';
-import LoadingBlock from '../../components/LoadingBlock';
 import ErrorBlock from '../../components/ErrorBlock';
 import Form from '../../components/Form';
 import FormInput from '../../components/FormInput';
@@ -38,17 +37,10 @@ const OwnerServicesPage = () => {
   const [formSuccess, setFormSuccess] = useState('');
   const [categoryError, setCategoryError] = useState('');
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [serviceFormKey, setServiceFormKey] = useState(0);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
 
   const servicesReq = useApi(() => serviceService.list({ page: 1, limit: 50 }), [refreshKey]);
   const categoriesReq = useApi(() => categoryService.list(), [categoryRefreshKey]);
-
-  useEffect(() => {
-    if (selectedCategoryId) {
-      setServiceFormKey((value) => value + 1);
-    }
-  }, [selectedCategoryId]);
 
   const categories: CategoryRecord[] = categoriesReq.data?.data || [];
   const serviceDefaultValues = {
@@ -70,7 +62,6 @@ const OwnerServicesPage = () => {
       setFormSuccess('Service created successfully');
       setRefreshKey((value) => value + 1);
       setSelectedCategoryId(data.categoryId);
-      setServiceFormKey((value) => value + 1);
       return { success: true, data: result.data };
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create service');
@@ -101,7 +92,7 @@ const OwnerServicesPage = () => {
       <h2 className="text-xl font-semibold">Services</h2>
       <div className="shell-panel rounded-2xl p-4">
         <Form
-          key={serviceFormKey}
+          key={selectedCategoryId || 0}
           schema={serviceSchema}
           defaultValues={serviceDefaultValues}
           onSubmit={createService}

@@ -29,7 +29,7 @@ const AdminSalonsPage = () => {
     [cityFilter, reloadKey],
   );
 
-  const salons = data?.data || [];
+  const salons = useMemo(() => data?.data || [], [data]);
   const kpis = useMemo(() => {
     const active = salons.filter((s) => s.status === "approved").length;
     const pending = salons.filter((s) => s.status === "pending").length;
@@ -58,7 +58,7 @@ const AdminSalonsPage = () => {
     }
   };
 
-  const handleCreated = (newSalon) => {
+  const handleCreated = () => {
     setReloadKey((v) => v + 1);
   };
 

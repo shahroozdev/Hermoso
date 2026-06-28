@@ -47,7 +47,7 @@ const emptyPasswordDefaults = {
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore();
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [profileDefaults, setProfileDefaults] = useState(emptyProfileDefaults);
   const [profileEmail, setProfileEmail] = useState('');
   const [profileFormKey, setProfileFormKey] = useState(0);
@@ -76,8 +76,8 @@ const ProfilePage = () => {
         });
         setProfileEmail(data.email || '');
         setProfileFormKey((value) => value + 1);
-      } catch (err: any) {
-        setProfileError(err.response?.data?.message || 'Failed to load profile');
+      } catch (err: unknown) {
+        setProfileError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load profile');
       } finally {
         setLoading(false);
       }
@@ -112,8 +112,8 @@ const ProfilePage = () => {
       setProfileSuccess('Profile updated successfully');
       setProfileFormKey((value) => value + 1);
       return { success: false };
-    } catch (err: any) {
-      setProfileError(err.response?.data?.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      setProfileError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update profile');
       throw err;
     } finally {
       setSavingProfile(false);
@@ -133,8 +133,8 @@ const ProfilePage = () => {
       setPasswordSuccess('Password changed successfully');
       setPasswordFormKey((value) => value + 1);
       return result;
-    } catch (err: any) {
-      setPasswordError(err.response?.data?.message || 'Failed to change password');
+    } catch (err: unknown) {
+      setPasswordError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to change password');
       throw err;
     } finally {
       setSavingPassword(false);

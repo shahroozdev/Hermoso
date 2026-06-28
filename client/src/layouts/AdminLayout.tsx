@@ -1,18 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useUIStore } from "../store/uiStore";
 import Sidebar2 from "@/components/Sidebar2";
-import { NavGroup, navGroups } from "@/components/constant";
+import { NavGroup } from "@/components/constant";
 import Topbar from "@/components/topbar";
 
 const ProtectedLayout = ({ item , isAdmin}: { item: NavGroup[] , isAdmin?: boolean }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openPathname, setOpenPathname] = useState("");
+  const mobileOpenDerived = mobileOpen && openPathname === location.pathname;
   const { theme } = useUIStore();
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
 
   return (
     <div
@@ -20,14 +18,17 @@ const ProtectedLayout = ({ item , isAdmin}: { item: NavGroup[] , isAdmin?: boole
       style={{ height: "100vh", overflow: "hidden" }}
     >
       <div
-        className={`ha-overlay ${mobileOpen ? "active" : ""}`}
-        onClick={() => setMobileOpen(false)}
+        className={`ha-overlay ${mobileOpenDerived ? "active" : ""}`}
+        onClick={() => { setMobileOpen(false); setOpenPathname(location.pathname); }}
       />
 
-      <Sidebar2 item={item} mobileOpen={mobileOpen} />
+      <Sidebar2 item={item} mobileOpen={mobileOpenDerived} />
 
       <div className="ha-main min-h-0">
-        <Topbar onMenuClick={() => setMobileOpen((v) => !v)} isAdmin={isAdmin} />
+        <Topbar onMenuClick={() => {
+          setOpenPathname(location.pathname);
+          setMobileOpen((v) => !v);
+        }} isAdmin={isAdmin} />
         <main className="ha-content">
           <Outlet />
         </main>

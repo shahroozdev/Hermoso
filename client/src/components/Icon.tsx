@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { ReactSVG } from "react-svg";
 
 export interface IconProperties {
@@ -25,7 +25,7 @@ export interface IconProperties {
   fill?: string;
   bordered?: boolean;
   bg?: string;
-  shadow?: boolean; // New prop for adding shadow
+  shadow?: boolean;
 }
 
 const Icon: React.FC<IconProperties> = ({
@@ -36,17 +36,13 @@ const Icon: React.FC<IconProperties> = ({
   name,
   fill,
   stroke,
-  bordered,
-  bg,
-  shadow = false, // Default to false
+  shadow = false,
   ...props
 }) => {
-  const [iconType, setIconType] = useState<string>("");
   const iconFile: string | null = useMemo(() => {
     if (name) {
       const fileExt = name.split(".").pop();
       const base: string = `/assets/icons/`;
-      setIconType(fileExt || "");
       if (fileExt === "svg" || fileExt === "png") {
         return `${base}${name}`;
       } else {
@@ -57,7 +53,9 @@ const Icon: React.FC<IconProperties> = ({
       return null;
     }
   }, [name]);
-  if (!iconFile || !iconType) return <span>No icon file found!</span>;
+  const fileExt = name ? name.split(".").pop() : "";
+  const iconType = fileExt || "";
+  if (!iconFile) return <span>No icon file found!</span>;
   
   const shadowClass = shadow ? "drop-shadow-lg" : ""; // Tailwind shadow utility
   return iconType === "png" ? (

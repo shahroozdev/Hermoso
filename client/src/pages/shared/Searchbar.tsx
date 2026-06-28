@@ -9,11 +9,11 @@ interface SearchSuggestion {
   subtitle?: string;
 }
 const Searchbar = () => {
-  const [location, setLocation] = useState("");
+  const [location] = useState("");
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [, setIsLoadingSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<
     SearchSuggestion[]
   >([]);
@@ -31,7 +31,7 @@ const Searchbar = () => {
           //   url: `/school/employee/suggestions?q=${searchValue}&country=${location}`,
           // });
           // setFilteredSuggestions(res?.data);
-        } catch (error) {
+        } catch {
           setFilteredSuggestions([]);
         } finally {
           setIsLoadingSuggestions(false);

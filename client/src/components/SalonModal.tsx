@@ -24,10 +24,23 @@ const defaultHours = {
   off: false,
 };
 
-const resolveOwnerId = (value: any): string => {
+interface SalonEditData {
+  _id?: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  description?: string;
+  location?: { city?: string; country?: string };
+  commissionRate?: number;
+  workingHours?: Record<string, { open: string; close: string; off: boolean }>;
+  owner?: { _id?: string; name?: string; email?: string };
+  ownerId?: string | { _id?: string };
+}
+
+const resolveOwnerId = (value: SalonEditData): string => {
   if (value?.owner?._id) return String(value.owner._id);
-  if (value?.ownerId?._id) return String(value.ownerId._id);
-  if (value?.ownerId) return String(value.ownerId);
+  if (typeof value?.ownerId === "object" && value.ownerId?._id) return String(value.ownerId._id);
+  if (typeof value?.ownerId === "string") return String(value.ownerId);
   return "";
 };
 
@@ -58,8 +71,8 @@ const SalonModal = ({
   editDefaultValues,
 }: {
   onClose: () => void;
-  onCreated: (salon: any) => void;
-  editDefaultValues?: any;
+  onCreated: (salon: Record<string, unknown>) => void;
+  editDefaultValues?: SalonEditData;
 }) => {
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,11 +85,11 @@ const SalonModal = ({
     password?: string;
     generated?: boolean;
   } | null>(null);
-  const [selectedOwnerIdOverride, setSelectedOwnerIdOverride] = useState("");
-
-  useEffect(() => {
-    setSelectedOwnerIdOverride(resolveOwnerId(editDefaultValues));
-  }, [editDefaultValues]);
+  const [ownerIdOverride, setOwnerIdOverride] = useState("");
+  const selectedOwnerIdOverride = useMemo(
+    () => ownerIdOverride || resolveOwnerId(editDefaultValues),
+    [ownerIdOverride, editDefaultValues],
+  );
 
   useEffect(() => {
     const loadOwners = async () => {
@@ -252,7 +265,7 @@ const SalonModal = ({
               [...current, owner].sort((a, b) => a.name.localeCompare(b.name)),
             );
             setOwnerCredentials(credentials || null);
-            setSelectedOwnerIdOverride(owner._id);
+            setOwnerIdOverride(owner._id);
           }}
         />
       ) : null}

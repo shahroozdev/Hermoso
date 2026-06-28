@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface UseApiResult<T> {
   data: T | null;
@@ -10,6 +10,11 @@ export const useApi = <T>(fetcher: () => Promise<T>, deps: React.DependencyList 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const fetcherRef = useRef(fetcher);
+
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -18,10 +23,10 @@ export const useApi = <T>(fetcher: () => Promise<T>, deps: React.DependencyList 
       setLoading(true);
       setError('');
       try {
-        const result = await fetcher();
+        const result = await fetcherRef.current();
         if (mounted) setData(result);
-      } catch (err: any) {
-        if (mounted) setError(err.response?.data?.message || 'Failed to load data');
+      } catch (err: unknown) {
+        if (mounted) setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load data');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -31,6 +36,7 @@ export const useApi = <T>(fetcher: () => Promise<T>, deps: React.DependencyList 
     return () => {
       mounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return { data, loading, error };
