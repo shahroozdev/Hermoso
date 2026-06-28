@@ -3,6 +3,7 @@ import { createSalon, getSalons, getSalonById, updateSalon, approveOrSuspendSalo
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
+import { upload } from '../middleware/upload.middleware.js';
 
 const router = Router();
 
@@ -185,11 +186,11 @@ const router = Router();
 
 router.use(authenticate);
 
-router.post('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), createSalon);
+router.post('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), upload.single('imageUrl'), createSalon);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.CUSTOMER), getSalons);
 router.get('/analytics/revenue', authorize(Roles.SUPER_ADMIN), getSalonRevenue);
 router.get('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.CUSTOMER), getSalonById);
-router.put('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), updateSalon);
+router.put('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), upload.single('imageUrl'), updateSalon);
 router.patch('/:id/status', authorize(Roles.SUPER_ADMIN), approveOrSuspendSalon);
 
 export default router;

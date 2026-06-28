@@ -7,6 +7,7 @@ export interface ISalon extends Document {
   description: string;
   address: string;
   phone: string;
+  imageUrl?: string;
   images: string[];
   workingHours: {
     monday: { open?: string; close?: string; off: boolean };
@@ -33,6 +34,7 @@ const salonSchema = new Schema<ISalon>(
     description: { type: String, default: '' },
     address: { type: String, required: true },
     phone: { type: String, required: true },
+    imageUrl: { type: String, default: '' },
     images: [{ type: String }],
     workingHours: {
       monday: { open: String, close: String, off: { type: Boolean, default: false } },

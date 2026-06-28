@@ -14,6 +14,7 @@ export const createSalonSchema = z.object({
     description: z.string().max(1000).optional().default(''),
     address: z.string().min(5, 'Address must be at least 5 characters'),
     phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
+    imageUrl: z.string().url('Invalid image URL').optional(),
     images: z.array(z.string().url('Invalid image URL')).optional().default([]),
     workingHours: z.object({
       monday: workingHoursSchema,
@@ -40,6 +41,7 @@ export const updateSalonSchema = z.object({
     description: z.string().max(1000).optional(),
     address: z.string().min(5, 'Address must be at least 5 characters').optional(),
     phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number').optional(),
+    imageUrl: z.string().url('Invalid image URL').optional(),
     images: z.array(z.string().url('Invalid image URL')).optional(),
     workingHours: z.object({
       monday: workingHoursSchema,

@@ -10,13 +10,31 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 import { Service } from "../models/Service.js";
 import mongoose from "mongoose";
+import { uploadToCloudinary } from "../config/cloudinary.js";
 
 const isSuperAdminLike = (role?: string) =>
   role === Roles.SUPER_ADMIN || role === "admin";
 
+const parseMultipartFields = (body: Record<string, unknown>): Record<string, unknown> => {
+  const parsed: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (typeof value === 'string') {
+      try {
+        parsed[key] = JSON.parse(value);
+      } catch {
+        parsed[key] = value;
+      }
+    } else {
+      parsed[key] = value;
+    }
+  }
+  return parsed;
+};
+
 export const createSalon = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { ownerId } = req.body;
+    const fields = parseMultipartFields(req.body);
+    const { ownerId } = fields;
     const isAdmin = isSuperAdminLike(req.user?.role as string | undefined);
 
     const finalOwnerId = isAdmin && ownerId ? ownerId : req.user?._id;
@@ -24,9 +42,14 @@ export const createSalon = asyncHandler(
       throw new ApiError(400, "Owner is required");
     }
 
-    const { ownerId: _ownerId, ...rest } = req.body;
+    let imageUrl: string | undefined;
+    if (req.file) {
+      imageUrl = await uploadToCloudinary(req.file.buffer);
+    }
+
+    const { ownerId: _ownerId, ...rest } = fields;
     void _ownerId;
-    const salonData = { ...rest, ownerId: finalOwnerId };
+    const salonData = { ...rest, ownerId: finalOwnerId, imageUrl: imageUrl || rest.imageUrl };
 
     const salon = await Salon.create(salonData);
 
@@ -245,7 +268,13 @@ export const updateSalon = asyncHandler(
       return next(new ApiError(403, "Forbidden"));
     }
 
-    Object.assign(salon, req.body);
+    const fields = parseMultipartFields(req.body);
+
+    if (req.file) {
+      fields.imageUrl = await uploadToCloudinary(req.file.buffer);
+    }
+
+    Object.assign(salon, fields);
     await salon.save();
     res.json({ success: true, data: salon });
   },
