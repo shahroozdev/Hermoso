@@ -2,6 +2,7 @@
   "name": "hermoso",
   "private": true,
   "type": "module",
+  "workspaces": ["client", "server"],
   "scripts": {
     "lint": "pnpm -r lint",
     "lint:client": "pnpm --filter hermoso-client lint",
