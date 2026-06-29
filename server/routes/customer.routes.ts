@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCustomers, getCustomerActivity } from '../controllers/customer.controller.js';
+import { getCustomers, getCustomersOverview, getCustomerActivity } from '../controllers/customer.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -74,6 +74,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getCustomers);
+router.get('/analytics/overview', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getCustomersOverview);
 router.get('/:id/activity', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getCustomerActivity);
 
 export default router;

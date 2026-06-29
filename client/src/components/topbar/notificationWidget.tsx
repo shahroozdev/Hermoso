@@ -24,13 +24,13 @@ const NotificationWidget = () => {
   const location = useLocation();
   const notificationsOpenDerived = notificationsOpen && openPathname === location.pathname;
   const { data, loading, error } = useApi(
-    () => notificationService.list({ page: 1, limit: 5 }),
+    () => notificationService.list({ page: 1, limit: 5, unreadOnly: "true" }),
     [],
   );
   const { user } = useAuthStore();
   const unread = data?.meta?.total || 0;
   const notifications: NotificationItem[] = data?.data || [];
-
+  console.log(data?.meta, 'notification')
   const notificationsPath = useMemo(() => {
     if (user?.role === "salon_owner") return "/owner/notifications";
     if (user?.role === "customer") return "/customer/notifications";

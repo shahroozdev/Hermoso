@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
-import Form from '../../components/Form';
-import FormInput from '../../components/FormInput';
+import Form from '../../components/form/Form';
+import FormInput from '../../components/form/FormInput';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
 

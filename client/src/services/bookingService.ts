@@ -48,5 +48,9 @@ export const bookingService = {
   updateStatus: async (id: string, status: string) => {
     const { data } = await api.patch(`/bookings/${id}/status`, { status });
     return data;
+  },
+  getStats: async () => {
+    const { data } = await api.get('/bookings/analytics/stats');
+    return data;
   }
 };

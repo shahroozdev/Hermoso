@@ -52,6 +52,40 @@ export const runBookingReminderJob = async () => {
   }
 };
 
+export const runBookingExpiryJob = async () => {
+  const threshold = new Date();
+  threshold.setHours(0, 0, 0, 0);
+
+  const expired = await Booking.find({
+    status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+    bookingDate: { $lt: threshold },
+  }).populate('serviceId', 'name');
+
+  for (const booking of expired) {
+    booking.status = BookingStatus.CANCELLED;
+    await booking.save();
+
+    const customer = await User.findById(booking.customerId).select('name email');
+    if (customer) {
+      const serviceName = (booking.serviceId && typeof booking.serviceId === 'object' && 'name' in booking.serviceId)
+        ? (booking.serviceId as { name: string }).name
+        : 'service';
+      await createNotification({
+        title: 'Booking Expired',
+        message: `Your booking for ${serviceName} on ${new Date(booking.bookingDate).toLocaleDateString()} has been auto-cancelled as the date has passed.`,
+        type: 'booking_update',
+        targetRole: Roles.CUSTOMER,
+        salonId: String(booking.salonId),
+        userId: String(customer._id),
+      });
+    }
+  }
+
+  if (expired.length > 0) {
+    console.log(`Auto-expired ${expired.length} overdue bookings`);
+  }
+};
+
 export const startSchedulers = () => {
   cron.schedule('*/15 * * * *', () => {
     runBookingReminderJob().catch((err) => {
@@ -59,5 +93,11 @@ export const startSchedulers = () => {
     });
   });
 
-  console.log('Schedulers started: booking reminders every 15 minutes');
+  cron.schedule('0 */6 * * *', () => {
+    runBookingExpiryJob().catch((err) => {
+      console.error('Booking expiry job failed', err.message);
+    });
+  });
+
+  console.log('Schedulers started: booking reminders every 15 min, expiry every 6 hours');
 };

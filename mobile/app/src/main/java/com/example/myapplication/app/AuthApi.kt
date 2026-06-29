@@ -119,7 +119,8 @@ data class SalonDto(
     val _id: String?,
     val name: String?,
     val avgRating: Double?,
-    val location: SalonLocationDto?
+    val location: SalonLocationDto?,
+    val imageUrl: String?
 )
 
 data class ListResponse<T>(
@@ -260,6 +261,7 @@ data class SalonDetailDto(
     val description: String?,
     val address: String?,
     val phone: String?,
+    val imageUrl: String?,
     val images: List<String>?,
     val commissionRate: Int?,
     val reviewsCount: Int?,

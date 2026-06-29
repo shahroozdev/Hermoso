@@ -287,6 +287,66 @@ export const getBookingAvailability = asyncHandler(async (req: AuthRequest, res:
   });
 });
 
+export const getBookingStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const query: Record<string, unknown> = {};
+  if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
+    query.salonId = req.user?.salonId;
+  } else if (req.user?.role === Roles.CUSTOMER) {
+    query.customerId = req.user?._id;
+  }
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const [
+    completedToday,
+    upcoming,
+    cancellations,
+    total,
+    eventsData,
+  ] = await Promise.all([
+    Booking.countDocuments({ ...query, status: BookingStatus.COMPLETED, bookingDate: { $gte: todayStart, $lte: todayEnd } }),
+    Booking.countDocuments({ ...query, status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] } }),
+    Booking.countDocuments({ ...query, status: BookingStatus.CANCELLED }),
+    Booking.countDocuments(query),
+    Booking.aggregate([
+      { $match: { ...query } as Record<string, unknown> },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'serviceId',
+          foreignField: '_id',
+          as: 'service',
+        },
+      },
+      { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { 'service.name': { $regex: 'bridal', $options: 'i' } },
+            { 'service.name': { $regex: 'package', $options: 'i' } },
+            { 'service.name': { $regex: 'event', $options: 'i' } },
+          ],
+        },
+      },
+      { $count: 'count' },
+    ]),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      completedToday,
+      upcoming,
+      cancellations,
+      events: eventsData[0]?.count || 0,
+      total,
+    },
+  });
+});
+
 export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, salonId, status, date } = req.query;
   const query: Record<string, unknown> = {};

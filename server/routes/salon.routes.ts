@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createSalon, getSalons, getSalonById, updateSalon, approveOrSuspendSalon, getSalonRevenue } from '../controllers/salon.controller.js';
+import { createSalon, getSalons, getSalonById, updateSalon, approveOrSuspendSalon, getSalonCities, getSalonStatusStats, getSalonRevenue, getRevenueStats } from '../controllers/salon.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -188,7 +188,10 @@ router.use(authenticate);
 
 router.post('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), upload.single('imageUrl'), createSalon);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.CUSTOMER), getSalons);
+router.get('/cities', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.CUSTOMER), getSalonCities);
+router.get('/analytics/status-stats', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), getSalonStatusStats);
 router.get('/analytics/revenue', authorize(Roles.SUPER_ADMIN), getSalonRevenue);
+router.get('/analytics/revenue-stats', authorize(Roles.SUPER_ADMIN), getRevenueStats);
 router.get('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.CUSTOMER), getSalonById);
 router.put('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), upload.single('imageUrl'), updateSalon);
 router.patch('/:id/status', authorize(Roles.SUPER_ADMIN), approveOrSuspendSalon);

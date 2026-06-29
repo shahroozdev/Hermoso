@@ -17,11 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.myapplication.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -68,9 +70,41 @@ fun SalonServicesScreen(navController: NavHostController, salonId: String) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.verticalGradient(listOf(PurpleDeeper, PurpleDark)))
                         .statusBarsPadding()
                 ) {
+                    // Show image if available, otherwise show gradient background
+                    val imageToShow = salon?.imageUrl ?: salon?.images?.firstOrNull()
+                    if (!imageToShow.isNullOrBlank()) {
+                        AsyncImage(
+                            model = imageToShow,
+                            contentDescription = salon?.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                        // Add gradient overlay for better text readability
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color.Black.copy(alpha = 0.3f),
+                                            Color.Black.copy(alpha = 0.6f)
+                                        )
+                                    )
+                                )
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Brush.verticalGradient(listOf(PurpleDeeper, PurpleDark)))
+                        )
+                    }
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

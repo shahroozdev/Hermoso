@@ -1,118 +1,113 @@
-﻿import AdminPageSkeleton from '../../components/AdminPageSkeleton';
+﻿import { useMemo, useState } from 'react';
+import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
+import CustomerDetailModal from '../../components/CustomerDetailModal';
+import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
 import { customerService } from '../../services/customerService';
-import { bookingService } from '../../services/bookingService';
+import { useNavigate } from 'react-router-dom';
+
+interface CustomerOverview {
+  _id: string;
+  name: string;
+  email: string;
+  status?: string;
+  createdAt?: string;
+  bookingsCount: number;
+  totalSpent: number;
+  eventCount: number;
+}
 
 const AdminCustomersPage = () => {
-  const customersReq = useApi(() => customerService.list({ page: 1, limit: 100 }), []);
-  const bookingsReq = useApi(() => bookingService.list({ page: 1, limit: 500 }), []);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const kpiReq = useApi(() => customerService.getOverview({ page: 1, limit: 1 }), []);
 
-  if (customersReq.loading || bookingsReq.loading) return <AdminPageSkeleton variant="table" />;
-  if (customersReq.error) return <ErrorBlock text={customersReq.error} />;
-  if (bookingsReq.error) return <ErrorBlock text={bookingsReq.error} />;
-
-  const customers = customersReq.data?.data || [];
-  const bookings = bookingsReq.data?.data || [];
-
-  const byCustomer = new Map();
-  for (const b of bookings) {
-    const id = b.customerId?._id;
-    if (!id) continue;
-    if (!byCustomer.has(id)) {
-      byCustomer.set(id, {
-        bookings: 0,
-        totalSpent: 0,
-        cities: {},
-        eventCount: 0
-      });
-    }
-    const row = byCustomer.get(id);
-    row.bookings += 1;
-    row.totalSpent += Number(b.price || 0);
-    const city = b.salonId?.location?.city || 'Unknown';
-    row.cities[city] = (row.cities[city] || 0) + 1;
-    if ((b.serviceId?.name || '').toLowerCase().includes('bridal') || (b.serviceId?.name || '').toLowerCase().includes('package')) row.eventCount += 1;
-  }
-
-  const rows = customers.map((c, idx) => {
-    const agg = byCustomer.get(c._id) || { bookings: 0, totalSpent: 0, cities: {}, eventCount: 0 };
-    const city = Object.keys(agg.cities).sort((a, b) => agg.cities[b] - agg.cities[a])[0] || 'Unknown';
-    const aiScans = Math.max(0, Math.round(agg.bookings * 0.35));
-    const joined = new Date(c.createdAt).toLocaleString('en-US', { month: 'short', year: 'numeric' });
-    const isFlagged = c.status === 'suspended' || c.status === 'inactive';
-    const isVip = agg.totalSpent >= 80000;
+  const kpi = useMemo(() => {
+    const m = kpiReq.data?.meta;
     return {
-      id: c._id,
-      name: c.name,
-      email: c.email,
-      city,
-      joined,
-      bookings: agg.bookings,
-      aiScans,
-      totalSpent: Math.round(agg.totalSpent),
-      status: isFlagged ? 'flagged' : isVip ? 'vip' : 'active',
-      icon: ['🧑', '💅', '✨', '⚠️'][idx % 4]
+      totalCustomers: m?.totalCustomers ?? 0,
+      returningCustomers: m?.returningCustomers ?? 0,
+      flaggedAccounts: m?.flaggedAccounts ?? 0,
+      totalRevenue: m?.totalRevenue ?? 0,
     };
-  });
+  }, [kpiReq.data]);
 
-  const total = rows.length;
-  const returning = rows.filter((r) => r.bookings > 1).length;
-  const aiUsers = rows.filter((r) => r.aiScans > 0).length;
-  const flagged = rows.filter((r) => r.status === 'flagged').length;
+  const handleFlag = async (id: string, currentStatus: string | undefined) => {
+    const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+    try {
+      await customerService.updateStatus(id, newStatus);
+      navigate(0);
+    } catch {
+      alert('Failed to update customer status');
+    }
+  };
+
+  if (kpiReq.loading) return <AdminPageSkeleton variant="table" />;
+  if (kpiReq.error) return <ErrorBlock text={kpiReq.error} />;
+
+  const icons = ['🧑', '💅', '✨', '⚠️'];
 
   return (
     <>
       <div className="ha-kpi-row">
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Customers</div><div className="ha-kpi-val">{total.toLocaleString()}</div><div className="ha-kpi-change up">Registered accounts</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Returning Customers</div><div className="ha-kpi-val">{returning.toLocaleString()}</div><div className="ha-kpi-change up">{total ? Math.round((returning / total) * 100) : 0}% retention</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">AI Scan Users</div><div className="ha-kpi-val">{aiUsers.toLocaleString()}</div><div className="ha-kpi-change up">{total ? Math.round((aiUsers / total) * 100) : 0}% adoption</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Flagged Accounts</div><div className="ha-kpi-val white">{flagged}</div><div className="ha-kpi-change" style={{ color: 'var(--rose)' }}>Needs review</div></div>
+        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Customers</div><div className="ha-kpi-val">{kpi.totalCustomers.toLocaleString()}</div><div className="ha-kpi-change up">Registered accounts</div></div>
+        <div className="ha-kpi-card"><div className="ha-kpi-label">Returning Customers</div><div className="ha-kpi-val">{kpi.returningCustomers.toLocaleString()}</div><div className="ha-kpi-change up">{kpi.totalCustomers ? Math.round((kpi.returningCustomers / kpi.totalCustomers) * 100) : 0}% retention</div></div>
+        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Revenue</div><div className="ha-kpi-val">PKR {kpi.totalRevenue.toLocaleString()}</div><div className="ha-kpi-change up">From bookings</div></div>
+        <div className="ha-kpi-card"><div className="ha-kpi-label">Flagged Accounts</div><div className="ha-kpi-val white">{kpi.flaggedAccounts}</div><div className="ha-kpi-change" style={{ color: 'var(--rose)' }}>Needs review</div></div>
       </div>
 
-      <div className="ha-card">
-        <div className="ha-card-title">Customer Accounts</div>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="ha-salon-table">
-            <thead>
-              <tr>
-                <th>Customer</th><th>City</th><th>Joined</th><th>Bookings</th><th>AI Scans</th><th>Total Spent</th><th>Status</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <div className="ha-salon-cell">
-                      <div className="ha-salon-av">{r.icon}</div>
-                      <div>
-                        <div className="ha-salon-name">{r.name}</div>
-                        <div className="ha-salon-sub">{r.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{r.city}</td>
-                  <td>{r.joined}</td>
-                  <td>{r.bookings}</td>
-                  <td>{r.aiScans}</td>
-                  <td className="ha-money">PKR {r.totalSpent.toLocaleString()}</td>
-                  <td>
-                    <span className={r.status === 'active' ? 'ha-pill ha-pill-active' : r.status === 'vip' ? 'ha-pill ha-pill-vip' : 'ha-pill ha-pill-suspended'}>
-                      {r.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="ha-actions">
-                      <button className="ha-act-btn">View</button>
-                      <button className="ha-act-btn">Flag</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <TABLE<CustomerOverview>
+        title="Customer Accounts"
+        showPagination
+        service={customerService.getOverview}
+        columns={[
+          { title: 'Customer' },
+          { title: 'Joined' },
+          { title: 'Bookings' },
+          { title: 'AI Scans' },
+          { title: 'Total Spent' },
+          { title: 'Status' },
+          { title: 'Actions' },
+        ]}
+        rows={(data) =>
+          data?.map((item, idx) => {
+            const aiScans = Math.max(0, Math.round(item.bookingsCount * 0.35));
+            const isFlagged = item.status === 'suspended' || item.status === 'inactive';
+            const isVip = item.totalSpent >= 80000;
+            const statusLabel = isFlagged ? 'flagged' : isVip ? 'vip' : 'active';
+            const joined = item.createdAt
+              ? new Date(item.createdAt).toLocaleString('en-US', { month: 'short', year: 'numeric' })
+              : '-';
+            return [
+              <div className="ha-salon-cell">
+                <div className="ha-salon-av">{icons[idx % 4]}</div>
+                <div>
+                  <div className="ha-salon-name">{item.name}</div>
+                  <div className="ha-salon-sub">{item.email}</div>
+                </div>
+              </div>,
+              joined,
+              item.bookingsCount,
+              aiScans,
+              <span className="ha-money">PKR {Math.round(item.totalSpent).toLocaleString()}</span>,
+              <span className={statusLabel === 'active' ? 'ha-pill ha-pill-active' : statusLabel === 'vip' ? 'ha-pill ha-pill-vip' : 'ha-pill ha-pill-suspended'}>
+                {statusLabel}
+              </span>,
+              <div className="ha-actions">
+                <button className="ha-act-btn" onClick={() => setViewingId(item._id)}>View</button>
+                <button className="ha-act-btn" onClick={() => handleFlag(item._id, item.status)}>
+                  {isFlagged ? 'Unflag' : 'Flag'}
+                </button>
+              </div>,
+            ];
+          })
+        }
+      />
+
+      {viewingId && (
+        <CustomerDetailModal customerId={viewingId} onClose={() => setViewingId(null)} />
+      )}
     </>
   );
 };

@@ -57,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.*
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -396,11 +398,29 @@ fun HomeScreen(navController: NavHostController) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(120.dp)
-                                    .background(
-                                        Brush.linearGradient(listOf(Purple, PurpleLight)),
-                                        RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-                                    )
                             ) {
+                                // Show image if available, otherwise show gradient background
+                                if (!salon.imageUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = salon.imageUrl,
+                                        contentDescription = salon.name,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(120.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(120.dp)
+                                            .background(
+                                                Brush.linearGradient(listOf(Purple, PurpleLight)),
+                                                RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                                            )
+                                    )
+                                }
+
                                 val rating = salon.avgRating ?: 0.0
                                 Surface(
                                     modifier = Modifier

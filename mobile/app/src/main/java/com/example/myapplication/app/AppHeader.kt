@@ -51,8 +51,7 @@ fun AppHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (isOwnerTheme) Brush.linearGradient(listOf(OwnerNavy, OwnerNavyMid))
-                else Brush.linearGradient(listOf(PurpleDeeper, PurpleDark, Purple))
+                Brush.linearGradient(listOf(PurpleDeeper, PurpleDark, Purple))
             )
             .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -68,7 +67,7 @@ fun AppHeader(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 "Hermoso",
-                color = if (isOwnerTheme) OwnerGold else Color.White,
+                color = Color.White,
                 fontWeight = FontWeight.Light,
                 fontFamily = CormorantFontFamily,
                 fontSize = 28.sp

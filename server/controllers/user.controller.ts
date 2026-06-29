@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { User } from '../models/User.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -121,6 +121,18 @@ export const changeMyPassword = asyncHandler(async (req: AuthRequest, res: Respo
   await user.save();
 
   res.json({ success: true, message: 'Password updated successfully' });
+});
+
+export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { status } = req.body as { status: string };
+  if (!['active', 'suspended', 'inactive'].includes(status)) {
+    return next(new ApiError(400, 'Invalid status. Must be active, suspended, or inactive.'));
+  }
+
+  const user = await User.findByIdAndUpdate(req.params.id, { status }, { new: true }).select('-password');
+  if (!user) return next(new ApiError(404, 'User not found'));
+
+  res.json({ success: true, data: serializeUser(user) });
 });
 
 export const listOwners = asyncHandler(async (_req: AuthRequest, res: Response) => {

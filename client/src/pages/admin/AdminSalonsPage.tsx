@@ -1,10 +1,13 @@
 ﻿import { useMemo, useState } from "react";
-import AdminPageSkeleton from "../../components/AdminPageSkeleton";
+import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
 import { useApi } from "../../hooks/useApi";
 import { salonService } from "../../services/salonService";
 import { useUIStore } from "../../store/uiStore";
 import SalonModal from "@/components/SalonModal";
+import { salonsStats } from "@/components/constant";
+import TABLE from "@/components/table";
+import { SalonItem } from "../shared/SalonListPage";
 
 const statusClass = (status) => {
   if (status === "approved") return "ha-pill ha-pill-active";
@@ -21,29 +24,27 @@ const AdminSalonsPage = () => {
 
   const { data, loading, error } = useApi(
     () =>
-      salonService.list({
-        page: 1,
-        limit: 50,
-        ...(cityFilter !== "all" ? { city: cityFilter } : {}),
-      }),
+      salonService.getCities(),
     [cityFilter, reloadKey],
   );
-
-  const salons = useMemo(() => data?.data || [], [data]);
+  const { data:stats} = useApi(
+    () =>
+      salonService.getStatusStats(),
+    [reloadKey],
+  );
   const kpis = useMemo(() => {
-    const active = salons.filter((s) => s.status === "approved").length;
-    const pending = salons.filter((s) => s.status === "pending").length;
-    const suspended = salons.filter((s) => s.status === "suspended").length;
-    const cities = new Set(salons.map((s) => s.location?.city).filter(Boolean))
-      .size;
+    const active = stats?.data?.approved||0
+    const pending = stats?.data?.pending||0
+    const suspended = stats?.data?.suspended||0
+    const cities = data?.data?.length || 0
     return { active, pending, suspended, cities };
-  }, [salons]);
+  }, [stats, data]);
 
   const cities = useMemo(() => {
     return [
       "all",
       ...new Set(
-        (data?.data || []).map((s) => s.location?.city).filter(Boolean),
+        (data?.data || []).map((s) => s).filter(Boolean),
       ),
     ];
   }, [data]);
@@ -68,30 +69,15 @@ const AdminSalonsPage = () => {
   return (
     <>
       <div className="ha-kpi-row">
-        <div className="ha-kpi-card">
-          <div className="ha-kpi-label">Active Salons</div>
-          <div className="ha-kpi-val">{kpis.active}</div>
-          <div className="ha-kpi-change up">Live and approved</div>
-        </div>
-        <div className="ha-kpi-card">
-          <div className="ha-kpi-label">Pending Approval</div>
-          <div className="ha-kpi-val white">{kpis.pending}</div>
-          <div className="ha-kpi-change" style={{ color: "var(--amber)" }}>
-            Needs review
+        {salonsStats.map((stat) => (
+          <div className="ha-kpi-card" key={stat.key}>
+            <div className="ha-kpi-label">{stat.label}</div>
+            <div className="ha-kpi-val">{kpis[stat.key]}</div>
+            <div className="ha-kpi-change up" style={{ color: stat.color }}>
+              {stat.sub}
+            </div>
           </div>
-        </div>
-        <div className="ha-kpi-card">
-          <div className="ha-kpi-label">Suspended</div>
-          <div className="ha-kpi-val white">{kpis.suspended}</div>
-          <div className="ha-kpi-change" style={{ color: "var(--rose)" }}>
-            Policy violations
-          </div>
-        </div>
-        <div className="ha-kpi-card">
-          <div className="ha-kpi-label">Cities Covered</div>
-          <div className="ha-kpi-val">{kpis.cities}</div>
-          <div className="ha-kpi-change up">Active regions</div>
-        </div>
+        ))}
       </div>
 
       <div className="ha-card">
@@ -118,109 +104,90 @@ const AdminSalonsPage = () => {
             <ErrorBlock text={errorAction} />
           </div>
         ) : null}
-
-        <div style={{ overflowX: "auto" }}>
-          <table className="ha-salon-table">
-            <thead>
-              <tr>
-                <th>Salon / Clinic</th>
-                <th>Owner</th>
-                <th>City</th>
-                <th>Services</th>
-                <th>Bookings</th>
-                <th>Revenue</th>
-                <th>Commission</th>
-                <th>Status</th>
-                <th>Active</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salons.map((salon, idx) => (
-                <tr key={salon._id}>
-                  <td>
-                    <div className="ha-salon-cell">
-                      <div className="ha-salon-av">
-                        {["💅", "🌿", "💎", "✨", "🚫"][idx % 5]}
-                      </div>
-                      <div>
-                        <div className="ha-salon-name">{salon.name}</div>
-                        <div className="ha-salon-sub">
-                          ⭐ {salon.avgRating || 0} · {salon.reviewsCount || 0}{" "}
-                          reviews
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{salon.owner?.name || "Unassigned"}</td>
-                  <td>{salon.location?.city || "-"}</td>
-                  <td>{salon.servicesCount || 0}</td>
-                  <td>{(salon.bookingsCount || 0).toLocaleString()}</td>
-                  <td className="ha-money">
-                    {Math.round(salon.revenue || 0).toLocaleString()}
-                  </td>
-                  <td>
-                    <div className="ha-commission-box">
-                      {salon.commissionRate ?? 10}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={statusClass(salon.status)}>
-                      {salon.status}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`ha-dot ${salon.active ? "on" : "off"}`} />
-                  </td>
-                  <td>
-                    <div className="ha-actions">
-                      <button className="ha-act-btn">View</button>
-                      <button
-                        className="ha-act-btn"
-                        onClick={() => {
-                          setEditDefaultValues(salon);
-                          setSalonModal(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      {salon.status === "pending" ? (
-                        <>
-                          <button
-                            className="ha-act-btn"
-                            onClick={() => patchStatus(salon._id, "approved")}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="ha-act-btn danger"
-                            onClick={() => patchStatus(salon._id, "suspended")}
-                          >
-                            Reject
-                          </button>
-                        </>
-                      ) : salon.status === "suspended" ? (
-                        <button
-                          className="ha-act-btn"
-                          onClick={() => patchStatus(salon._id, "approved")}
-                        >
-                          Reinstate
-                        </button>
-                      ) : (
-                        <button
-                          className="ha-act-btn danger"
-                          onClick={() => patchStatus(salon._id, "suspended")}
-                        >
-                          Suspend
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TABLE<SalonItem>
+          noBorder
+          showPagination
+          service={salonService.list}
+          serviceParams={{ ...(cityFilter !== "all" ? { city: cityFilter } : {}) }}
+          columns={[
+            { title: "Salon / Clinic", size: "250px" },
+            { title: "Owner" , size: "150px" },
+            { title: "City" },
+            { title: "Services" },
+            { title: "Bookings" },
+            { title: "Revenue" },
+            { title: "Commission" },
+            { title: "Status" },
+            { title: "Active" },
+            { title: "Actions" },
+          ]}
+          rows={(data) =>
+            data?.map((salon, idx) => [
+              <div className="ha-salon-cell">
+                <div className="ha-salon-av">
+                  {["💅", "🌿", "💎", "✨", "🚫"][idx % 5]}
+                </div>
+                <div>
+                  <div className="ha-salon-name">{salon.name}</div>
+                  <div className="ha-salon-sub">
+                    ⭐ {salon.avgRating || 0} · {salon.reviewsCount || 0}{" "}
+                    reviews
+                  </div>
+                </div>
+              </div>,
+              salon.owner?.name || "Unassigned",
+              salon.location?.city || "-",
+              salon.servicesCount || 0,
+              (salon.bookingsCount || 0).toLocaleString(),
+              Math.round(salon.revenue || 0).toLocaleString(),
+              salon.commissionRate ?? 10,
+              <span className={statusClass(salon.status)}>{salon.status}</span>,
+              <span className={`ha-dot ${salon.active ? "on" : "off"}`} />,
+              <div className="ha-actions">
+                <button className="ha-act-btn">View</button>
+                <button
+                  className="ha-act-btn"
+                  onClick={() => {
+                    setEditDefaultValues(salon);
+                    setSalonModal(true);
+                  }}
+                >
+                  Edit
+                </button>
+                {salon.status === "pending" ? (
+                  <>
+                    <button
+                      className="ha-act-btn"
+                      onClick={() => patchStatus(salon._id, "approved")}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="ha-act-btn danger"
+                      onClick={() => patchStatus(salon._id, "suspended")}
+                    >
+                      Reject
+                    </button>
+                  </>
+                ) : salon.status === "suspended" ? (
+                  <button
+                    className="ha-act-btn"
+                    onClick={() => patchStatus(salon._id, "approved")}
+                  >
+                    Reinstate
+                  </button>
+                ) : (
+                  <button
+                    className="ha-act-btn danger"
+                    onClick={() => patchStatus(salon._id, "suspended")}
+                  >
+                    Suspend
+                  </button>
+                )}
+              </div>,
+            ])
+          }
+        />
       </div>
 
       {salonModalOpen && (

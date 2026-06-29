@@ -38,6 +38,7 @@ fun AuthScreen(onLoginSuccess: (String?) -> Unit) {
     var error by rememberSaveable { mutableStateOf("") }
     var message by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var selectedRole by rememberSaveable { mutableStateOf("customer") }
     val scope = rememberCoroutineScope()
 
     fun parseApiError(throwable: Throwable): String {
@@ -84,7 +85,7 @@ fun AuthScreen(onLoginSuccess: (String?) -> Unit) {
                             email = email,
                             phone = phone,
                             password = password,
-                            role = "customer"
+                            role = selectedRole
                         )
                     )
                     if (result.success) {
@@ -163,6 +164,60 @@ fun AuthScreen(onLoginSuccess: (String?) -> Unit) {
                             shape = RoundedCornerShape(12.dp),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Role Selection
+                        Text(
+                            text = "I am a:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = TextDark,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { selectedRole = "customer" },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedRole == "customer") PurplePale else Color.Transparent,
+                                    contentColor = if (selectedRole == "customer") Purple else TextMuted
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = 2.dp,
+                                    color = if (selectedRole == "customer") Purple else Color(0xFFE0E0E0)
+                                )
+                            ) {
+                                Text(
+                                    text = "Customer",
+                                    fontWeight = if (selectedRole == "customer") FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = { selectedRole = "owner" },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedRole == "owner") PurplePale else Color.Transparent,
+                                    contentColor = if (selectedRole == "owner") Purple else TextMuted
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = 2.dp,
+                                    color = if (selectedRole == "owner") Purple else Color(0xFFE0E0E0)
+                                )
+                            ) {
+                                Text(
+                                    text = "Salon Owner",
+                                    fontWeight = if (selectedRole == "owner") FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 

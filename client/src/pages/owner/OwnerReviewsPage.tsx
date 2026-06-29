@@ -1,28 +1,30 @@
-import DataTable from "../../components/DataTable";
-import ErrorBlock from "../../components/ErrorBlock";
-import { useApi } from "../../hooks/useApi";
 import { reviewService } from "../../services/reviewService";
+import TABLE from "@/components/table";
+
+interface ReviewItem {
+  customerId?: { name?: string };
+  rating?: number;
+  comment?: string;
+  status?: string;
+}
 
 const OwnerReviewsPage = () => {
-  const { data, loading, error } = useApi(
-    () => reviewService.list({ page: 1, limit: 50 }),
-    [],
-  );
-
-  if (error) return <ErrorBlock text={error} />;
-
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Reviews</h2>
-      <DataTable
-        loading={loading}
-        columns={["Customer", "Rating", "Comment", "Status"]}
-        rows={(data?.data || []).map((item) => [
-          item.customerId?.name || "-",
-          item.rating,
-          item.comment,
-          item.status,
-        ])}
+      <TABLE<ReviewItem>
+        title="Reviews List"
+        showPagination
+        service={reviewService.list}
+        columns={[{ title: "Customer" }, { title: "Rating" }, { title: "Comment" }, { title: "Status" }]}
+        rows={(data) =>
+          data?.map((item) => [
+            item.customerId?.name || "-",
+            item.rating,
+            item.comment,
+            item.status,
+          ])
+        }
       />
     </div>
   );

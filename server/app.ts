@@ -17,6 +17,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import userRoutes from './routes/user.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import scanRoutes from './routes/scan.routes.js';
+import posRoutes from './routes/pos.routes.js';
 import { swaggerSpec } from './config/swagger.js';
 import { ApiError } from './utils/ApiError.js';
 import helmet from 'helmet';
@@ -105,6 +106,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/scans', scanRoutes);
+app.use('/api/pos', posRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => next(new ApiError(404, 'Route not found')));
 

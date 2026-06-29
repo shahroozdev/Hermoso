@@ -1,29 +1,30 @@
-import DataTable from "../../components/DataTable";
-import ErrorBlock from "../../components/ErrorBlock";
-import { useApi } from "../../hooks/useApi";
 import { customerService } from "../../services/customerService";
+import TABLE from "@/components/table";
+
+interface CustomerItem {
+  name?: string;
+  email?: string;
+  status?: string;
+  createdAt?: string;
+}
 
 const OwnerCustomersPage = () => {
-  const { data, loading, error } = useApi(
-    () => customerService.list({ page: 1, limit: 50 }),
-    [],
-  );
-
-  // if (loading) return <LoadingBlock text="Loading customers..." />;
-  if (error) return <ErrorBlock text={error} />;
-
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Customers</h2>
-      <DataTable
-        loading={loading}
-        columns={["Name", "Email", "Status", "Joined"]}
-        rows={(data?.data || []).map((item) => [
-          item.name,
-          item.email,
-          item.status,
-          new Date(item.createdAt).toLocaleDateString(),
-        ])}
+      <TABLE<CustomerItem>
+        title="Customers List"
+        showPagination
+        service={customerService.list}
+        columns={[{ title: "Name" }, { title: "Email" }, { title: "Status" }, { title: "Joined" }]}
+        rows={(data) =>
+          data?.map((item) => [
+            item.name,
+            item.email,
+            item.status,
+            item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "-",
+          ])
+        }
       />
     </div>
   );

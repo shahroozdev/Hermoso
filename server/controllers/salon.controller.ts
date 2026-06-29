@@ -308,8 +308,66 @@ export const approveOrSuspendSalon = asyncHandler(
   },
 );
 
+export const getSalonStatusStats = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const match: Record<string, unknown> = {};
+
+    if (req.user?.role === Roles.SALON_OWNER) {
+      match.ownerId = req.user._id;
+    }
+
+    const stats = await Salon.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          status: "$_id",
+          count: 1,
+        },
+      },
+    ]);
+
+    const result: Record<string, number> = {};
+    for (const s of [SalonStatus.PENDING, SalonStatus.APPROVED, SalonStatus.SUSPENDED]) {
+      result[s] = 0;
+    }
+    for (const stat of stats) {
+      result[stat.status] = stat.count;
+    }
+
+    res.json({ success: true, data: result });
+  },
+);
+
+export const getSalonCities = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const match: Record<string, unknown> = {
+      "location.city": { $exists: true, $ne: "" },
+    };
+
+    if (req.user?.role === Roles.CUSTOMER) {
+      match.status = SalonStatus.APPROVED;
+      match.verified = true;
+    }
+
+    const cities = await Salon.distinct("location.city", match);
+
+    res.json({ success: true, data: cities });
+  },
+);
+
 export const getSalonRevenue = asyncHandler(
   async (req: AuthRequest, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const limitNum = Number(limit);
+
     const salons = await Salon.aggregate([
       {
         $lookup: {
@@ -320,17 +378,125 @@ export const getSalonRevenue = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "bookings",
+          localField: "_id",
+          foreignField: "salonId",
+          as: "bookings",
+        },
+      },
+      {
         $project: {
           name: 1,
           status: 1,
           commissionRate: 1,
+          bookingsCount: { $size: "$bookings" },
           grossRevenue: { $sum: "$payments.amount" },
           platformRevenue: { $sum: "$payments.platformCommission" },
           salonNetRevenue: { $sum: "$payments.salonAmount" },
         },
       },
-    ]);
+      { $sort: { grossRevenue: -1 } as const },
+      { $skip: skip },
+      { $limit: limitNum },
+    ] as mongoose.PipelineStage[]);
 
-    res.json({ success: true, data: salons });
+    const countResult = await Salon.aggregate([
+      {
+        $lookup: {
+          from: "payments",
+          localField: "_id",
+          foreignField: "salonId",
+          as: "payments",
+        },
+      },
+      {
+        $lookup: {
+          from: "bookings",
+          localField: "_id",
+          foreignField: "salonId",
+          as: "bookings",
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          status: 1,
+          commissionRate: 1,
+          bookingsCount: { $size: "$bookings" },
+          grossRevenue: { $sum: "$payments.amount" },
+          platformRevenue: { $sum: "$payments.platformCommission" },
+          salonNetRevenue: { $sum: "$payments.salonAmount" },
+        },
+      },
+      { $sort: { grossRevenue: -1 } as const },
+      { $count: "total" },
+    ] as mongoose.PipelineStage[]);
+
+    const total = (countResult[0] as { total?: number } | undefined)?.total || 0;
+
+    res.json({
+      success: true,
+      data: salons,
+      meta: { page: Number(page), limit: Number(limit), total },
+    });
   },
 );
+
+
+export const getRevenueStats = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const [revenueAgg] = await Salon.aggregate([
+      {
+        $lookup: {
+          from: "payments",
+          localField: "_id",
+          foreignField: "salonId",
+          as: "payments",
+        },
+      },
+      {
+        $lookup: {
+          from: "bookings",
+          localField: "_id",
+          foreignField: "salonId",
+          as: "bookings",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalGMV: { $sum: { $sum: "$payments.amount" } },
+          platformCommission: { $sum: { $sum: "$payments.platformCommission" } },
+          totalBookings: { $sum: { $size: "$bookings" } },
+        },
+      },
+    ] as mongoose.PipelineStage[]);
+
+    const [payoutAgg] = await mongoose.model("Payment").aggregate([
+      { $match: { status: "pending" } },
+      {
+        $group: {
+          _id: null,
+          pendingPayouts: { $sum: 1 },
+          pendingPayoutAmount: { $sum: "$salonAmount" },
+        },
+      },
+    ] as mongoose.PipelineStage[]);
+
+    res.json({
+      success: true,
+      data: {
+        totalGMV: revenueAgg?.totalGMV || 0,
+        platformCommission: revenueAgg?.platformCommission || 0,
+        totalBookings: revenueAgg?.totalBookings || 0,
+        pendingPayouts: payoutAgg?.pendingPayouts || 0,
+        pendingPayoutAmount: payoutAgg?.pendingPayoutAmount || 0,
+        avgBookingValue: revenueAgg?.totalBookings
+          ? Math.round((revenueAgg?.totalGMV || 0) / revenueAgg.totalBookings)
+          : 0,
+      },
+    });
+  },
+);
+

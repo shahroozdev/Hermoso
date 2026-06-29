@@ -16,8 +16,12 @@ export const reviewService = {
     const { data } = await api.post('/reviews', payload);
     return data;
   },
-  moderate: async (id: string, status: 'approved' | 'rejected' | 'flagged') => {
-    const { data } = await api.post(`/reviews/${id}/moderate`, { status });
+  moderate: async (id: string, status: 'approved' | 'rejected' | 'flagged' | 'deleted') => {
+    const { data } = await api.patch(`/reviews/${id}/moderate`, { status });
+    return data;
+  },
+  getStats: async () => {
+    const { data } = await api.get('/reviews/analytics/stats');
     return data;
   }
 };

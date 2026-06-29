@@ -16,6 +16,7 @@ export const authenticate = async (req: AuthRequest, _res: Response, next: NextF
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
     const user = await User.findById(decoded.id).select('-password');
     if (!user) return next(new ApiError(401, 'Invalid token user'));
+    if (user.status === 'suspended' || user.status === 'inactive') return next(new ApiError(403, 'Account has been suspended. Contact support.'));
     req.user = user as IUser;
     next();
   } catch {

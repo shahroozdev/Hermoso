@@ -24,6 +24,40 @@ export const createReview = asyncHandler(async (req: AuthRequest, res: Response)
   res.status(201).json({ success: true, data: review });
 });
 
+export const getReviewStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const query: Record<string, unknown> = {};
+
+  if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
+    query.salonId = req.user?.salonId;
+  } else if (req.user?.role === Roles.CUSTOMER) {
+    query.customerId = req.user?._id;
+  }
+
+  const [stats] = await Review.aggregate([
+    { $match: query },
+    {
+      $group: {
+        _id: null,
+        totalReviews: { $sum: 1 },
+        averageRating: { $avg: '$rating' },
+        flaggedCount: { $sum: { $cond: [{ $eq: ['$status', 'flagged'] }, 1, 0] } },
+        approvedCount: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
+      },
+    },
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      totalReviews: stats?.totalReviews || 0,
+      averageRating: stats?.averageRating ? Number(stats.averageRating.toFixed(1)) : 0,
+      flaggedCount: stats?.flaggedCount || 0,
+      approvedCount: stats?.approvedCount || 0,
+      approvedPercentage: stats?.totalReviews ? Math.round((stats.approvedCount / stats.totalReviews) * 100) : 0,
+    },
+  });
+});
+
 export const getReviews = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, salonId, status } = req.query;
   const query: Record<string, unknown> = {};

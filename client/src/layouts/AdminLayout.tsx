@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useUIStore } from "../store/uiStore";
-import Sidebar2 from "@/components/Sidebar2";
 import { NavGroup } from "@/components/constant";
 import Topbar from "@/components/topbar";
+import Sidebar from "@/components/sidebar/Sidebar";
 
 const ProtectedLayout = ({ item , isAdmin}: { item: NavGroup[] , isAdmin?: boolean }) => {
   const location = useLocation();
@@ -22,7 +22,7 @@ const ProtectedLayout = ({ item , isAdmin}: { item: NavGroup[] , isAdmin?: boole
         onClick={() => { setMobileOpen(false); setOpenPathname(location.pathname); }}
       />
 
-      <Sidebar2 item={item} mobileOpen={mobileOpenDerived} />
+      <Sidebar item={item} mobileOpen={mobileOpenDerived} />
 
       <div className="ha-main min-h-0">
         <Topbar onMenuClick={() => {

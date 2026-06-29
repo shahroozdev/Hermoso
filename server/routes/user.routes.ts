@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { changeMyPassword, createOwner, getMyProfile, listOwners, updateMyProfile } from '../controllers/user.controller.js';
+import { changeMyPassword, createOwner, getMyProfile, listOwners, updateMyProfile, updateUserStatus } from '../controllers/user.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -16,5 +16,6 @@ router.use(authorize(Roles.SUPER_ADMIN));
 
 router.get('/owners', listOwners);
 router.post('/owners', createOwner);
+router.patch('/:id/status', updateUserStatus);
 
 export default router;

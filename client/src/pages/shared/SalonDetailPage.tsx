@@ -2,22 +2,28 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingBlock from '../../components/LoadingBlock';
 import ErrorBlock from '../../components/ErrorBlock';
-import DataTable from '../../components/DataTable';
+import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
 import { salonService } from '../../services/salonService';
 import { serviceService } from '../../services/serviceService';
 import { categoryService } from '../../services/categoryService';
 
+interface ServiceItem {
+  name?: string;
+  category?: string;
+  categoryId?: { name?: string };
+  duration?: number;
+  price?: number;
+}
+
 const SalonDetailPage = () => {
   const { id } = useParams();
   const [categoryId, setCategoryId] = useState('');
   const salon = useApi(() => salonService.getById(id), [id]);
-  const services = useApi(() => serviceService.list({ salonId: id, categoryId: categoryId || undefined, page: 1, limit: 30 }), [id, categoryId]);
   const categories = useApi(() => categoryService.list(), []);
 
-  if (salon.loading || services.loading || categories.loading) return <LoadingBlock text="Loading salon details..." />;
+  if (salon.loading || categories.loading) return <LoadingBlock text="Loading salon details..." />;
   if (salon.error) return <ErrorBlock text={salon.error} />;
-  if (services.error) return <ErrorBlock text={services.error} />;
   if (categories.error) return <ErrorBlock text={categories.error} />;
 
   const s = salon.data?.data;
@@ -51,9 +57,13 @@ const SalonDetailPage = () => {
           </div>
         </div>
       </div>
-      <DataTable
-        columns={['Service', 'Category', 'Duration', 'Price']}
-        rows={(services.data?.data || []).map((item) => [item.name, item.category || item.categoryId?.name || '-', `${item.duration} min`, `$${item.price}`])}
+      <TABLE<ServiceItem>
+        service={serviceService.list}
+        serviceParams={{ salonId: id, categoryId: categoryId || undefined }}
+        columns={[{ title: 'Service' }, { title: 'Category' }, { title: 'Duration' }, { title: 'Price' }]}
+        rows={(data) =>
+          data?.map((item) => [item.name, item.category || item.categoryId?.name || '-', `${item.duration} min`, `$${item.price}`])
+        }
       />
     </div>
   );

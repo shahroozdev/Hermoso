@@ -19,5 +19,9 @@ export const payoutService = {
   update: async (id: string, payload: { status: string }) => {
     const { data } = await api.patch(`/payouts/${id}`, payload);
     return data;
+  },
+  getStats: async () => {
+    const { data } = await api.get('/payouts/analytics/stats');
+    return data;
   }
 };

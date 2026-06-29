@@ -64,6 +64,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.mlkit:face-detection:16.1.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)

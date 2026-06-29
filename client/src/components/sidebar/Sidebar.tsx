@@ -1,9 +1,10 @@
 import { NavLink, useLocation } from "react-router-dom";
-import Icon from "./Icon";
-import { NavGroup } from "./constant";
+import Icon from "../Icon";
+import { NavGroup } from "../constant";
 import SidebarUserMenu from "./SidebarUserMenu";
+import { useAuthStore } from "@/store/authStore";
 
-const Sidebar2 = ({
+const Sidebar = ({
   item,
   mobileOpen,
 }: {
@@ -11,7 +12,7 @@ const Sidebar2 = ({
   mobileOpen: boolean;
 }) => {
   const location = useLocation();
-
+  const { user } = useAuthStore();
   return (
     <aside className={`ha-sidebar ${mobileOpen ? "open" : ""}`}>
       <div className="ha-sidebar-brand">
@@ -78,7 +79,7 @@ const Sidebar2 = ({
         </svg>
         <div className="ha-brand-text">
           <div className="ha-brand-name">Hermoso</div>
-          <div className="ha-brand-tag">Super Admin</div>
+          <div className="ha-brand-tag uppercase"> {(user?.role || "super_admin").replace(/_/g, " ")}</div>
         </div>
       </div>
       <div className="ha-sidebar-menu" >
@@ -116,4 +117,4 @@ const Sidebar2 = ({
   );
 };
 
-export default Sidebar2;
+export default Sidebar;

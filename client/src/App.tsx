@@ -16,6 +16,8 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage';
 import OwnerServicesPage from './pages/owner/OwnerServicesPage';
+import OwnerEventsPage from './pages/owner/OwnerEventsPage';
+import OwnerPOSPage from './pages/owner/OwnerPOSPage';
 import OwnerStaffPage from './pages/owner/OwnerStaffPage';
 import OwnerBookingsPage from './pages/owner/OwnerBookingsPage';
 import OwnerCustomersPage from './pages/owner/OwnerCustomersPage';
@@ -60,6 +62,8 @@ const App = () => (
         <Route path="/owner" element={<ProtectedLayout item={ownerNavGroups} />}>
           <Route index element={<OwnerDashboardPage />} />
           <Route path="services" element={<OwnerServicesPage />} />
+          <Route path="events" element={<OwnerEventsPage />} />
+          <Route path="pos" element={<OwnerPOSPage />} />
           <Route path="staff" element={<OwnerStaffPage />} />
           <Route path="bookings" element={<OwnerBookingsPage />} />
           <Route path="customers" element={<OwnerCustomersPage />} />

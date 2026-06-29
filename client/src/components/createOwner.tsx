@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { z } from "zod";
-import Form from "./Form";
+import Form from "./form/Form";
 import GenericModal from "./GenericModal";
-import FormInput from "./FormInput";
+import FormInput from "./form/FormInput";
 import { ownerService, type OwnerRecord } from "@/services/ownerService";
 
 const schema = z.object({

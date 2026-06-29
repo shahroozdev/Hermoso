@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requestPayout, getPayouts, updatePayout } from '../controllers/payout.controller.js';
+import { requestPayout, getPayouts, getPayoutStats, updatePayout } from '../controllers/payout.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -106,6 +106,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get('/analytics/stats', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), getPayoutStats);
 router.post('/request', authorize(Roles.SALON_OWNER), requestPayout);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), getPayouts);
 router.patch('/:id', authorize(Roles.SUPER_ADMIN), updatePayout);

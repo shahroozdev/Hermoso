@@ -32,6 +32,39 @@ export const requestPayout = asyncHandler(async (req: AuthRequest, res: Response
   res.status(201).json({ success: true, data: payout, availableBalance: available });
 });
 
+export const getPayoutStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const query: Record<string, unknown> = {};
+  if (req.user?.role !== Roles.SUPER_ADMIN) {
+    query.salonId = req.user?.salonId;
+  }
+
+  const [stats] = await Payout.aggregate([
+    { $match: query },
+    {
+      $group: {
+        _id: null,
+        pendingPayouts: { $sum: { $cond: [{ $in: ['$status', ['pending', 'processing']] }, 1, 0] } },
+        pendingTotal: { $sum: { $cond: [{ $in: ['$status', ['pending', 'processing']] }, '$amount', 0] } },
+        paidPayouts: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+        paidTotal: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$amount', 0] } },
+        totalAmount: { $sum: '$amount' },
+        totalCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      pendingPayouts: stats?.pendingPayouts || 0,
+      pendingTotal: stats?.pendingTotal || 0,
+      paidPayouts: stats?.paidPayouts || 0,
+      paidTotal: stats?.paidTotal || 0,
+      avgPayout: stats?.totalCount ? Math.round(stats.totalAmount / stats.totalCount) : 0,
+    },
+  });
+});
+
 export const getPayouts = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 10, salonId, status } = req.query;
   const query: Record<string, unknown> = {};

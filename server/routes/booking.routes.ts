@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createBooking, getBookingAvailability, getBookingFormOptions, getBookings, updateBookingStatus } from '../controllers/booking.controller.js';
+import { createBooking, getBookingAvailability, getBookingFormOptions, getBookings, getBookingStats, updateBookingStatus } from '../controllers/booking.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -116,7 +116,8 @@ router.use(authenticate);
 router.get('/options', authorize(Roles.CUSTOMER, Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getBookingFormOptions);
 router.get('/availability', authorize(Roles.CUSTOMER, Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getBookingAvailability);
 router.post('/', authorize(Roles.CUSTOMER), createBooking);
+router.get('/analytics/stats', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getBookingStats);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getBookings);
-router.patch('/:id/status', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), updateBookingStatus);
+router.patch('/:id/status', authorize(Roles.SUPER_ADMIN), updateBookingStatus);
 
 export default router;

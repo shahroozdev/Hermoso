@@ -1,28 +1,20 @@
-import DataTable from "../../components/DataTable";
-import ErrorBlock from "../../components/ErrorBlock";
-import { useApi } from "../../hooks/useApi";
+import TABLE from "@/components/table";
 import { bookingService } from "../../services/bookingService";
 import BookingPage from "./BookingPage";
 import { formatTimeAMPM } from "@/utils/format";
+import { Booking } from "@/types";
 
 const BookingHistoryPage = () => {
-  const { data, loading, error } = useApi(
-    () => bookingService.list({ page: 1, limit: 50 }),
-    [],
-  );
-
-  if (error) return <ErrorBlock text={error} />;
-
   return (
     <div className="mx-auto container space-y-4">
       <BookingPage />
       <h2 className="text-xl font-semibold">Booking History</h2>
-      <div className="p-6">
-        <DataTable
-          loading={loading}
-          loadingRows={6}
-          columns={["Salon", "Service", "Date", "Status", "Amount", "Action"]}
-          rows={(data?.data || []).map((item) => [
+      <TABLE<Booking>
+        showPagination
+        service={bookingService.list}
+        columns={[{ title: "Salon" }, { title: "Service" }, { title: "Date" }, { title: "Status" }, { title: "Amount" }, { title: "Action" }]}
+        rows={(data) =>
+          data?.map((item) => [
             item.salonId?.name || "-",
             item.serviceId?.name || "-",
             <p>
@@ -42,9 +34,9 @@ const BookingHistoryPage = () => {
                 <button className="ha-act-btn">Cancel</button>
               )}
             </div>,
-          ])}
-        />
-      </div>
+          ])
+        }
+      />
     </div>
   );
 };

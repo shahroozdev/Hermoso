@@ -1,4 +1,4 @@
-﻿import AdminPageSkeleton from '../../components/AdminPageSkeleton';
+﻿import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
 import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';

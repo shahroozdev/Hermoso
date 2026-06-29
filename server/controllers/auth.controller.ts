@@ -85,6 +85,7 @@ export const login = asyncHandler(
     const match = await user.comparePassword(password);
     if (!match) return next(new ApiError(401, 'Invalid credentials'));
     if (!user.isVerified) return next(new ApiError(403, 'Account not verified. Please verify OTP first.'));
+    if (user.status === 'suspended' || user.status === 'inactive') return next(new ApiError(403, 'Account has been suspended. Contact support.'));
 
     const tokens = await buildAuthPayload(user);
     user.password = undefined as unknown as string; // Remove password from response

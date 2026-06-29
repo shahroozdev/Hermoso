@@ -59,6 +59,8 @@ import retrofit2.HttpException
 object Dest {
     const val Splash = "splash"
     const val Auth = "auth"
+
+    // Customer destinations
     const val Home = "home"
     const val Scan = "scan"
     const val Recs = "recs"
@@ -69,9 +71,19 @@ object Dest {
     const val BookingWithSalonService = "booking/{salonId}/{serviceId}"
     const val SalonServices = "salon-services/{salonId}"
     const val BookingsList = "bookings-list"
+    const val Salons = "salons?city={city}"
+
+    // Owner/Business destinations
+    const val OwnerDashboard = "owner-dashboard"
+    const val OwnerCalendar = "owner-calendar"
+    const val OwnerServices = "owner-services"
+    const val OwnerClients = "owner-clients"
+    const val OwnerInsights = "owner-insights"
+
+    // Shared destinations
     const val Profile = "profile"
     const val Notifications = "notifications"
-    const val Salons = "salons?city={city}"
+
     fun SalonsWithCity(city: String?) = if (city != null) "salons?city=$city" else "salons"
 }
 
@@ -149,7 +161,10 @@ fun HermosoApp() {
     }
 
     Scaffold(
-        containerColor = Cream,
+        containerColor = when (userRole) {
+            "owner" -> PurpleDeeper
+            else -> Cream
+        },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             if (sessionReady && isLoggedIn && current != Dest.Splash) {
@@ -157,6 +172,7 @@ fun HermosoApp() {
                     onProfileClick = { navController.navigate(Dest.Profile) },
                     onNotificationsClick = { navController.navigate(Dest.Notifications) },
                     unreadCount = unreadCount,
+                    isOwnerTheme = userRole == "owner",
                     onLogoutClick = {
                         scope.launch {
                             val token = SessionManager.refreshToken
@@ -180,7 +196,7 @@ fun HermosoApp() {
         },
         bottomBar = {
             if (sessionReady && isLoggedIn && current != Dest.Splash) {
-                BottomNav(current = current, navController = navController)
+                BottomNav(current = current, navController = navController, userRole = userRole)
             }
         }
     ) { innerPadding ->
@@ -192,7 +208,11 @@ fun HermosoApp() {
             composable(Dest.Splash) {
                 SplashScreen(onNext = {
                     if (isLoggedIn) {
-                        navController.navigate(Dest.Home) {
+                        val startDest = when (userRole) {
+                            "owner" -> Dest.OwnerDashboard
+                            else -> Dest.Home
+                        }
+                        navController.navigate(startDest) {
                             popUpTo(Dest.Splash) { inclusive = true }
                         }
                     } else {
@@ -206,16 +226,30 @@ fun HermosoApp() {
                 AuthScreen(onLoginSuccess = { role ->
                     isLoggedIn = true
                     userRole = role
-                    navController.navigate(Dest.Home) {
+                    val startDest = when (role) {
+                        "owner" -> Dest.OwnerDashboard
+                        else -> Dest.Home
+                    }
+                    navController.navigate(startDest) {
                         popUpTo(Dest.Auth) { inclusive = true }
                     }
                 })
             }
+            // Customer screens
             composable(Dest.Home) { HomeScreen(navController) }
             composable(Dest.Scan) { ScanScreen(navController) }
             composable(Dest.Recs) { RecommendationsScreen(navController) }
             composable(Dest.Match) { MatchScreen(navController) }
             composable(Dest.Tracker) { TrackerScreen() }
+
+            // Owner/Business screens
+            composable(Dest.OwnerDashboard) { OwnerDashboardScreen() }
+            composable(Dest.OwnerCalendar) { OwnerCalendarScreen() }
+            composable(Dest.OwnerServices) { OwnerServicesScreen() }
+            composable(Dest.OwnerClients) { OwnerClientsScreen() }
+            composable(Dest.OwnerInsights) { OwnerInsightsScreen() }
+
+            // Shared screens
             composable(Dest.Profile) { ProfileScreen() }
             composable(Dest.Notifications) { NotificationScreen() }
             composable(
@@ -262,17 +296,26 @@ fun HermosoApp() {
 }
 
 @Composable
-private fun BottomNav(current: String, navController: NavHostController) {
+private fun BottomNav(current: String, navController: NavHostController, userRole: String?) {
     val configuration = LocalConfiguration.current
     // Using a slightly smaller factor to ensure text fits on all screen widths
     val dynamicFontSize = (configuration.screenWidthDp / 36).sp
 
-    val items = listOf(
-        Triple(Dest.Home, "Home", Icons.Default.Home),
-        Triple(Dest.Scan, "AI Scan", Icons.Default.Face),
-        Triple(Dest.BookingsList, "Bookings", Icons.Default.DateRange),
-        Triple(Dest.Tracker, "Progress", Icons.AutoMirrored.Filled.ShowChart)
-    )
+    val items = when (userRole) {
+        "owner" -> listOf(
+            Triple(Dest.OwnerDashboard, "Dashboard", Icons.Default.Home),
+            Triple(Dest.OwnerCalendar, "Calendar", Icons.Default.DateRange),
+            Triple(Dest.OwnerServices, "Services", Icons.Default.Face),
+            Triple(Dest.OwnerInsights, "Insights", Icons.AutoMirrored.Filled.ShowChart)
+        )
+        else -> listOf(
+            Triple(Dest.Home, "Home", Icons.Default.Home),
+            Triple(Dest.Scan, "AI Scan", Icons.Default.Face),
+            Triple(Dest.BookingsList, "Bookings", Icons.Default.DateRange),
+            Triple(Dest.Tracker, "Progress", Icons.AutoMirrored.Filled.ShowChart)
+        )
+    }
+
     Surface(
         color = Color.White,
         tonalElevation = 8.dp,
@@ -293,9 +336,10 @@ private fun BottomNav(current: String, navController: NavHostController) {
                         Dest.BookingsList,
                         Dest.Booking,
                         Dest.BookingWithSalon,
-                        Dest.BookingWithSalonService,
-                        Dest.SalonServices
+                        Dest.BookingWithSalonService
                     )
+                    Dest.OwnerDashboard, Dest.OwnerCalendar, Dest.OwnerServices,
+                    Dest.OwnerClients, Dest.OwnerInsights -> current == route
                     else -> current == route
                 }
                 Box(
@@ -305,10 +349,19 @@ private fun BottomNav(current: String, navController: NavHostController) {
                     TextButton(
                         onClick = {
                             if (!selected) {
-                                navController.navigate(route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                // Special handling for BookingsList to always show the list, not restore state
+                                if (route == Dest.BookingsList) {
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = false  // Don't restore state for Bookings tab
+                                    }
+                                } else {
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             }
                         },

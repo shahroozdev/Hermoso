@@ -1,162 +1,148 @@
-﻿import { useState } from 'react';
-import AdminPageSkeleton from '../../components/AdminPageSkeleton';
-import ErrorBlock from '../../components/ErrorBlock';
-import { useApi } from '../../hooks/useApi';
-import { notificationService } from '@/services/notificationService';
-
-interface NotificationForm {
-  title: string;
-  message: string;
-  targetRole: string;
-  city: string;
-}
+﻿import { useState } from "react";
+import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
+import ErrorBlock from "../../components/ErrorBlock";
+import NotificationModal from "../../components/NotificationModal";
+import NotificationDetailModal from "../../components/NotificationDetailModal";
+import TABLE from "@/components/table";
+import { useApi } from "../../hooks/useApi";
+import { notificationService } from "@/services/notificationService";
+import { formatDateInput, formatTimeAMPM } from "@/utils/format";
 
 interface NotificationItem {
   _id: string;
   title: string;
+  message: string;
   targetRole: string;
+  type: string;
+  isRead: boolean;
   createdAt: string;
 }
 
 const roleLabel = (role: string): string => {
-  if (role === 'customer') return 'All Customers';
-  if (role === 'salon_owner') return 'All Salons';
-  if (role === 'staff') return 'All Staff';
-  return role || 'All Users';
-};
-
-const fakeOpenRate = (title: string): number => {
-  const seed = title.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  return 50 + (seed % 36);
+  if (role === "customer") return "Customers";
+  if (role === "salon_owner") return "Salon Owners";
+  if (role === "staff") return "Staff";
+  return role || "All Users";
 };
 
 const AdminNotificationsPage = () => {
-  const [form, setForm] = useState<NotificationForm>({ title: '', message: '', targetRole: 'customer', city: 'all' });
-  const [status, setStatus] = useState('');
-  const [reloadKey, setReloadKey] = useState(0);
+  const [viewNotif, setViewNotif] = useState<NotificationItem | null>(null);
+  const req = useApi(() => notificationService.list({ page: 1, limit: 1 }), []);
 
-  const notificationsReq = useApi(() => notificationService.list({ page: 1, limit: 50 }), [reloadKey]);
-
-  if (notificationsReq.loading) return <AdminPageSkeleton variant="notifications" />;
-  if (notificationsReq.error) return <ErrorBlock text={notificationsReq.error} />;
-
-  const notifications: NotificationItem[] = notificationsReq.data?.data || [];
-
-  const grouped = new Map();
-  for (const n of notifications) {
-    const key = `${n.title}|${n.targetRole}|${new Date(n.createdAt).toDateString()}`;
-    if (!grouped.has(key)) grouped.set(key, n);
-  }
-
-  const rows = (Array.from(grouped.values()) as NotificationItem[])
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 6)
-    .map((n) => ({
-      id: n._id,
-      title: n.title,
-      audience: roleLabel(n.targetRole),
-      sent: new Date(n.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric' }),
-      openRate: `${fakeOpenRate(n.title)}%`
-    }));
-
-  const preview = () => {
-    setStatus(`Preview: "${form.title || 'Untitled'}" to ${roleLabel(form.targetRole)}${form.city !== 'all' ? ` · ${form.city}` : ''}`);
-  };
-
-  const sendNow = async () => {
-    setStatus('');
+  const handleMarkRead = async (id: string) => {
     try {
-      const result = await notificationService.announce({
-        title: form.title,
-        message: form.message,
-        targetRole: form.targetRole
-      });
-      setStatus(`Notification sent to ${result.count || 0} users.`);
-      setForm({ title: '', message: '', targetRole: 'customer', city: 'all' });
-      setReloadKey((v) => v + 1);
-    } catch (err) {
-      setStatus(err.response?.data?.message || 'Failed to send notification');
+      await notificationService.markRead(id);
+      window.location.reload();
+    } catch {
+      alert("Failed to mark notification as read");
     }
   };
 
+  const handleMarkAllRead = async () => {
+    try {
+      const res = await notificationService.list({
+        unreadOnly: "true",
+        limit: 500,
+      });
+      const unread: NotificationItem[] = res?.data || [];
+      for (const n of unread) {
+        await notificationService.markRead(n._id);
+      }
+      window.location.reload();
+    } catch {
+      alert("Failed to mark all as read");
+    }
+  };
+
+  if (req.loading) return <AdminPageSkeleton variant="notifications" />;
+  if (req.error) return <ErrorBlock text={req.error} />;
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20 }} className="ha-notif-grid">
-      <div className="ha-card">
-        <div className="ha-card-title">Send Platform Notification</div>
-
-        <div className="ha-notif-panel">
-          <label className="ha-kpi-label" style={{ marginBottom: 8 }}>Title</label>
-          <input
-            className="ha-input"
-            placeholder="e.g. Eid Special Offers Live Now 🎉"
-            value={form.title}
-            onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-          />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Notifications</h2>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="ha-act-btn" onClick={handleMarkAllRead}>
+            Mark All Read
+          </button>
+          <NotificationModal />
         </div>
-
-        <div className="ha-notif-panel">
-          <label className="ha-kpi-label" style={{ marginBottom: 8 }}>Message</label>
-          <textarea
-            className="ha-textarea"
-            rows={3}
-            placeholder="Write your push notification message here..."
-            value={form.message}
-            onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
-          />
-        </div>
-
-        <div className="ha-notif-panel">
-          <label className="ha-kpi-label" style={{ marginBottom: 8 }}>Send To</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <select className="ha-select" value={form.targetRole} onChange={(e) => setForm((p) => ({ ...p, targetRole: e.target.value }))}>
-              <option value="customer">All Customers</option>
-              <option value="salon_owner">All Salons</option>
-              <option value="staff">All Staff</option>
-            </select>
-            <select className="ha-select" value={form.city} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}>
-              <option value="all">All Cities</option>
-              <option value="lahore">Lahore</option>
-              <option value="karachi">Karachi</option>
-              <option value="islamabad">Islamabad</option>
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-            <button className="ha-act-btn" onClick={preview}>Preview</button>
-            <button className="ha-topbar-btn primary" onClick={sendNow}>Send Now 📣</button>
-          </div>
-        </div>
-
-        {status ? <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>{status}</p> : null}
       </div>
+      <TABLE<NotificationItem>
+        title="All Notifications"
+        showPagination
+        service={notificationService.list}
+        columns={[
+          { title: "Title" },
+          { title: "Message" },
+          { title: "Audience" },
+          { title: "Type", size: "150px" },
+          { title: "Sent", size: "120px" },
+          { title: "Status" },
+          { title: "Actions" },
+        ]}
+        rows={(data) =>
+          data?.map((item) => [
+            <span className="ha-salon-name" style={{ fontSize: 14 }}>
+              {item.title}
+            </span>,
+            <span
+              className="ha-salon-sub"
+              style={{
+                fontSize: 13,
+                maxWidth: 250,
+                display: "block",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {item.message || "-"}
+            </span>,
+            roleLabel(item.targetRole),
+            <span className="ha-pill ha-pill-booking">
+              {item.type.replace("_", " ")}
+            </span>,
+            <p>
+              {formatDateInput(item.createdAt)} <br />
+              <span className="text-gray-400">
+                {formatTimeAMPM(item.createdAt)}
+              </span>
+            </p>,
+            <span
+              className={
+                item.isRead
+                  ? "ha-pill ha-pill-active"
+                  : "ha-pill ha-pill-pending"
+              }
+            >
+              {item.isRead ? "Read" : "Unread"}
+            </span>,
+            <div className="ha-actions">
+              <button className="ha-act-btn" onClick={() => setViewNotif(item)}>
+                View
+              </button>
+              {!item.isRead && (
+                <button
+                  className="ha-act-btn min-w-max"
+                  onClick={() => handleMarkRead(item._id)}
+                >
+                  Mark Read
+                </button>
+              )}
+            </div>,
+          ])
+        }
+      />
 
-      <div className="ha-card">
-        <div className="ha-card-title">Recent Notifications Sent <span>Last 7 days</span></div>
-        <table className="ha-salon-table" style={{ minWidth: '100%' }}>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Audience</th>
-              <th>Sent</th>
-              <th>Open Rate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td className="ha-salon-name" style={{ fontSize: 14 }}>{r.title}</td>
-                <td>{r.audience}</td>
-                <td>{r.sent}</td>
-                <td style={{ color: Number(r.openRate.replace('%', '')) >= 70 ? 'var(--green)' : 'var(--amber)', fontWeight: 700 }}>{r.openRate}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {viewNotif && (
+        <NotificationDetailModal
+          notification={viewNotif}
+          onClose={() => setViewNotif(null)}
+        />
+      )}
     </div>
   );
 };
 
 export default AdminNotificationsPage;
-
-

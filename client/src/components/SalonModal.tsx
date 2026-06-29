@@ -1,11 +1,11 @@
-import { salonService } from "@/services/salonService";
+import { CreateSalonPayload, salonService } from "@/services/salonService";
 import { ownerService, type OwnerRecord } from "@/services/ownerService";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
-import Form from "./Form";
+import Form from "./form/Form";
 import GenericModal from "./GenericModal";
-import FormInput from "./FormInput";
+import FormInput from "./form/FormInput";
 import CreateOwnerModal from "./createOwner";
 
 const DAYS = [
@@ -32,6 +32,7 @@ interface SalonEditData {
   description?: string;
   location?: { city?: string; country?: string };
   commissionRate?: number;
+  imageUrl?: string;
   workingHours?: Record<string, { open: string; close: string; off: boolean }>;
   owner?: { _id?: string; name?: string; email?: string };
   ownerId?: string | { _id?: string };
@@ -65,6 +66,8 @@ const schema = z.object({
   ),
 });
 
+type FormValues = z.infer<typeof schema>;
+
 const SalonModal = ({
   onClose,
   onCreated,
@@ -86,10 +89,36 @@ const SalonModal = ({
     generated?: boolean;
   } | null>(null);
   const [ownerIdOverride, setOwnerIdOverride] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [showImageUpload, setShowImageUpload] = useState(false);
   const selectedOwnerIdOverride = useMemo(
     () => ownerIdOverride || resolveOwnerId(editDefaultValues),
     [ownerIdOverride, editDefaultValues],
   );
+  const hasExistingImage = !!(editDefaultValues?.imageUrl && !showImageUpload);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview("");
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setShowImageUpload(true);
+    setImageFile(null);
+    setImagePreview("");
+  };
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   useEffect(() => {
     const loadOwners = async () => {
@@ -108,23 +137,27 @@ const SalonModal = ({
     loadOwners();
   }, []);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: FormValues) => {
     setServerError("");
     setIsSubmitting(true);
-    const payload = {
+    const payload: CreateSalonPayload = {
       ownerId: data.ownerId,
       name: data.name,
       phone: data.phone,
       address: data.address,
       description: data.description || "",
-      location: { city: data.city, country: data.country },
+      location: { city: data?.city, country: data?.country },
       workingHours: data.workingHours,
       commissionRate: data.commissionRate,
+      imageFile: imageFile || null,
     };
+    if (imageFile) {
+      payload.imageFile = imageFile;  
+    }
     try {
       const result = await (editDefaultValues
-        ? salonService.update(editDefaultValues._id, payload)
-        : salonService.create(payload));
+        ? salonService.update(editDefaultValues._id!, payload as CreateSalonPayload)
+        : salonService.create(payload as CreateSalonPayload));
       onCreated(result.data);
       onClose();
     } catch (err) {
@@ -199,6 +232,53 @@ const SalonModal = ({
               currentOwner={editDefaultValues?.owner}
               onCreateClick={() => setOwnerModalOpen(true)}
             />
+
+            <div className="ha-form-group">
+              <label className="ha-form-label-row">
+                <span>Salon Image</span>
+              </label>
+              {hasExistingImage ? (
+                <div className="ha-image-preview">
+                  <img
+                    src={editDefaultValues!.imageUrl}
+                    alt="Salon"
+                    className="ha-image-preview-img"
+                  />
+                  <button
+                    type="button"
+                    className="ha-image-remove-btn"
+                    onClick={handleRemoveImage}
+                    aria-label="Remove image"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="ha-input"
+                  onChange={handleImageChange}
+                />
+              )}
+              {imageFile && imagePreview && (
+                <div className="ha-image-preview" style={{ marginTop: 8 }}>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="ha-image-preview-img"
+                  />
+                  <button
+                    type="button"
+                    className="ha-image-remove-btn"
+                    onClick={() => { setImageFile(null); setImagePreview(""); }}
+                    aria-label="Remove selected image"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="ha-form-row">
               <FormInput
@@ -364,7 +444,7 @@ const WorkingHours = () => {
   const { watch, setValue } = useFormContext();
   const workingHours = watch("workingHours");
 
-  const handleDayToggle = (day) => {
+  const handleDayToggle = (day: string) => {
     setValue(`workingHours.${day}.off`, !workingHours[day].off);
   };
 
