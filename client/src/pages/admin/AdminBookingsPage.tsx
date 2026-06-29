@@ -3,6 +3,7 @@ import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
 import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
+import { useInvalidate } from '../../hooks/useInvalidate';
 import { bookingService } from '../../services/bookingService';
 
 interface BookingItem {
@@ -25,6 +26,7 @@ const statusPillClass = (status: string) => {
 };
 
 const AdminBookingsPage = () => {
+  const invalidate = useInvalidate();
   const statsReq = useApi(() => bookingService.getStats(), []);
 
   const metrics = useMemo(() => ({
@@ -37,7 +39,7 @@ const AdminBookingsPage = () => {
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
       await bookingService.updateStatus(id, status);
-      window.location.reload();
+      invalidate();
     } catch {
       alert('Failed to update booking status');
     }

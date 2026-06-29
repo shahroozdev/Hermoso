@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseApiResult<T> {
   data: T | null;
@@ -6,38 +6,20 @@ interface UseApiResult<T> {
   error: string;
 }
 
-export const useApi = <T>(fetcher: () => Promise<T>, deps: React.DependencyList = []): UseApiResult<T> => {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const fetcherRef = useRef(fetcher);
+type ApiError = Error & { response?: { data?: { message?: string } } };
 
-  useEffect(() => {
-    fetcherRef.current = fetcher;
+export const useApi = <T>(fetcher: () => Promise<T>, deps: React.DependencyList = []): UseApiResult<T> => {
+  // Filter out undefined, null, and empty string values from dependencies
+  const queryKey = deps.filter((dep) => dep !== undefined && dep !== null && dep !== '');
+
+  const { data, isLoading, error } = useQuery<T, ApiError>({
+    queryKey,
+    queryFn: fetcher,
   });
 
-  useEffect(() => {
-    let mounted = true;
-
-    const run = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const result = await fetcherRef.current();
-        if (mounted) setData(result);
-      } catch (err: unknown) {
-        if (mounted) setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load data');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    run();
-    return () => {
-      mounted = false;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
-
-  return { data, loading, error };
+  return {
+    data: data ?? null,
+    loading: isLoading,
+    error: error?.response?.data?.message || error?.message || '',
+  };
 };

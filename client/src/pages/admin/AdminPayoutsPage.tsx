@@ -4,6 +4,7 @@ import ErrorBlock from '../../components/ErrorBlock';
 import PayoutDetailModal from '../../components/PayoutDetailModal';
 import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
+import { useInvalidate } from '../../hooks/useInvalidate';
 import { payoutService } from '../../services/payoutService';
 
 interface PayoutItem {
@@ -39,6 +40,7 @@ const periodLabel = (dateLike?: string) => {
 
 const AdminPayoutsPage = () => {
   const [receiptPayout, setReceiptPayout] = useState<PayoutItem | null>(null);
+  const invalidate = useInvalidate();
   const statsReq = useApi(() => payoutService.getStats(), []);
 
   const kpi = useMemo(() => {
@@ -63,7 +65,7 @@ const AdminPayoutsPage = () => {
   const handleRelease = async (id: string) => {
     try {
       await payoutService.update(id, { status: 'completed' });
-      window.location.reload();
+      invalidate();
     } catch {
       alert('Failed to release payout');
     }
@@ -76,7 +78,7 @@ const AdminPayoutsPage = () => {
       for (const p of pending) {
         await payoutService.update(p._id, { status: 'completed' });
       }
-      window.location.reload();
+      invalidate();
     } catch {
       alert('Failed to release all payouts');
     }

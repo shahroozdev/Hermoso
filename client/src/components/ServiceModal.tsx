@@ -7,7 +7,7 @@ import { useApi } from '../hooks/useApi';
 import { serviceService } from '../services/serviceService';
 import { categoryService, type CategoryRecord } from '../services/categoryService';
 import GenericModal from './GenericModal';
-import { useNavigate } from 'react-router-dom';
+import { useInvalidate } from '../hooks/useInvalidate';
 
 const serviceSchema = z.object({
   name: z.string().min(2, 'Service name must be at least 2 characters'),
@@ -37,7 +37,7 @@ const ServiceModal = () => {
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
-  const navigate = useNavigate();
+  const invalidate = useInvalidate();
 
   const categoriesReq = useApi(() => categoryService.list(), [categoryRefreshKey]);
 
@@ -61,7 +61,7 @@ const ServiceModal = () => {
       });
       setFormSuccess('Service created successfully');
       setSelectedCategoryId(data.categoryId);
-      navigate(0);
+      invalidate();
       return { success: true, data: result.data };
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create service');

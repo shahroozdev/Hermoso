@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {  useState } from 'react';
 import { z } from 'zod';
 import Form from '../../components/form/Form';
 import FormInput from '../../components/form/FormInput';
@@ -31,14 +31,6 @@ const passwordSchema = z
     path: ['confirmPassword']
   });
 
-const emptyProfileDefaults = {
-  name: '',
-  phone: '',
-  city: '',
-  country: '',
-  bankAccount: ''
-};
-
 const emptyPasswordDefaults = {
   currentPassword: '',
   newPassword: '',
@@ -47,9 +39,13 @@ const emptyPasswordDefaults = {
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore();
-  const [, setLoading] = useState(true);
-  const [profileDefaults, setProfileDefaults] = useState(emptyProfileDefaults);
-  const [profileEmail, setProfileEmail] = useState('');
+  const [profileDefaults, setProfileDefaults] = useState({
+  name: user.name,
+  phone: user.phone || '',
+  city: user.location?.city || '',
+  country: user.location?.country || '',
+  bankAccount: user.bankAccount || ''
+});
   const [profileFormKey, setProfileFormKey] = useState(0);
   const [passwordFormKey, setPasswordFormKey] = useState(0);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -59,32 +55,6 @@ const ProfilePage = () => {
   const [profileSuccess, setProfileSuccess] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      setLoading(true);
-      setProfileError('');
-      try {
-        const result = await authService.getProfile();
-        const data = result.data;
-        updateUser(data);
-        setProfileDefaults({
-          name: data.name || '',
-          phone: data.phone || '',
-          city: data.location?.city || '',
-          country: data.location?.country || '',
-          bankAccount: data.bankAccount || ''
-        });
-        setProfileEmail(data.email || '');
-        setProfileFormKey((value) => value + 1);
-      } catch (err: unknown) {
-        setProfileError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load profile');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, [updateUser]);
 
   const onProfileSubmit = async (data) => {
     setSavingProfile(true);
@@ -108,7 +78,6 @@ const ProfilePage = () => {
         country: result.data.location?.country || '',
         bankAccount: result.data.bankAccount || ''
       });
-      setProfileEmail(result.data.email || '');
       setProfileSuccess('Profile updated successfully');
       setProfileFormKey((value) => value + 1);
       return { success: false };
@@ -141,9 +110,7 @@ const ProfilePage = () => {
     }
   };
 
-  // if (loading) {
-  //   return <div className="mx-auto max-w-3xl shell-panel rounded-2xl p-6">Loading profile...</div>;
-  // }
+
 
   return (
     <div className="mx-auto container space-y-6">
@@ -172,8 +139,8 @@ const ProfilePage = () => {
               <label htmlFor="profile-email">Email</label>
               <input
                 id="profile-email"
-                className="ha-input"
-                value={profileEmail}
+                className="ha-input opacity-45"
+                value={user?.email}
                 readOnly
                 disabled
               />
@@ -190,7 +157,7 @@ const ProfilePage = () => {
               <label htmlFor="profile-role">Role</label>
               <input
                 id="profile-role"
-                className="ha-input capitalize"
+                className="ha-input capitalize opacity-45"
                 value={user?.role.replace('_', ' ') || ''}
                 readOnly
                 disabled

@@ -6,7 +6,7 @@ import Form from "./form/Form";
 import FormInput from "./form/FormInput";
 import z from "zod";
 import GenericModal from "./GenericModal";
-import { useNavigate } from "react-router-dom";
+import { useInvalidate } from "../hooks/useInvalidate";
 export const staffSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
 
@@ -96,7 +96,7 @@ const StaffModal = () => {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [onClose, setOnClose] = useState(true);
-  const navigate = useNavigate();
+  const invalidate = useInvalidate();
 
   const servicesReq = useApi(
     () => serviceService.list({ page: 1, limit: 50 }),
@@ -114,8 +114,8 @@ const StaffModal = () => {
         location: data.location,
         staffDetails: data.staffDetails,
       });
-      setFormSuccess("Service created successfully");
-      navigate(0);
+      setFormSuccess("Staff created successfully");
+      invalidate();
       return { success: true, data: result.data };
     } catch (err) {
       setFormError(err.response?.data?.message || "Failed to create service");

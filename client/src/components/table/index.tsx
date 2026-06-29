@@ -6,6 +6,7 @@ import { useState } from "react";
 
 interface TableProps<T> {
   title?: string;
+  queryKey?: string[];
   showPagination?: boolean;
   service?: (
     params: Record<string, unknown>,
@@ -18,6 +19,7 @@ interface TableProps<T> {
 
 const TABLE = <T,>({
   title,
+  queryKey=[],
   showPagination,
   service,
   serviceParams,
@@ -32,7 +34,7 @@ const TABLE = <T,>({
 
   const { data, loading, error } = useApi(
     () => service({ page, limit: pageSize, ...serviceParams }),
-    [pageSize, page, serviceParams],
+    [...queryKey, pageSize, page, serviceParams],
   );
   const handlePageChange = (p: number) => setPage(p);
   const handlePageSizeChange = (size: number) => {

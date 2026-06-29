@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import GenericModal from './GenericModal';
+import { useInvalidate } from '../hooks/useInvalidate';
 import { notificationService } from '@/services/notificationService';
 
 const NotificationModal = () => {
+  const invalidate = useInvalidate();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -28,7 +30,7 @@ const NotificationModal = () => {
       setTitle('');
       setMessage('');
       setTargetRole('customer');
-      setTimeout(() => window.location.reload(), 1000);
+      invalidate();
     } catch (err) {
       setStatus(err.response?.data?.message || 'Failed to send notification');
     }

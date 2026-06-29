@@ -3,6 +3,7 @@ import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
 import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
+import { useInvalidate } from '../../hooks/useInvalidate';
 import { reviewService } from '../../services/reviewService';
 
 interface ReviewItem {
@@ -21,6 +22,7 @@ const stars = (rating: number) => {
 };
 
 const AdminReviewsPage = () => {
+  const invalidate = useInvalidate();
   const statsReq = useApi(() => reviewService.getStats(), []);
 
   const stats = useMemo(() => ({
@@ -33,7 +35,7 @@ const AdminReviewsPage = () => {
   const moderate = async (id: string, status: string) => {
     try {
       await reviewService.moderate(id, status as 'approved' | 'flagged' | 'deleted');
-      window.location.reload();
+      invalidate();
     } catch {
       alert('Failed to moderate review');
     }

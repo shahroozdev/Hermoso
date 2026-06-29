@@ -6,7 +6,7 @@ import { useApi } from '../hooks/useApi';
 import { eventService } from '../services/eventService';
 import { serviceService } from '../services/serviceService';
 import GenericModal from './GenericModal';
-import { useNavigate } from 'react-router-dom';
+import { useInvalidate } from '../hooks/useInvalidate';
 
 const eventSchema = z.object({
   name: z.string().min(2, 'Event name must be at least 2 characters'),
@@ -41,7 +41,7 @@ const EventModal = () => {
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
-  const navigate = useNavigate();
+  const invalidate = useInvalidate();
 
   const servicesReq = useApi(
     () => serviceService.list({ page: 1, limit: 100 }),
@@ -60,7 +60,7 @@ const EventModal = () => {
         description: data.description || ''
       });
       setFormSuccess('Event created successfully');
-      navigate(0);
+      invalidate();
       return { success: true, data: result.data };
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to create event');

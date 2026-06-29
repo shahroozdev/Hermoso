@@ -4,8 +4,8 @@ import ErrorBlock from '../../components/ErrorBlock';
 import CustomerDetailModal from '../../components/CustomerDetailModal';
 import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
+import { useInvalidate } from '../../hooks/useInvalidate';
 import { customerService } from '../../services/customerService';
-import { useNavigate } from 'react-router-dom';
 
 interface CustomerOverview {
   _id: string;
@@ -20,7 +20,7 @@ interface CustomerOverview {
 
 const AdminCustomersPage = () => {
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const invalidate = useInvalidate();
   const kpiReq = useApi(() => customerService.getOverview({ page: 1, limit: 1 }), []);
 
   const kpi = useMemo(() => {
@@ -37,7 +37,7 @@ const AdminCustomersPage = () => {
     const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
     try {
       await customerService.updateStatus(id, newStatus);
-      navigate(0);
+      invalidate();
     } catch {
       alert('Failed to update customer status');
     }

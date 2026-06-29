@@ -1,10 +1,8 @@
 ﻿import { useState } from "react";
-import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
-import ErrorBlock from "../../components/ErrorBlock";
 import NotificationModal from "../../components/NotificationModal";
 import NotificationDetailModal from "../../components/NotificationDetailModal";
 import TABLE from "@/components/table";
-import { useApi } from "../../hooks/useApi";
+import { useInvalidate } from "../../hooks/useInvalidate";
 import { notificationService } from "@/services/notificationService";
 import { formatDateInput, formatTimeAMPM } from "@/utils/format";
 
@@ -27,12 +25,12 @@ const roleLabel = (role: string): string => {
 
 const AdminNotificationsPage = () => {
   const [viewNotif, setViewNotif] = useState<NotificationItem | null>(null);
-  const req = useApi(() => notificationService.list({ page: 1, limit: 1 }), []);
+  const invalidate = useInvalidate();
 
   const handleMarkRead = async (id: string) => {
     try {
       await notificationService.markRead(id);
-      window.location.reload();
+      invalidate(['notifications']);
     } catch {
       alert("Failed to mark notification as read");
     }
@@ -48,14 +46,11 @@ const AdminNotificationsPage = () => {
       for (const n of unread) {
         await notificationService.markRead(n._id);
       }
-      window.location.reload();
+      invalidate();
     } catch {
       alert("Failed to mark all as read");
     }
   };
-
-  if (req.loading) return <AdminPageSkeleton variant="notifications" />;
-  if (req.error) return <ErrorBlock text={req.error} />;
 
   return (
     <div className="space-y-4">
@@ -70,6 +65,7 @@ const AdminNotificationsPage = () => {
       </div>
       <TABLE<NotificationItem>
         title="All Notifications"
+        queryKey={["notifications"]}
         showPagination
         service={notificationService.list}
         columns={[
