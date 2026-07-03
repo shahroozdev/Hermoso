@@ -74,7 +74,7 @@ const seed = async () => {
     email: 'admin@hermoso.app',
     password: 'Admin@123',
     role: Roles.SUPER_ADMIN,
-    isActive: true,
+    isVerified: true,
   });
 
   console.log('📚 Creating categories...');
@@ -96,7 +96,7 @@ const seed = async () => {
       email: generateCustomerEmail(i),
       password: 'Customer@123',
       role: Roles.CUSTOMER,
-      isActive: true,
+      isVerified: true,
       location: {
         city: getRandomItem(mockCities),
         country: 'Pakistan'
@@ -121,7 +121,7 @@ const seed = async () => {
         city: city,
         country: 'Pakistan'
       },
-      isActive: true
+      isVerified: true
     });
     owners.push(owner);
 
@@ -215,7 +215,7 @@ const seed = async () => {
         password: 'Staff@123',
         role: Roles.STAFF,
         phone: mockPhoneNumbers[(salonIndex + staffIndex) % mockPhoneNumbers.length],
-        isActive: true,
+        isVerified: true,
         location: {
           city: city,
           country: 'Pakistan'
