@@ -30,7 +30,6 @@ const NotificationWidget = () => {
   const { user } = useAuthStore();
   const unread = data?.meta?.total || 0;
   const notifications: NotificationItem[] = data?.data || [];
-  console.log(data?.meta, 'notification')
   const notificationsPath = useMemo(() => {
     if (user?.role === "salon_owner") return "/owner/notifications";
     if (user?.role === "customer") return "/customer/notifications";

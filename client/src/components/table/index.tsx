@@ -41,7 +41,6 @@ const TABLE = <T,>({
     setPageSize(size);
     setPage(1);
   };
-  console.log("data", data, page, pageSize, serviceParams);
   const meta = data?.meta as Record<string, unknown> | undefined;
   const items = (data?.data ?? []) as T[];
   const total = (meta?.total as number) ?? items.length;
