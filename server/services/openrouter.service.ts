@@ -313,6 +313,86 @@ RULES:
 `.trim();
 };
 
+async function callOpenRouterWithKey(
+  apiKey: string,
+  model: string,
+  imageDataUrl: string,
+  prompt: string
+): Promise<{ result: ComprehensiveAnalysisResult | null; status: number | null }> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': process.env.APP_URL || 'https://hermoso.app',
+      'X-Title': 'Hermoso AI Skin Analysis'
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.3,
+      max_tokens: 4000,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: prompt },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Analyze this face image comprehensively. Return ONLY valid JSON matching the exact schema. Keep treatment lists to max 3 items each.'
+            },
+            { type: 'image_url', image_url: { url: imageDataUrl } }
+          ]
+        }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OpenRouter API error:', response.status, errorText);
+    return { result: null, status: response.status };
+  }
+
+  const json: { choices?: { message?: { content?: string } }[] } = await response.json();
+  const raw = json?.choices?.[0]?.message?.content;
+
+  if (!raw || typeof raw !== 'string') {
+    console.error('Invalid response from OpenRouter');
+    console.error('Full response:', JSON.stringify(json, null, 2));
+    return { result: null, status: null };
+  }
+
+  console.log('OpenRouter raw response (first 500 chars):', raw.substring(0, 500));
+
+  let cleanedResponse = raw.trim();
+  cleanedResponse = cleanedResponse.replace(/^```(?:json)?\s*/i, '');
+  cleanedResponse = cleanedResponse.replace(/\s*```$/i, '');
+  cleanedResponse = cleanedResponse.trim();
+
+  let parsed: ComprehensiveAnalysisResult;
+  try {
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      parsed = JSON.parse(jsonMatch[0]) as ComprehensiveAnalysisResult;
+    } else {
+      parsed = JSON.parse(cleanedResponse) as ComprehensiveAnalysisResult;
+    }
+  } catch (parseError) {
+    console.error('Failed to parse OpenRouter response:', parseError);
+    console.error('Raw response:', raw.substring(0, 200));
+    console.error('Cleaned response:', cleanedResponse.substring(0, 200));
+    return { result: null, status: null };
+  }
+
+  if (typeof parsed.faceValid !== 'boolean') {
+    console.error('Invalid faceValid in response');
+    return { result: null, status: null };
+  }
+
+  return { result: parsed, status: null };
+}
+
 /**
  * Analyze face image with comprehensive South Asian-calibrated AI analysis
  *
@@ -332,7 +412,7 @@ export const analyzeFaceComprehensive = async (
     return DEFAULT_RESULT;
   }
 
-  // Use GPT-4o or Claude Sonnet 4 as specified in CR-27
+  const fallbackApiKey = process.env.OPENROUTER_API_KEY_FALLBACK;
   const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o';
 
   const imageBase64 = imageBuffer.toString('base64');
@@ -341,86 +421,23 @@ export const analyzeFaceComprehensive = async (
   const prompt = buildComprehensivePrompt(eyebrowData);
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.APP_URL || 'https://hermoso.app',
-        'X-Title': 'Hermoso AI Skin Analysis'
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.3,
-        max_tokens: 4000, // Increased from 2500 to ensure complete response
-        response_format: { type: 'json_object' }, // Force valid JSON output
-        messages: [
-          { role: 'system', content: prompt },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Analyze this face image comprehensively. Return ONLY valid JSON matching the exact schema. Keep treatment lists to max 3 items each.'
-              },
-              { type: 'image_url', image_url: { url: imageDataUrl } }
-            ]
-          }
-        ]
-      })
-    });
+    const { result, status } = await callOpenRouterWithKey(apiKey, model, imageDataUrl, prompt);
+    if (result) return result;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
-      return DEFAULT_RESULT;
-    }
+    if (status === 429 && fallbackApiKey) {
+      console.warn('Primary OpenRouter key rate limited, trying fallback key');
+      const fallback = await callOpenRouterWithKey(fallbackApiKey, model, imageDataUrl, prompt);
+      if (fallback.result) return fallback.result;
 
-    const json: { choices?: { message?: { content?: string } }[] } = await response.json();
-    const raw = json?.choices?.[0]?.message?.content;
-
-    if (!raw || typeof raw !== 'string') {
-      console.error('Invalid response from OpenRouter');
-      console.error('Full response:', JSON.stringify(json, null, 2));
-      return DEFAULT_RESULT;
-    }
-
-    // Log the raw response for debugging
-    console.log('OpenRouter raw response (first 500 chars):', raw.substring(0, 500));
-
-    // Clean up response - remove markdown code blocks if present
-    let cleanedResponse = raw.trim();
-
-    // Remove markdown code blocks (```json ... ``` or ``` ... ```)
-    cleanedResponse = cleanedResponse.replace(/^```(?:json)?\s*/i, '');
-    cleanedResponse = cleanedResponse.replace(/\s*```$/i, '');
-    cleanedResponse = cleanedResponse.trim();
-
-    // Extract JSON from response (handle cases where there's text before/after the JSON)
-    let parsed: ComprehensiveAnalysisResult;
-    try {
-      // Try to find JSON object in the response
-      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]) as ComprehensiveAnalysisResult;
-      } else {
-        // If no JSON object found, try parsing the whole cleaned response
-        parsed = JSON.parse(cleanedResponse) as ComprehensiveAnalysisResult;
+      if (fallback.status === 429) {
+        return {
+          ...DEFAULT_RESULT,
+          error: 'Service temporarily unavailable due to high demand. Please try again in a few minutes.'
+        };
       }
-    } catch (parseError) {
-      console.error('Failed to parse OpenRouter response:', parseError);
-      console.error('Raw response:', raw.substring(0, 200)); // Log first 200 chars
-      console.error('Cleaned response:', cleanedResponse.substring(0, 200));
-      return DEFAULT_RESULT;
     }
 
-    // Validate required fields
-    if (typeof parsed.faceValid !== 'boolean') {
-      console.error('Invalid faceValid in response');
-      return DEFAULT_RESULT;
-    }
-
-    return parsed;
+    return DEFAULT_RESULT;
   } catch (error) {
     console.error('Error analyzing face with OpenRouter:', error);
     return DEFAULT_RESULT;

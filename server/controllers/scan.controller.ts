@@ -30,6 +30,11 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
   // Perform comprehensive AI analysis with South Asian calibration
   const analysis = await analyzeFaceComprehensive(file.buffer, file.mimetype, eyebrowData);
 
+  // Handle rate limit / service unavailable
+  if (analysis.error) {
+    return next(new ApiError(503, analysis.error));
+  }
+
   // Handle invalid face detection
   if (!analysis.faceValid) {
     const rejected = await SkinScan.create({
