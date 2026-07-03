@@ -70,6 +70,37 @@ fun OwnerDashboardScreen() {
                 OwnerStatCard("Net", "PKR ${(dashboard?.totals?.netRevenue ?: 0.0).toInt()}", Modifier.weight(1f))
             }
         }
+        // CR-26: AI Scan Referral Metrics
+        val aiScanBookings = dashboard?.totals?.aiScanBookings ?: 0
+        val aiScanRevenue = dashboard?.totals?.aiScanRevenue ?: 0.0
+        if (aiScanBookings > 0 || aiScanRevenue > 0) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF065F46).copy(alpha = 0.2f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("✨", fontSize = 20.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Text("AI Scan Referrals", color = Color(0xFF10B981), fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Column(Modifier.weight(1f)) {
+                                Text("$aiScanBookings", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                                Text("Bookings from AI Match", color = TextMuted, fontSize = 12.sp)
+                            }
+                            Column(Modifier.weight(1f)) {
+                                Text("PKR ${aiScanRevenue.toInt()}", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                                Text("Revenue from AI Referrals", color = TextMuted, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
         item { Text("Bookings by month", color = PurpleLight, fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp)) }
         items(dashboard?.charts?.bookingsByMonth ?: emptyList()) { row ->
             Card(
