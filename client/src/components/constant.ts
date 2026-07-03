@@ -184,6 +184,35 @@ export const customerNavGroups: NavGroup[] = [
     ],
   },
   {
+    label: "AI Skin Analysis",
+    items: [
+      {
+        key: "scan",
+        label: "AI Skin Scan",
+        to: "/customer/scan",
+        icon: "Camera.svg",
+      },
+      {
+        key: "scan-results",
+        label: "Scan Results",
+        to: "/customer/scan-results",
+        icon: "Analytic.svg",
+      },
+      {
+        key: "matched-salons",
+        label: "Matched Salons",
+        to: "/customer/matched-salons",
+        icon: "Shop.svg",
+      },
+      {
+        key: "progress",
+        label: "Progress Report",
+        to: "/customer/progress",
+        icon: "Analytic.svg",
+      },
+    ],
+  },
+  {
     label: "Bookings",
     items: [
       {

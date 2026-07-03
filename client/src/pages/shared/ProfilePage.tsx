@@ -17,7 +17,8 @@ const profileSchema = z.object({
   phone: phoneSchema,
   city: z.string().optional(),
   country: z.string().optional(),
-  bankAccount: z.string().optional()
+  bankAccount: z.string().optional(),
+  southAsianSpecialist: z.boolean().optional()
 });
 
 const passwordSchema = z
@@ -44,7 +45,8 @@ const ProfilePage = () => {
   phone: user.phone || '',
   city: user.location?.city || '',
   country: user.location?.country || '',
-  bankAccount: user.bankAccount || ''
+  bankAccount: user.bankAccount || '',
+  southAsianSpecialist: user.southAsianSpecialist || false
 });
   const [profileFormKey, setProfileFormKey] = useState(0);
   const [passwordFormKey, setPasswordFormKey] = useState(0);
@@ -67,7 +69,8 @@ const ProfilePage = () => {
         phone: data.phone || '',
         city: data.city || '',
         country: data.country || '',
-        bankAccount: data.bankAccount || ''
+        bankAccount: data.bankAccount || '',
+        southAsianSpecialist: data.southAsianSpecialist || false
       });
 
       updateUser(result.data);
@@ -76,7 +79,8 @@ const ProfilePage = () => {
         phone: result.data.phone || '',
         city: result.data.location?.city || '',
         country: result.data.location?.country || '',
-        bankAccount: result.data.bankAccount || ''
+        bankAccount: result.data.bankAccount || '',
+        southAsianSpecialist: result.data.southAsianSpecialist || false
       });
       setProfileSuccess('Profile updated successfully');
       setProfileFormKey((value) => value + 1);
@@ -183,6 +187,16 @@ const ProfilePage = () => {
             label="Bank Account"
             placeholder="Enter your bank account"
           />
+
+          {/* CR-25: South Asian Specialist Toggle (salon owners only) */}
+          {user?.role === 'salon_owner' && (
+            <FormInput
+              name="southAsianSpecialist"
+              type="checkbox"
+              label="South Asian Skin Specialist"
+              placeholder="Highlight your salon as specializing in South Asian skin tones for AI scan matching"
+            />
+          )}
 
           <div>
             <button

@@ -14,7 +14,8 @@ const serviceSchema = z.object({
   categoryId: z.string().min(1, 'Category is required'),
   duration: z.coerce.number().min(5, 'Duration must be at least 5 minutes'),
   price: z.coerce.number().min(0, 'Price must be 0 or greater'),
-  description: z.string().optional()
+  description: z.string().optional(),
+  aiScanLink: z.string().optional()
 });
 
 const categorySchema = z.object({
@@ -26,8 +27,21 @@ const serviceDefaults = {
   categoryId: '',
   duration: 30,
   price: 0,
-  description: ''
+  description: '',
+  aiScanLink: ''
 };
+
+// CR-24: AI Scan categories that services can be linked to
+const AI_SCAN_CATEGORIES = [
+  { value: '', label: 'Not linked to AI scan' },
+  { value: 'skin-tone', label: 'Skin Tone & Tanning' },
+  { value: 'eyebrows', label: 'Eyebrow Treatments' },
+  { value: 'hydration', label: 'Hydration & Texture' },
+  { value: 'dark-circles', label: 'Dark Circles Treatment' },
+  { value: 'acne', label: 'Acne Treatment' },
+  { value: 'lip-pigmentation', label: 'Lip Pigmentation Treatment' },
+  { value: 'general-facial', label: 'General Facial Treatment' }
+];
 
 const ServiceModal = () => {
   const [open, setOpen] = useState(false);
@@ -57,7 +71,8 @@ const ServiceModal = () => {
         categoryId: data.categoryId,
         duration: Number(data.duration),
         price: Number(data.price),
-        description: data.description || ''
+        description: data.description || '',
+        aiScanLink: data.aiScanLink || ''
       });
       setFormSuccess('Service created successfully');
       setSelectedCategoryId(data.categoryId);
@@ -148,6 +163,9 @@ const ServiceModal = () => {
               />
             </div>
 
+            {/* CR-24: AI Scan Link */}
+            <AiScanLinkPicker />
+
             {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
             {formSuccess ? <p className="text-sm text-emerald-600">{formSuccess}</p> : null}
 
@@ -198,6 +216,30 @@ const ServiceModal = () => {
         </Form>
       )}
     </>
+  );
+};
+
+const AiScanLinkPicker = () => {
+  const { register } = useFormContext();
+
+  return (
+    <div className="ha-form-group" data-field="aiScanLink">
+      <label htmlFor="aiScanLink">AI Scan Link (Optional)</label>
+      <select
+        id="aiScanLink"
+        className="ha-input"
+        {...register('aiScanLink')}
+      >
+        {AI_SCAN_CATEGORIES.map((cat) => (
+          <option key={cat.value} value={cat.value}>
+            {cat.label}
+          </option>
+        ))}
+      </select>
+      <div className="ha-form-hint" style={{ marginTop: 6 }}>
+        Link this service to AI skin scan results to help customers find it
+      </div>
+    </div>
   );
 };
 

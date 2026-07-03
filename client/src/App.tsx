@@ -29,6 +29,10 @@ import SalonDetailPage from './pages/shared/SalonDetailPage';
 import BookingPage from './pages/shared/BookingPage';
 import ProfilePage from './pages/shared/ProfilePage';
 import BookingHistoryPage from './pages/shared/BookingHistoryPage';
+import ScanPage from './pages/shared/ScanPage';
+import ScanResultsPage from './pages/shared/ScanResultsPage';
+import ProgressReportPage from './pages/shared/ProgressReportPage';
+import SalonMatchPage from './pages/shared/SalonMatchPage';
 import PublicLayout from './layouts/PublicLayout';
 import { customerNavGroups, navGroups, ownerNavGroups } from './components/constant';
 import ProtectedLayout from './layouts/AdminLayout';
@@ -82,6 +86,10 @@ const App = () => (
           <Route path="booking" element={<BookingPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="bookings" element={<BookingHistoryPage />} />
+          <Route path="scan" element={<ScanPage />} />
+          <Route path="scan-results" element={<ScanResultsPage />} />
+          <Route path="progress" element={<ProgressReportPage />} />
+          <Route path="matched-salons" element={<SalonMatchPage />} />
         </Route>
       </Route>
 

@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import ErrorBlock from '../../components/ErrorBlock';
 import { useApi } from '../../hooks/useApi';
 import { salonService } from '../../services/salonService';
 import { bookingService } from '../../services/bookingService';
 
-const BookingForm = ({ selectedSalon, setSelectedSalon, salons }: { selectedSalon: string; setSelectedSalon: (v: string) => void; salons: { loading: boolean; error: string; data: { data: { _id: string; name: string }[] } | null } }) => {
+const BookingForm = ({ selectedSalon, setSelectedSalon, salons, fromAiScan, preSelectedTreatments }: { selectedSalon: string; setSelectedSalon: (v: string) => void; salons: { loading: boolean; error: string; data: { data: { _id: string; name: string }[] } | null }; fromAiScan?: boolean; preSelectedTreatments?: string[] }) => {
   const [payload, setPayload] = useState({ serviceId: '', staffId: '', bookingDate: '', bookingTime: '' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -17,6 +17,22 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons }: { selectedSalo
     () => (selectedSalon ? bookingService.getOptions({ salonId: selectedSalon, serviceId: payload.serviceId || undefined }) : Promise.resolve({ data: { services: [], staff: [] } })),
     [selectedSalon, payload.serviceId],
   );
+
+  // CR-20: Auto-select first service that matches AI scan recommendations
+  const hasAutoSelectedRef = useRef(false);
+
+  useEffect(() => {
+    if (fromAiScan && preSelectedTreatments?.length && bookingOptions.data?.data?.services?.length && !hasAutoSelectedRef.current) {
+      const matchedService = bookingOptions.data.data.services.find((svc: { name: string }) =>
+        preSelectedTreatments.some((treatment) => svc.name.toLowerCase().includes(treatment.toLowerCase()) || treatment.toLowerCase().includes(svc.name.toLowerCase()))
+      );
+      if (matchedService) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: auto-select service from AI scan on initial load
+        setPayload((prev) => ({ ...prev, serviceId: matchedService._id }));
+        hasAutoSelectedRef.current = true;
+      }
+    }
+  }, [fromAiScan, preSelectedTreatments, bookingOptions.data]);
 
   const canFetchSlots = useMemo(
     () => Boolean(selectedSalon && payload.serviceId && payload.staffId && payload.bookingDate),
@@ -66,6 +82,20 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons }: { selectedSalo
 
   return (
     <div className="shell-panel rounded-2xl p-6">
+      {/* CR-20: AI Scan Badge */}
+      {fromAiScan && preSelectedTreatments?.length ? (
+        <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-emerald-600" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 1l2 4.2 4.6.6-3.3 3.2.8 4.6L8 11.2 3.9 13.6l.8-4.6L1.4 5.8l4.6-.6L8 1z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-emerald-700">AI-Matched Booking</p>
+              <p className="text-xs text-emerald-600">Recommended treatments: {preSelectedTreatments.join(', ')}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="grid gap-4 md:grid-cols-2">
         <select className="rounded border p-2" value={selectedSalon} onChange={(e) => setSelectedSalon(e.target.value)} disabled={salons.loading}>
           <option value="">Select Salon</option>
@@ -123,7 +153,10 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons }: { selectedSalo
 
 const BookingPage = () => {
   const [searchParams] = useSearchParams();
-  const preSelectedSalon = searchParams.get('salonId') || '';
+  const location = useLocation();
+  const locationState = location.state as { salonId?: string; preSelectedTreatments?: string[]; fromAiScan?: boolean } | null;
+
+  const preSelectedSalon = locationState?.salonId || searchParams.get('salonId') || '';
   const [selectedSalon, setSelectedSalon] = useState(preSelectedSalon);
   const salons = useApi(() => salonService.list({ page: 1, limit: 50 }), []);
 
@@ -133,7 +166,9 @@ const BookingPage = () => {
     <div key={preSelectedSalon || '_'} className="mx-auto container space-y-6 p-6">
       <div className="shell-panel rounded-2xl p-6">
         <h2 className="text-2xl font-semibold">Book Appointment</h2>
-        <p className="mt-2 text-sm text-slate-500">Select salon, service, date and pick a real-time available slot.</p>
+        <p className="mt-2 text-sm text-slate-500">
+          {locationState?.fromAiScan ? 'Complete your AI-recommended booking' : 'Select salon, service, date and pick a real-time available slot.'}
+        </p>
       </div>
 
       <BookingForm
@@ -141,6 +176,8 @@ const BookingPage = () => {
         selectedSalon={selectedSalon}
         setSelectedSalon={setSelectedSalon}
         salons={salons}
+        fromAiScan={locationState?.fromAiScan}
+        preSelectedTreatments={locationState?.preSelectedTreatments}
       />
     </div>
   );
