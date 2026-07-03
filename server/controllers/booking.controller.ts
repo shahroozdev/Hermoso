@@ -50,7 +50,13 @@ export const getBookingFormOptions = asyncHandler(async (req: AuthRequest, res: 
     data: {
       salon,
       services,
-      staff: filteredStaff.map((member) => ({ _id: member._id, name: member.name }))
+      staff: filteredStaff.map((member) => ({
+      _id: member._id,
+      name: member.name,
+      services: Array.isArray(member.staffDetails?.services)
+        ? member.staffDetails.services.map((id) => String(id))
+        : []
+    }))
     }
   });
 });
@@ -404,7 +410,7 @@ export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) 
     .populate('salonId', 'name location')
     .populate('serviceId', 'name price duration')
     .populate('staffId', 'name role')
-    .sort({ bookingDate: -1, bookingTime: -1 })
+    .sort({ createdAt: -1 })
     .skip((Number(page) - 1) * Number(limit))
     .limit(Number(limit));
 

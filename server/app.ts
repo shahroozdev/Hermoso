@@ -2,6 +2,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import cors from 'cors';
 import dotenv from "dotenv";
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes.js';
 import salonRoutes from './routes/salon.routes.js';
@@ -54,6 +55,32 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many auth attempts, please try again later.' }
+});
+
+const scanLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many scan requests. You can scan up to 10 times per hour.' }
+});
+
+app.use(generalLimiter);
 app.get('/health', (_req: Request, res: Response) => res.json({ success: true, message: 'Hermoso API running' }));
 
 // Swagger documentation route with CDN assets
@@ -92,7 +119,7 @@ app.get('/', (_req: Request, res: Response) => {
   </html>`);
 });
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/salons', salonRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/events', eventRoutes);
@@ -105,7 +132,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/scans', scanRoutes);
+app.use('/api/scans', scanLimiter, scanRoutes);
 app.use('/api/pos', posRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => next(new ApiError(404, 'Route not found')));

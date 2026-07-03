@@ -43,10 +43,12 @@ const BookingCard = ({
   state: ServiceCardState;
   setState: (s: ServiceCardState) => void;
   selectedSalon: string;
-  staffList: { _id: string; name: string }[];
+  staffList: { _id: string; name: string; services: string[] }[];
   staffLoading: boolean;
 }) => {
-  const serviceStaff = staffList;
+  const serviceStaff = staffList.filter(
+    (s) => !s.services.length || s.services.includes(state.serviceId)
+  );
   const canFetchSlots = Boolean(selectedSalon && state.serviceId && state.staffId && state.bookingDate);
 
   useEffect(() => {
@@ -302,7 +304,7 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons, fromAiScan, preS
       <div className="grid gap-4 md:grid-cols-2">
         <select className="rounded border p-2" value={selectedSalon} onChange={(e) => setSelectedSalon(e.target.value)} disabled={salons.loading}>
           <option value="">Select Salon</option>
-          {(salons.data?.data || []).map((salon) => <option key={salon._id} value={salon._id}>{salon.name}</option>)}
+          {(salons?.data?.data || [])?.map((salon) => <option key={salon._id} value={salon._id}>{salon.name}</option>)}
         </select>
 
         <select className="rounded border p-2" value={payload.serviceId} onChange={(e) => setPayload({ ...payload, serviceId: e.target.value })} disabled={!selectedSalon}>

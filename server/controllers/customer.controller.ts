@@ -132,7 +132,7 @@ export const getCustomerActivity = asyncHandler(async (req: AuthRequest, res: Re
   const bookings = await Booking.find(bookingQuery)
     .populate('salonId', 'name')
     .populate('serviceId', 'name price')
-    .sort({ bookingDate: -1, createdAt: -1 });
+    .sort({ createdAt: -1 });
 
   res.json({ success: true, data: { customer, bookings } });
 });

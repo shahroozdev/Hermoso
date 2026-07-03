@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { scanService, type ScanHistoryItem, type SalonMatch } from '../../services/scanService';
 import LoadingBlock from '../../components/LoadingBlock';
 import ErrorBlock from '../../components/ErrorBlock';
@@ -72,6 +72,7 @@ const TreatmentTag = ({ label }: { label: string }) => (
 );
 
 const ScanResultsPage = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [scan, setScan] = useState<ScanHistoryItem | null>(null);
@@ -447,10 +448,31 @@ const ScanResultsPage = () => {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {matches.map((match) => (
-                <Link
+                <div
                   key={match.salonId}
-                  to={`/customer/salons/${match.salonId}`}
-                  className="rounded-xl border border-[var(--border)] p-4 hover:border-[var(--accent)] transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    navigate('/customer/booking', {
+                      state: {
+                        salonId: match.salonId,
+                        preSelectedTreatments: match.matchedServices || [],
+                        fromAiScan: true
+                      }
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      navigate('/customer/booking', {
+                        state: {
+                          salonId: match.salonId,
+                          preSelectedTreatments: match.matchedServices || [],
+                          fromAiScan: true
+                        }
+                      });
+                    }
+                  }}
+                  className="cursor-pointer rounded-xl border border-[var(--border)] p-4 hover:border-[var(--accent)] transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -475,7 +497,7 @@ const ScanResultsPage = () => {
                       ))}
                     </div>
                   ) : null}
-                </Link>
+                </div>
               ))}
             </div>
           )}
