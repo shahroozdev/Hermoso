@@ -13,6 +13,7 @@ interface ComprehensiveAnalysisResult {
   faceGuidance: string[];
   overallSkinScore: number;
   summary: string;
+  error?: string;
 
   // Detailed analysis sections
   skinTone: {
