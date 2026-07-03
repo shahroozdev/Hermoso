@@ -38,6 +38,7 @@ import androidx.navigation.NavHostController
 import com.example.myapplication.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -130,13 +131,14 @@ fun MatchScreen(navController: NavHostController) {
                         onClick = {
                             val salonId = match.salonId
                             if (!salonId.isNullOrBlank()) {
-                                navController.navigate("salon-services/$salonId")
+                                val servicesStr = match.matchedServices?.joinToString(",") { java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
+                                navController.navigate("booking-ai/$salonId/$servicesStr")
                             }
                         },
                         enabled = !match.salonId.isNullOrBlank(),
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Purple)
-                    ) { Text("View Services") }
+                    ) { Text("Book Now") }
                 }
             }
         }

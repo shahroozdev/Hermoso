@@ -70,6 +70,7 @@ object Dest {
     const val Booking = "booking"
     const val BookingWithSalon = "booking/{salonId}"
     const val BookingWithSalonService = "booking/{salonId}/{serviceId}"
+    const val BookingAI = "booking-ai/{salonId}/{services}"
     const val SalonServices = "salon-services/{salonId}"
     const val BookingsList = "bookings-list"
     const val Salons = "salons?city={city}"
@@ -333,6 +334,25 @@ fun HermosoApp() {
                     navController = navController,
                     preSelectedSalonId = backStackEntry.arguments?.getString("salonId"),
                     preSelectedServiceId = backStackEntry.arguments?.getString("serviceId")
+                )
+            }
+            composable(
+                route = Dest.BookingAI,
+                arguments = listOf(
+                    navArgument("salonId") { type = NavType.StringType },
+                    navArgument("services") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val servicesRaw = backStackEntry.arguments?.getString("services") ?: ""
+                val decodedServices = try {
+                    java.net.URLDecoder.decode(servicesRaw, "UTF-8").split(",").map { it.trim() }.filter { it.isNotBlank() }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+                BookingScreen(
+                    navController = navController,
+                    preSelectedSalonId = backStackEntry.arguments?.getString("salonId"),
+                    preSelectedTreatments = decodedServices
                 )
             }
             composable(

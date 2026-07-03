@@ -141,6 +141,23 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
   });
   if (hasOverlap) return next(new ApiError(409, 'Time slot is already booked'));
 
+  // Customer-level overlap: same customer can't have overlapping bookings even with different staff
+  const customerBookings = await Booking.find({
+    customerId: req.user?._id,
+    salonId,
+    bookingDate: normalizedDate,
+    status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] }
+  }).populate('serviceId', 'duration');
+
+  const customerOverlap = customerBookings.some((existing) => {
+    const existingStart = parseTimeToMinutes(existing.bookingTime);
+    const existingDuration = Number((existing.serviceId as unknown as { duration?: number })?.duration || 0);
+    if (existingStart === null || !existingDuration) return false;
+    const existingEnd = existingStart + existingDuration;
+    return startMinutes < existingEnd && existingStart < requestedEndMinutes;
+  });
+  if (customerOverlap) return next(new ApiError(409, 'You already have a booking during this time period'));
+
   let booking: IBooking;
   try {
     booking = await Booking.create({
@@ -265,8 +282,25 @@ export const getBookingAvailability = asyncHandler(async (req: AuthRequest, res:
     return { start, end: start + duration };
   }).filter(Boolean) as { start: number; end: number }[];
 
+  // Customer-level: exclude slots where this customer already has a booking
+  const customerBooked = await Booking.find({
+    customerId: req.user?._id,
+    salonId,
+    bookingDate: normalizedDate,
+    status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED] }
+  }).populate('serviceId', 'duration');
+
+  const normalizedCustomerBooked = customerBooked.map((b) => {
+    const start = parseTimeToMinutes(b.bookingTime);
+    const duration = Number((b.serviceId as { duration?: number })?.duration || 0);
+    if (start === null || duration <= 0) return null;
+    return { start, end: start + duration };
+  }).filter(Boolean) as { start: number; end: number }[];
+
   const slots = allSlots.map((slot) => {
-    const available = !normalizedBooked.some((b) => slot.start < b.end && b.start < slot.end);
+    const staffUnavailable = normalizedBooked.some((b) => slot.start < b.end && b.start < slot.end);
+    const customerUnavailable = normalizedCustomerBooked.some((b) => slot.start < b.end && b.start < slot.end);
+    const available = !staffUnavailable && !customerUnavailable;
     return {
       time: slot.time,
       label: slot.label,
