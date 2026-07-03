@@ -24,6 +24,7 @@ interface UpdateProfilePayload {
   city?: string;
   country?: string;
   bankAccount?: string;
+  southAsianSpecialist?: boolean;
 }
 
 interface ChangePasswordPayload {

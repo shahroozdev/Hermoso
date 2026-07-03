@@ -4,13 +4,19 @@ import { Service } from '../models/Service.js';
 import { User } from '../models/User.js';
 import { Salon } from '../models/Salon.js';
 import { SalonStatus } from '../utils/constants.js';
-import { analyzeFaceWithOpenRouter } from '../services/openrouter.service.js';
+import { analyzeFaceComprehensive } from '../services/openrouter.service.js';
+import { generateDietPlanFromAnalysis } from '../services/diet.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
-const metricOrder = ['hydration', 'sunDamage', 'skinClarity', 'pigmentation', 'skinBarrier'] as const;
-
+/**
+ * Analyze face image with comprehensive AI skin analysis
+ * CR-27: AI skin analysis via OpenRouter
+ * CR-05: South Asian calibration
+ * CR-29: Scan history storage with comprehensive data
+ * CR-31: Diet plan generation
+ */
 export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const file: any = (req as any).file;
@@ -18,19 +24,26 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
     return next(new ApiError(400, 'Image file is required as multipart field "image"'));
   }
 
-  const analysis = await analyzeFaceWithOpenRouter(file.buffer, file.mimetype);
+  // Extract eyebrow landmarks from request body if provided by mobile device (MediaPipe)
+  const eyebrowData = req.body.eyebrowData ? JSON.parse(req.body.eyebrowData) : undefined;
 
-  const safeGuidance = (analysis.faceGuidance || []).slice(0, 5).filter(Boolean);
+  // Perform comprehensive AI analysis with South Asian calibration
+  const analysis = await analyzeFaceComprehensive(file.buffer, file.mimetype, eyebrowData);
+
+  // Handle invalid face detection
   if (!analysis.faceValid) {
     const rejected = await SkinScan.create({
       customerId: req.user?._id,
       imageMimeType: file.mimetype,
       faceValid: false,
-      faceGuidance: safeGuidance.length ? safeGuidance : ['Move face to center and ensure clear front lighting.'],
-      metrics: [],
+      faceGuidance: analysis.faceGuidance.slice(0, 5),
+      overallSkinScore: 0,
       summary: '',
+      metrics: [],
       recommendationNotes: [],
-      recommendedServiceIds: []
+      recommendedServiceIds: [],
+      treatmentPlan: [],
+      southAsianCalibrated: true
     });
 
     return res.status(422).json({
@@ -44,55 +57,130 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
     });
   }
 
+  // Generate personalized diet plan based on analysis (CR-31)
+  const dietPlan = generateDietPlanFromAnalysis({
+    skinTone: analysis.skinTone,
+    hydration: analysis.hydration,
+    darkCircles: analysis.darkCircles,
+    acne: analysis.acne,
+    lipPigmentation: analysis.lipPigmentation
+  });
+
+  // Find matching services based on treatment recommendations
   const user = await User.findById(req.user?._id).select('salonId');
   const salonId = user?.salonId ? String(user.salonId) : undefined;
   const serviceQuery: Record<string, unknown> = { active: true };
   if (salonId) serviceQuery.salonId = salonId;
   const services = await Service.find(serviceQuery).select('name price duration');
 
-  const recommendations = (analysis.recommendations || []).map((v) => String(v || '').trim()).filter(Boolean);
+  // Extract all treatment names from the analysis
+  const allTreatments = [
+    ...analysis.skinTone.recommendedTreatments,
+    ...analysis.hydration.recommendedTreatments,
+    ...analysis.darkCircles.recommendedTreatments,
+    ...analysis.acne.recommendedTreatments,
+    ...analysis.lipPigmentation.recommendedTreatments,
+    ...analysis.treatmentPlan.map((t) => t.treatmentName)
+  ];
+
+  const uniqueTreatments = [...new Set(allTreatments.map((t) => t.toLowerCase()))];
+
+  // Match services to recommended treatments
   const recommendedServices = services.filter((s) =>
-    recommendations.some((name) => s.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(s.name.toLowerCase()))
+    uniqueTreatments.some(
+      (treatment) =>
+        s.name.toLowerCase().includes(treatment) || treatment.includes(s.name.toLowerCase())
+    )
   );
 
-  const normalizedMetrics = metricOrder.map((key) => {
-    const source = (analysis.metrics || []).find((m) => m.key === key);
-    return {
-      key,
-      score: Math.max(0, Math.min(100, Math.round(Number(source?.score || 0)))),
-      label: source?.label || ''
-    };
-  });
-
+  // Create comprehensive scan record (CR-29)
   const scan = await SkinScan.create({
     customerId: req.user?._id,
     imageMimeType: file.mimetype,
     faceValid: true,
-    faceGuidance: safeGuidance,
-    metrics: normalizedMetrics,
-    summary: analysis.summary || '',
-    recommendationNotes: recommendations,
-    recommendedServiceIds: recommendedServices.map((s) => s._id)
+    faceGuidance: analysis.faceGuidance.slice(0, 5),
+    overallSkinScore: analysis.overallSkinScore,
+    summary: analysis.summary,
+
+    // Comprehensive analysis sections
+    skinTone: analysis.skinTone,
+    eyebrows: eyebrowData,
+    hydration: analysis.hydration,
+    darkCircles: analysis.darkCircles,
+    acne: analysis.acne,
+    lipPigmentation: analysis.lipPigmentation,
+
+    // Treatment and diet plans
+    treatmentPlan: analysis.treatmentPlan,
+    dietPlan,
+
+    // Legacy fields for backward compatibility
+    metrics: [
+      {
+        key: 'hydration',
+        score: analysis.hydration.hydrationPercent,
+        label: 'Hydration Level'
+      },
+      {
+        key: 'skinClarity',
+        score: analysis.hydration.textureRating,
+        label: 'Skin Clarity & Texture'
+      },
+      {
+        key: 'pigmentation',
+        score: Math.max(0, 100 - analysis.skinTone.severity),
+        label: 'Pigmentation Balance'
+      },
+      {
+        key: 'overallHealth',
+        score: analysis.overallSkinScore,
+        label: 'Overall Skin Health'
+      }
+    ],
+    recommendationNotes: uniqueTreatments,
+    recommendedServiceIds: recommendedServices.map((s) => s._id),
+    southAsianCalibrated: true
   });
 
+  // Return comprehensive analysis result
   res.json({
     success: true,
     data: {
       scanId: scan._id,
       faceValid: true,
-      faceGuidance: scan.faceGuidance,
+      overallSkinScore: scan.overallSkinScore,
       summary: scan.summary,
-      metrics: scan.metrics,
+
+      // Detailed analysis sections
+      skinTone: scan.skinTone,
+      eyebrows: scan.eyebrows,
+      hydration: scan.hydration,
+      darkCircles: scan.darkCircles,
+      acne: scan.acne,
+      lipPigmentation: scan.lipPigmentation,
+
+      // Plans
+      treatmentPlan: scan.treatmentPlan,
+      dietPlan: scan.dietPlan,
+
+      // Matched services
       recommendedServices: recommendedServices.map((s) => ({
         _id: s._id,
         name: s.name,
         price: s.price,
         duration: s.duration
-      }))
+      })),
+
+      // Legacy fields for backward compatibility
+      metrics: scan.metrics
     }
   });
 });
 
+/**
+ * Get scan history for the current user
+ * CR-29: Enhanced scan history with comprehensive data
+ */
 export const getMyScanHistory = asyncHandler(async (req: AuthRequest, res: Response) => {
   const history = await SkinScan.find({ customerId: req.user?._id, faceValid: true })
     .populate('recommendedServiceIds', 'name price duration')
@@ -102,14 +190,22 @@ export const getMyScanHistory = asyncHandler(async (req: AuthRequest, res: Respo
   res.json({ success: true, data: history });
 });
 
+/**
+ * Get latest scan for the current user
+ */
 export const getLatestScan = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const latest = await SkinScan.findOne({ customerId: req.user?._id, faceValid: true })
     .populate('recommendedServiceIds', 'name price duration')
     .sort({ createdAt: -1 });
+
   if (!latest) return next(new ApiError(404, 'No successful scan found'));
+
   res.json({ success: true, data: latest });
 });
 
+/**
+ * Get skin improvements over time
+ */
 export const getScanImprovements = asyncHandler(async (req: AuthRequest, res: Response) => {
   const scans = await SkinScan.find({ customerId: req.user?._id, faceValid: true })
     .sort({ createdAt: 1 })
@@ -127,10 +223,21 @@ export const getScanImprovements = asyncHandler(async (req: AuthRequest, res: Re
 
   const first = scans[0];
   const latest = scans[scans.length - 1];
+
+  // Compare overall skin scores
+  const overallImprovement = {
+    key: 'overallSkinScore',
+    before: first.overallSkinScore,
+    after: latest.overallSkinScore,
+    delta: latest.overallSkinScore - first.overallSkinScore,
+    positive: latest.overallSkinScore >= first.overallSkinScore
+  };
+
+  // Compare specific metrics if available
   const firstMap = new Map(first.metrics.map((m) => [m.key, m.score]));
   const latestMap = new Map(latest.metrics.map((m) => [m.key, m.score]));
 
-  const improvements = Array.from(latestMap.keys()).map((key) => {
+  const metricImprovements = Array.from(latestMap.keys()).map((key) => {
     const before = Number(firstMap.get(key) || 0);
     const after = Number(latestMap.get(key) || 0);
     const delta = after - before;
@@ -149,50 +256,297 @@ export const getScanImprovements = asyncHandler(async (req: AuthRequest, res: Re
       scansCount: scans.length,
       firstScanAt: first.createdAt,
       latestScanAt: latest.createdAt,
-      improvements
+      overallImprovement,
+      improvements: metricImprovements
     }
   });
 });
 
+/**
+ * Get AI-matched salons based on scan results
+ * CR-18: AI match score algorithm
+ * CR-30: Treatment-to-salon matching API with enhanced scoring
+ */
 export const getScanMatches = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const latest = await SkinScan.findOne({ customerId: req.user?._id, faceValid: true }).sort({ createdAt: -1 });
+  const latest = await SkinScan.findOne({ customerId: req.user?._id, faceValid: true })
+    .sort({ createdAt: -1 });
+
   if (!latest) return next(new ApiError(404, 'No successful scan found'));
 
-  const allServices = await Service.find({ active: true }).select('_id name salonId');
-  const salons = await Salon.find({ status: SalonStatus.APPROVED, verified: true }).select('_id name location');
-  const recommendationTerms = latest.recommendationNotes.map((r) => r.toLowerCase());
+  // Get user location for proximity calculations (if available)
+  const user = await User.findById(req.user?._id).select('location');
+  const userLat = user?.location?.coordinates?.[1];
+  const userLng = user?.location?.coordinates?.[0];
 
-  const servicesBySalon = new Map<string, Array<{ id: string; name: string }>>();
+  // Get all active services grouped by salon
+  const allServices = await Service.find({ active: true }).select('_id name salonId aiScanLink');
+
+  // Get approved salons
+  const salons = await Salon.find({ status: SalonStatus.APPROVED, verified: true })
+    .select('_id name location rating averagePrice openingHours southAsianSpecialist');
+
+  // Extract recommended treatment names from scan
+  const recommendedTreatments = latest.treatmentPlan.map((t) => t.treatmentName.toLowerCase());
+  const allRecommendations = [
+    ...recommendedTreatments,
+    ...latest.recommendationNotes.map((r) => r.toLowerCase())
+  ];
+
+  // Group services by salon
+  const servicesBySalon = new Map<string, Array<{ id: string; name: string; aiScanLink?: string }>>();
   allServices.forEach((service) => {
     const key = String(service.salonId);
     const list = servicesBySalon.get(key) || [];
-    list.push({ id: String(service._id), name: service.name });
+    list.push({
+      id: String(service._id),
+      name: service.name,
+      aiScanLink: service.aiScanLink
+    });
     servicesBySalon.set(key, list);
   });
 
-  const matches = salons.map((salon) => {
-    const salonServices = servicesBySalon.get(String(salon._id)) || [];
-    const matchedServices = salonServices.filter((service) =>
-      recommendationTerms.some((term) => service.name.toLowerCase().includes(term) || term.includes(service.name.toLowerCase()))
-    );
+  // Calculate match scores for each salon
+  const matches = salons
+    .map((salon) => {
+      const salonServices = servicesBySalon.get(String(salon._id)) || [];
 
-    const scoreBase = recommendationTerms.length || 1;
-    const score = Math.max(20, Math.min(100, Math.round((matchedServices.length / scoreBase) * 100)));
-    return {
-      salonId: salon._id,
-      name: salon.name,
-      city: salon.location?.city || '',
-      matchPercent: score,
-      matchedServices: matchedServices.map((s) => s.name)
-    };
-  }).sort((a, b) => b.matchPercent - a.matchPercent);
+      // Find services that match scan recommendations
+      const matchedServices = salonServices.filter((service) =>
+        allRecommendations.some(
+          (rec) =>
+            service.name.toLowerCase().includes(rec) ||
+            rec.includes(service.name.toLowerCase()) ||
+            service.aiScanLink === rec
+        )
+      );
+
+      // Calculate distance if user location is available
+      let distance: number | null = null;
+      if (userLat && userLng && salon.location?.coordinates) {
+        const salonLat = salon.location.coordinates[1];
+        const salonLng = salon.location.coordinates[0];
+        distance = calculateDistance(userLat, userLng, salonLat, salonLng);
+      }
+
+      // Base score: percentage of recommended treatments available
+      const totalRecommended = recommendedTreatments.length || 1;
+      let score = Math.round((matchedServices.length / totalRecommended) * 100);
+
+      // Proximity boost (CR-18)
+      if (distance !== null) {
+        if (distance <= 2) score += 5;
+        else if (distance <= 5) score += 3;
+      }
+
+      // Rating boost (CR-18)
+      if (salon.rating >= 4.8) score += 5;
+      else if (salon.rating >= 4.5) score += 3;
+
+      // South Asian specialist boost (CR-18, CR-25)
+      if (salon.southAsianSpecialist && latest.southAsianCalibrated) {
+        score += 8;
+      }
+
+      // Price match boost (simplified for now)
+      // TODO: Add user budget from profile when available
+
+      // Availability penalty (simplified - checking if salon has opening hours)
+      if (!salon.openingHours || Object.keys(salon.openingHours).length === 0) {
+        score -= 10;
+      }
+
+      // Clamp score to 0-100
+      score = Math.max(0, Math.min(100, score));
+
+      return {
+        salonId: salon._id,
+        name: salon.name,
+        city: salon.location?.city || '',
+        rating: salon.rating,
+        matchPercent: score,
+        matchedServices: matchedServices.map((s) => s.name),
+        southAsianSpecialist: salon.southAsianSpecialist || false,
+        distance: distance !== null ? Number(distance.toFixed(1)) : null,
+        distanceUnit: 'km'
+      };
+    })
+    .filter((match) => match.matchPercent >= 60) // Min threshold (CR-18)
+    .sort((a, b) => {
+      // Sort by distance first (closest first), then by match score
+      if (a.distance !== null && b.distance !== null) {
+        const distanceDiff = a.distance - b.distance;
+        if (Math.abs(distanceDiff) > 0.5) { // If distance difference > 0.5km
+          return distanceDiff;
+        }
+      }
+      // If distances are similar or unavailable, sort by match score
+      return b.matchPercent - a.matchPercent;
+    })
+    .slice(0, 5); // Top 5 (CR-18)
 
   res.json({
     success: true,
     data: {
       scanId: latest._id,
-      recommendations: latest.recommendationNotes,
+      recommendations: latest.treatmentPlan,
       matches
     }
   });
 });
+
+/**
+ * Match salons based on treatment IDs or names
+ * CR-30: Treatment-to-salon matching API
+ * POST /api/scans/match-salons
+ * Input: { treatmentIds?: string[], treatmentNames?: string[], userLocation?: { lat: number, lng: number } }
+ * Output: ranked salons with match score, matched treatment tags
+ */
+export const matchSalons = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { treatmentIds, treatmentNames, userLocation } = req.body;
+
+  if ((!treatmentIds || treatmentIds.length === 0) && (!treatmentNames || treatmentNames.length === 0)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Either treatmentIds or treatmentNames must be provided'
+    });
+  }
+
+  // Get user location for proximity calculations
+  let userLat: number | undefined;
+  let userLng: number | undefined;
+
+  if (userLocation?.lat && userLocation?.lng) {
+    userLat = userLocation.lat;
+    userLng = userLocation.lng;
+  } else {
+    // Try to get from user profile
+    const user = await User.findById(req.user?._id).select('location');
+    userLat = user?.location?.coordinates?.[1];
+    userLng = user?.location?.coordinates?.[0];
+  }
+
+  // Get all active services grouped by salon
+  const allServices = await Service.find({ active: true }).select('_id name salonId aiScanLink');
+
+  // Get approved salons
+  const salons = await Salon.find({ status: SalonStatus.APPROVED, verified: true })
+    .select('_id name location rating averagePrice openingHours workingHours southAsianSpecialist');
+
+  // Build list of treatment names to match against
+  const treatmentNamesToMatch: string[] = [];
+
+  if (treatmentNames && treatmentNames.length > 0) {
+    treatmentNamesToMatch.push(...treatmentNames.map((t: string) => t.toLowerCase()));
+  }
+
+  if (treatmentIds && treatmentIds.length > 0) {
+    // Get treatment names from IDs
+    const treatments = await Service.find({ _id: { $in: treatmentIds } }).select('name');
+    treatmentNamesToMatch.push(...treatments.map((t) => t.name.toLowerCase()));
+  }
+
+  // Group services by salon
+  const servicesBySalon = new Map<string, Array<{ id: string; name: string; aiScanLink?: string }>>();
+  allServices.forEach((service) => {
+    const key = String(service.salonId);
+    const list = servicesBySalon.get(key) || [];
+    list.push({
+      id: String(service._id),
+      name: service.name,
+      aiScanLink: service.aiScanLink
+    });
+    servicesBySalon.set(key, list);
+  });
+
+  // Calculate match scores for each salon
+  const matches = salons
+    .map((salon) => {
+      const salonServices = servicesBySalon.get(String(salon._id)) || [];
+
+      // Find services that match requested treatments
+      const matchedServices = salonServices.filter((service) =>
+        treatmentNamesToMatch.some(
+          (treatment) =>
+            service.name.toLowerCase().includes(treatment) ||
+            treatment.includes(service.name.toLowerCase()) ||
+            service.aiScanLink === treatment
+        )
+      );
+
+      // Base score: percentage of requested treatments available (CR-18)
+      const totalRequested = treatmentNamesToMatch.length || 1;
+      let score = Math.round((matchedServices.length / totalRequested) * 100);
+
+      // Proximity boost (CR-18)
+      if (userLat && userLng && salon.location?.coordinates) {
+        const salonLat = salon.location.coordinates[1];
+        const salonLng = salon.location.coordinates[0];
+        const distance = calculateDistance(userLat, userLng, salonLat, salonLng);
+
+        if (distance <= 2) score += 5;
+        else if (distance <= 5) score += 3;
+      }
+
+      // Rating boost (CR-18)
+      if (salon.rating >= 4.8) score += 5;
+      else if (salon.rating >= 4.5) score += 3;
+
+      // South Asian specialist boost (CR-18, CR-25)
+      if (salon.southAsianSpecialist) {
+        score += 8;
+      }
+
+      // Availability check - use workingHours (simplified)
+      const hours = salon.workingHours || salon.openingHours;
+      if (!hours || Object.keys(hours).length === 0) {
+        score -= 10;
+      }
+
+      // Clamp score to 0-100
+      score = Math.max(0, Math.min(100, score));
+
+      return {
+        salonId: salon._id,
+        name: salon.name,
+        city: salon.location?.city || '',
+        rating: salon.rating,
+        matchPercent: score,
+        matchedServices: matchedServices.map((s) => s.name),
+        southAsianSpecialist: salon.southAsianSpecialist || false,
+        averagePrice: salon.averagePrice
+      };
+    })
+    .filter((match) => match.matchPercent >= 60) // Min threshold (CR-18)
+    .sort((a, b) => b.matchPercent - a.matchPercent)
+    .slice(0, 5); // Top 5 (CR-18)
+
+  res.json({
+    success: true,
+    data: {
+      requestedTreatments: treatmentNamesToMatch,
+      matchCount: matches.length,
+      matches
+    }
+  });
+});
+
+/**
+ * Helper function to calculate distance between two coordinates (Haversine formula)
+ * Returns distance in kilometers
+ */
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}

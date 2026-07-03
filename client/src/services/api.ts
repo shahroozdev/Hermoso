@@ -24,15 +24,15 @@ api.interceptors.response.use(
 
     originalRequest._retry = true;
     try {
-      const refreshToken = tokenCookies.getRefreshToken();
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
-        { refreshToken },
-        { withCredentials: true }
-      );
-      if (data?.accessToken && data?.refreshToken) {
-        tokenCookies.set(data.accessToken, data.refreshToken);
-      }
+      // const refreshToken = tokenCookies.getRefreshToken();
+      // const { data } = await axios.post(
+      //   `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
+      //   { refreshToken },
+      //   { withCredentials: true }
+      // );
+      // if (data?.accessToken && data?.refreshToken) {
+      //   tokenCookies.set(data.accessToken, data.refreshToken);
+      // }
       return api(originalRequest);
     } catch (refreshError) {
       tokenCookies.clear();

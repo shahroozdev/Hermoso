@@ -46,7 +46,7 @@ const ProfilePage = () => {
   city: user.location?.city || '',
   country: user.location?.country || '',
   bankAccount: user.bankAccount || '',
-  southAsianSpecialist: user.southAsianSpecialist || false
+  southAsianSpecialist: user?.southAsianSpecialist || false
 });
   const [profileFormKey, setProfileFormKey] = useState(0);
   const [passwordFormKey, setPasswordFormKey] = useState(0);

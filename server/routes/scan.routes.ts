@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { analyzeScanImage, getLatestScan, getMyScanHistory, getScanImprovements, getScanMatches } from '../controllers/scan.controller.js';
+import { analyzeScanImage, getLatestScan, getMyScanHistory, getScanImprovements, getScanMatches, matchSalons } from '../controllers/scan.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -16,5 +16,8 @@ router.get('/latest', getLatestScan);
 router.get('/history', getMyScanHistory);
 router.get('/improvements', getScanImprovements);
 router.get('/matches', getScanMatches);
+
+// CR-30: Treatment-to-salon matching API
+router.post('/match-salons', matchSalons);
 
 export default router;

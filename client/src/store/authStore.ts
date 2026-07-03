@@ -14,6 +14,7 @@ interface User {
     country?: string;
   };
   bankAccount?: string;
+  southAsianSpecialist?: boolean;
 }
 
 interface AuthState {

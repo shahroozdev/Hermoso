@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, no-console */
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { connectDB } from '../config/db.js';
 import { User } from '../models/User.js';
 import { Salon } from '../models/Salon.js';
@@ -49,34 +50,31 @@ const getRandomItems = <T,>(array: T[], min: number, max: number): T[] => {
   return shuffled.slice(0, count);
 };
 
-const generateUniqueEmails = (baseName: string, index: number) => {
-  const timestamp = Date.now();
-  return `${baseName.toLowerCase().replace(/\s+/g, '.')}.${index}.${timestamp}@hermoso.app`;
-};
+const CUSTOMER_EMAIL_BASE = 'shahro.naro89';
+const OWNER_EMAIL_BASE = 'shahrooz.alta.dev';
+const STAFF_EMAIL_BASE = 'shahrooz.alta.dev';
+
+const generateCustomerEmail = (index: number) => `${CUSTOMER_EMAIL_BASE}+customer${index}@gmail.com`;
+const generateOwnerEmail = (index: number) => `${OWNER_EMAIL_BASE}+owner${index}@gmail.com`;
+const generateStaffEmail = (index: number) => `${STAFF_EMAIL_BASE}+staff${index}@gmail.com`;
 
 const seed = async () => {
   await connectDB();
 
   console.log('🧹 Clearing database...');
-  await Promise.all([
-    User.deleteMany({}),
-    Salon.deleteMany({}),
-    Category.deleteMany({}),
-    Service.deleteMany({}),
-    Event.deleteMany({}),
-    Booking.deleteMany({}),
-    Payment.deleteMany({}),
-    Review.deleteMany({}),
-    Payout.deleteMany({}),
-    Notification.deleteMany({})
-  ]);
+  // Drop collections to also clear indexes (critical for Service unique index fix)
+  const collections = ['users', 'salons', 'categories', 'services', 'events', 'bookings', 'payments', 'reviews', 'payouts', 'notifications'];
+  await Promise.all(collections.map((name) => mongoose.connection.db?.dropCollection(name).catch(() => {})));
+  // Ensure indexes are rebuilt per schema
+  await Promise.all([User, Salon, Category, Service, Event, Booking, Payment, Review, Payout, Notification].map((m) => m.createIndexes()));
 
   console.log('👤 Creating admin users...');
   const superAdmin = await User.create({
     name: 'Platform Admin',
     email: 'admin@hermoso.app',
     password: 'Admin@123',
-    role: Roles.SUPER_ADMIN
+    role: Roles.SUPER_ADMIN,
+    isActive: true,
   });
 
   console.log('📚 Creating categories...');
@@ -95,9 +93,10 @@ const seed = async () => {
   for (let i = 0; i < 50; i++) {
     const customer = await User.create({
       name: mockCustomerNames[i % mockCustomerNames.length],
-      email: generateUniqueEmails(`customer${i}`, i),
+      email: generateCustomerEmail(i),
       password: 'Customer@123',
       role: Roles.CUSTOMER,
+      isActive: true,
       location: {
         city: getRandomItem(mockCities),
         country: 'Pakistan'
@@ -114,14 +113,15 @@ const seed = async () => {
     // Create owner for salon
     const owner = await User.create({
       name: mockOwnerNames[salonIndex % mockOwnerNames.length],
-      email: generateUniqueEmails(`owner${salonIndex}`, salonIndex),
+      email: generateOwnerEmail(salonIndex),
       password: 'Owner@123',
       role: Roles.SALON_OWNER,
       phone: mockPhoneNumbers[salonIndex % mockPhoneNumbers.length],
       location: {
         city: city,
         country: 'Pakistan'
-      }
+      },
+      isActive: true
     });
     owners.push(owner);
 
@@ -148,28 +148,26 @@ const seed = async () => {
     owner.salonId = salon._id as any;
     await owner.save();
 
-    // Create 5-15 services per salon
+    // Create 5-15 services per salon (batched for speed)
     const salonServiceCount = Math.floor(Math.random() * 11) + 5;
-    const salonServices = getRandomItems(mockServiceNames, salonServiceCount, salonServiceCount);
+    const salonServiceNames = getRandomItems(mockServiceNames, salonServiceCount, salonServiceCount);
 
-    for (let serviceIndex = 0; serviceIndex < salonServices.length; serviceIndex++) {
-      const serviceName = salonServices[serviceIndex];
-      const category = getRandomItem(categories);
-      const service = await Service.create({
+    const serviceDocs = salonServiceNames.map((name) => {
+      const cat = getRandomItem(categories);
+      return {
         salonId: salon._id,
-        name: `${serviceName} - Salon${salonIndex} - S${serviceIndex}`,
-        description: getRandomItem(mockServiceDescriptions),
+        name,
+        description: mockServiceDescriptions[mockServiceNames.indexOf(name)] || 'Professional service',
         price: getRandomItem(mockServicePrices),
         duration: getRandomItem(mockServiceDurations),
-        categoryId: category._id,
-        category: category.name,
+        categoryId: cat._id,
+        category: cat.name,
         active: true
-      });
-      allServices.push(service);
-    }
-
-    // Get salon services for staff assignment
-    const salonServices_db = await Service.find({ salonId: salon._id });
+      };
+    });
+    const createdServices = await Service.insertMany(serviceDocs);
+    allServices.push(...createdServices);
+    const salonServices_db = createdServices;
 
     // Create 3-6 events per salon
     const eventCount = Math.floor(Math.random() * 4) + 3;
@@ -187,7 +185,7 @@ const seed = async () => {
 
       await Event.create({
         salonId: salon._id,
-        name: `${eventName} - ${salon.name}`,
+        name: eventName,
         description: getRandomItem(mockEventDescriptions),
         category: eventCategory,
         services: eventServices.map(service => ({
@@ -213,10 +211,15 @@ const seed = async () => {
       const staff = await User.create({
         salonId: salon._id,
         name: mockStaffNames[(salonIndex * staffCount + staffIndex) % mockStaffNames.length],
-        email: generateUniqueEmails(`staff${salonIndex}${staffIndex}`, salonIndex * 100 + staffIndex),
+        email: generateStaffEmail(salonIndex * 100 + staffIndex),
         password: 'Staff@123',
         role: Roles.STAFF,
         phone: mockPhoneNumbers[(salonIndex + staffIndex) % mockPhoneNumbers.length],
+        isActive: true,
+        location: {
+          city: city,
+          country: 'Pakistan'
+        },
         staffDetails: {
           designation: getRandomItem(mockDesignations),
           salary: Math.floor(Math.random() * 30000) + 15000,

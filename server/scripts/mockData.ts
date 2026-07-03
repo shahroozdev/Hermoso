@@ -339,7 +339,6 @@ export const mockServiceNames = [
   'Party Makeup',
   'Professional Makeup',
   'Eye Makeup',
-  'Eyebrow Threading',
   'Eyelash Extensions',
   'Makeup Lesson',
   'HD Makeup',
@@ -395,27 +394,164 @@ export const mockServiceNames = [
   'Men Body Waxing'
 ];
 
-export const mockServiceDescriptions = [
-  'Professional and quality service',
-  'Premium quality treatment',
-  'Expert service by trained professionals',
-  'Luxurious experience',
-  'Personalized care',
-  'State-of-the-art service',
-  'Customized treatment',
-  'Relaxing and rejuvenating',
-  'High-quality materials used',
-  'Experienced staff',
-  'Satisfying results',
-  'Best in class service',
-  'Professional expertise',
-  'Premium finishing',
-  'Complete care package',
-  'Therapeutic benefits',
-  'Transformative treatment',
-  'Stress relief service',
-  'Beauty enhancement',
-  'Wellness focused'
+// Real, descriptive service descriptions keyed to service name patterns
+const SERVICE_DESCRIPTION_MAP: Record<string, string> = {
+  'Hair Cut': 'Precision haircut tailored to your face shape, layered and texturized for a natural finish',
+  'Hair Styling': 'Professional blow-dry and styling using premium products for long-lasting volume and shine',
+  'Hair Coloring': 'Full-head color application with ammonia-free professional dyes for vibrant, even color',
+  'Highlights': 'Hand-painted balayage or foil highlights for natural dimension and sun-kissed brightness',
+  'Hair Smoothing': 'Keratin smoothing treatment that eliminates frizz and leaves hair silky for up to 3 months',
+  'Hair Extensions': 'Clip-in or tape-in 100% human hair extensions for instant length and volume',
+  'Blow Dry': 'Professional blow-dry with round brush technique for salon-perfect volume and smoothness',
+  'Perming': 'Cold or digital perm for bouncy, long-lasting curls customised to your hair type',
+  'Hair Treatment': 'Deep conditioning protein treatment that repairs damage and restores hair health',
+  'Scalp Treatment': 'Therapeutic scalp cleansing and massage treatment for dandruff control and hair growth',
+
+  'Facial': 'Deep cleansing facial with steam, extraction, and hydrating mask for refreshed, glowing skin',
+  'Deep Cleansing Facial': 'Professional multi-step facial with pore extraction, exfoliation, and purifying mask for deep clean skin',
+  'Hydrating Facial': 'Intensive moisture-boosting facial with hyaluronic acid serum and hydrogel mask for dehydrated skin',
+  'Anti-Aging Facial': 'Age-defying facial with collagen-boosting ingredients, microcurrent lift, and firming mask',
+  'Acne Treatment': 'Clinical acne facial with salicylic acid peel, extraction, and antibacterial mask for breakout-prone skin',
+  'Chemical Peel': 'Medical-grade glycolic or lactic acid peel that resurfaces skin and reduces hyperpigmentation',
+  'Microdermabrasion': 'Diamond-tip exfoliation treatment that buffs away dead cells and stimulates collagen production',
+  'Skin Whitening': 'Brightening treatment with vitamin C and kojic acid to reduce dark spots and even skin tone',
+  'Skin Rejuvenation': 'Multi-modal rejuvenation with LED therapy, serums, and massage for youthful radiance',
+  'Sensitive Skin Treatment': 'Gentle calming facial with ceramides and niacinamide to soothe redness and irritation',
+
+  'Manicure': 'Classic manicure with nail shaping, cuticle care, buffing, and polish application',
+  'Pedicure': 'Therapeutic pedicure with foot soak, callus removal, nail care, and relaxing foot massage',
+  'Gel Nails': 'Long-lasting gel polish application that stays chip-free for 2-3 weeks with high-gloss shine',
+  'Nail Art': 'Custom hand-painted nail art with intricate designs, gems, and embellishments',
+  'Acrylic Nails': 'Full set of acrylic nail extensions with custom shaping and your choice of polish',
+  'French Manicure': 'Classic French manicure with natural pink base and crisp white tips, gel or regular',
+  'Nail Extension': 'Tip or form nail extensions for added length, shaped and finished to your preference',
+  'Nail Repair': 'Professional repair for broken or damaged nails using silk wrap or acrylic reinforcement',
+  'Nail Polish': 'Application of premium long-wear nail polish in your choice of color from our collection',
+  'Nail Spa': 'Luxury nail spa experience with paraffin wax dip, hot oil massage, and intensive cuticle care',
+
+  'Bridal Makeup': 'Full bridal makeup with HD foundation, contouring, false lashes, and setting for all-day wear',
+  'Party Makeup': 'Glamorous party makeup with smokey eyes, highlighted cheeks, and long-wear lipstick',
+  'Professional Makeup': 'Clean, polished makeup suitable for corporate events, interviews, and photoshoots',
+  'Eye Makeup': 'Dramatic eye makeup with eyeshadow blending, eyeliner, and lash application',
+  'Eyebrow Threading': 'Precision eyebrow threading for clean, defined arches tailored to your face shape',
+  'Eyelash Extensions': 'Individual lash extensions applied lash-by-lash for natural volume and curl',
+  'Makeup Lesson': 'One-on-one makeup lesson covering techniques personalized to your face shape and preferences',
+  'HD Makeup': 'High-definition airbrush makeup for flawless camera-ready finish in photos and video',
+  'Airbrush Makeup': 'Lightweight airbrush foundation application for seamless, natural-looking coverage',
+  'Special Effects Makeup': 'Professional SFX makeup including wounds, aging, fantasy looks, and body painting',
+
+  'Full Body Massage': 'Full-body Swedish massage using warm oil to relieve tension and improve circulation',
+  'Head Massage': 'Ayurvedic head and scalp massage with herbal oils for stress relief and hair health',
+  'Back Massage': 'Therapeutic back massage targeting knots and tension with deep tissue techniques',
+  'Swedish Massage': 'Classic Swedish massage with long gliding strokes and gentle kneading for total relaxation',
+  'Thai Massage': 'Traditional Thai massage with assisted stretching and pressure point work on a floor mat',
+  'Deep Tissue Massage': 'Intense deep tissue massage targeting chronic muscle tension and adhesion release',
+  'Aromatherapy Massage': 'Massage with custom-blended essential oils for mood enhancement and relaxation',
+  'Hot Stone Massage': 'Massage using heated basalt stones placed on key points and used for muscle release',
+  'Reflexology': 'Foot reflexology applying pressure to reflex points corresponding to organs and body systems',
+  'Foot Massage': 'Soothing foot massage with reflexology techniques and cooling gel for tired feet',
+
+  'Body Waxing': 'Full body waxing using hot wax for smooth, hair-free skin lasting 3-4 weeks',
+  'Leg Waxing': 'Hot wax application for full or partial leg hair removal with post-wax soothing lotion',
+  'Arm Waxing': 'Quick and clean arm waxing from shoulder to wrist with gentle, skin-friendly wax',
+  'Brazilian Waxing': 'Complete bikini waxing using hard wax technique for minimal discomfort',
+  'Bikini Waxing': 'Standard bikini line waxing with precision strips for clean, neat results',
+  'Face Waxing': 'Gentle facial waxing for upper lip, chin, and cheeks with post-care soothing balm',
+
+  'Bridal Package': 'Complete bridal package including makeup, hair, facial, and manicure for your wedding day',
+  'Pre-Wedding Glow': 'Multi-session skin prep package with facials, peel, and brightening treatments before the big day',
+  'Bridal Skincare': 'Customised bridal skincare regimen including deep cleansing, hydration, and glow-boosting treatments',
+  'Bridal Hair': 'Professional bridal hairstyling with trial session, veil setting, and all-day touch-up service',
+  'Bridal Nails': 'Bridal nail package with gel application, nail art, and French or nude finish options',
+  'Henna Application': 'Intricate henna design application for bridal or festive occasions with dark-stain formula',
+  'Bridal Massage': 'Pre-wedding relaxation massage with aromatherapy to reduce stress and promote skin glow',
+  'Complete Bridal Makeover': 'Full bridal transformation including facial, makeup, hair, nails, and mehndi consultation',
+  'Wedding Day Touch-up': 'On-location touch-up service throughout your wedding events for makeup and hair',
+  'Groom Grooming': 'Complete groom grooming package with haircut, facial, manicure, and beard styling',
+
+  'Beard Trim': 'Precision beard trimming and shaping with hot towel treatment and beard oil application',
+  'Men Haircut': 'Modern men\'s haircut with clipper and scissor techniques tailored to your style preference',
+  'Shaving Service': 'Traditional straight-razor shave with hot lather, steam towel, and post-shave balm',
+  'Men Facial': 'Men\'s deep cleansing facial with charcoal mask and extraction for oily and congested skin',
+  'Men Massage': 'Deep tissue massage for men focusing on back, shoulders, and neck tension relief',
+  'Grooming Package': 'Complete men\'s grooming package with haircut, facial, manicure, and beard styling',
+  'Beard Styling': 'Professional beard sculpting, shaping, and styling with premium products',
+  'Hair Straightening': 'Japanese or chemical hair straightening for permanently smooth, frizz-free hair',
+
+  'Eyebrow Shaping': 'Custom eyebrow shaping through threading and tweezing for perfect arch definition',
+  'Men Body Waxing': 'Men\'s chest, back, or full body waxing with numbing spray for comfort',
+
+  'Threading & Tinting': 'Eyebrow threading followed by tinting for defined, natural-looking brows that last weeks',
+  'Upper Lip Threading': 'Quick and precise upper lip threading for clean, smooth results',
+  'Full Face Threading': 'Full face threading including brows, upper lip, chin, and side for complete facial hair removal',
+};
+
+export const mockServiceDescriptions = mockServiceNames.map(
+  (name) => SERVICE_DESCRIPTION_MAP[name] || `Professional ${name.toLowerCase()} service by trained specialists`
+);
+
+export const mockEventNames = [
+  'Bridal Complete Package',
+  'Premium Bridal Experience',
+  'Royal Wedding Package',
+  'Birthday Celebration Package',
+  'Party Glam Package',
+  'Eid Special Package',
+  'Independence Day Special',
+  'Corporate Event Package',
+  'Anniversary Package',
+  'Engagement Ceremony Package',
+  'Pre-Wedding Glow Package',
+  'Mehendi Function Package',
+  'Valima Package',
+  'Sweet Sixteen Package',
+  'New Year Party Package',
+  'Graduation Party Package',
+  'Formal Event Package',
+  'Festival Special Package',
+  'Summer Glow Package',
+  'Winter Care Package'
+];
+
+// Real, descriptive event descriptions keyed to event name patterns
+const EVENT_DESCRIPTION_MAP: Record<string, string> = {
+  'Bridal Complete Package': 'All-inclusive bridal package with professional makeup, hairstyling, facial, and manicure services for your wedding day. Includes trial session and on-location touch-up.',
+  'Premium Bridal Experience': 'Luxury bridal experience featuring HD airbrush makeup, advanced facial treatments, keratin hair smoothing, and complete nail care for the modern bride.',
+  'Royal Wedding Package': 'Regal wedding package with gold facial, bridal hair styling with real accessories, intricate henna, and full-body polish for a royal glow on your special day.',
+  'Birthday Celebration Package': 'Celebrate your birthday with a glamorous makeover including party makeup, stylish hairdo, manicure, and a refreshing facial to look your best.',
+  'Party Glam Package': 'Get party-ready with dramatic eye makeup, contouring, blow-dry styling, and gel nails for a stunning night-out transformation.',
+  'Eid Special Package': 'Special Eid package featuring brightening facial, traditional henna application, elegant makeup, and festive hairstyling for the celebrations.',
+  'Independence Day Special': 'Patriotic beauty package with green and white themed nail art, facial glow treatment, and formal hairstyling for Independence Day festivities.',
+  'Corporate Event Package': 'Professional grooming package with clean makeup styling, sleek hairstyling, and manicure suitable for corporate events, conferences, and formal meetings.',
+  'Anniversary Package': 'Romantic anniversary package with couple grooming, glowing facial, elegant makeup, and styled hair for your special celebration together.',
+  'Engagement Ceremony Package': 'Engagement-ready package with radiant makeup, elegant updo hairstyling, mehndi-touch nails, and glow-boosting facial for the moment you shine.',
+  'Pre-Wedding Glow Package': 'Multi-session skin preparation package with hydrating facials, enzyme peels, and brightening treatments leading up to your wedding day.',
+  'Mehendi Function Package': 'Vibrant mehendi function package with colorful makeup, floral hairstyling, intricate hand henna, and bright nail art for the most colorful event.',
+  'Valima Package': 'Elegant Valima reception package with sophisticated makeup, voluminous hairstyling, pearl-finish nails, and skin brightening facial.',
+  'Sweet Sixteen Package': 'Fun and youthful Sweet Sixteen package with age-appropriate makeup, trendy hairstyling, colorful nail art, and refreshing facial.',
+  'New Year Party Package': 'Ring in the new year with sparkling makeup, glamorous hairstyling, glitter nail art, and a champagne facial for a fresh start.',
+  'Graduation Party Package': 'Celebrate your achievement with camera-ready makeup, polished hairstyling, classic manicure, and glow facial for your graduation photos and party.',
+  'Formal Event Package': 'Sophisticated formal event grooming with natural makeup, elegant bun or blow-dry, French manicure, and quick facial refresh.',
+  'Festival Special Package': 'Festive beauty package with brightening treatments, traditional hairstyling with flowers, henna, and colorful nail art for any cultural celebration.',
+  'Summer Glow Package': 'Beat the heat with summer-specific hydrating facial, lightweight makeup, beachy hairstyling, and cool pedicure for a fresh summer look.',
+  'Winter Care Package': 'Winter skin and hair rescue package with deep moisturizing facial, hot oil hair treatment, warm paraffin manicure, and hydrating body wrap.',
+};
+
+export const mockEventDescriptions = mockEventNames.map(
+  (name) => EVENT_DESCRIPTION_MAP[name] || `Curated ${name.toLowerCase()} with premium beauty services for a complete transformation`
+);
+
+export const mockEventCategories = [
+  'bridal',
+  'party',
+  'eid',
+  'independence_day',
+  'birthday',
+  'engagement',
+  'anniversary',
+  'corporate',
+  'wedding',
+  'other'
 ];
 
 export const mockDesignations = [
@@ -578,62 +714,3 @@ export const mockServicePrices = [15, 20, 25, 30, 35, 40, 45, 50, 60, 75, 85, 10
 export const mockServiceDurations = [30, 45, 60, 75, 90, 120, 150, 180];
 
 export const mockCommissionRates = [8, 10, 12, 15, 18, 20];
-
-export const mockEventNames = [
-  'Bridal Complete Package',
-  'Premium Bridal Experience',
-  'Royal Wedding Package',
-  'Birthday Celebration Package',
-  'Party Glam Package',
-  'Eid Special Package',
-  'Independence Day Special',
-  'Corporate Event Package',
-  'Anniversary Package',
-  'Engagement Ceremony Package',
-  'Pre-Wedding Glow Package',
-  'Mehendi Function Package',
-  'Valima Package',
-  'Sweet Sixteen Package',
-  'New Year Party Package',
-  'Graduation Party Package',
-  'Formal Event Package',
-  'Festival Special Package',
-  'Summer Glow Package',
-  'Winter Care Package'
-];
-
-export const mockEventDescriptions = [
-  'Complete beauty transformation for your special day',
-  'Premium package with all essential services',
-  'Luxury treatment package for memorable occasions',
-  'All-inclusive beauty solution',
-  'Perfect package for your celebration',
-  'Comprehensive beauty services bundle',
-  'Special occasion complete package',
-  'Transform your look with our exclusive package',
-  'Everything you need in one package',
-  'Ultimate beauty experience',
-  'Curated services for your event',
-  'Professional styling package',
-  'Complete makeover solution',
-  'Premium beauty bundle',
-  'Exclusive event package',
-  'Full-service beauty treatment',
-  'Celebration ready package',
-  'Special day complete care',
-  'All-in-one beauty solution',
-  'Custom event package'
-];
-
-export const mockEventCategories = [
-  'bridal',
-  'party',
-  'eid',
-  'independence_day',
-  'birthday',
-  'engagement',
-  'anniversary',
-  'corporate',
-  'wedding',
-  'other'
-];
