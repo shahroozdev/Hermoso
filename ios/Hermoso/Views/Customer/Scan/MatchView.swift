@@ -23,10 +23,10 @@ struct MatchView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text("AI Salon Match")
                 .font(.system(size: 19, weight: .heavy))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             Text("Salons matched to your latest scan")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundColor(.white.opacity(0.6))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
@@ -44,9 +44,9 @@ struct MatchView: View {
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
             VStack(spacing: 12) {
-                Text(error).foregroundStyle(Color.hermosoError)
+                Text(error).foregroundColor(Color.hermosoError)
                 Button("Retry") { Task { await viewModel.load() } }
-                    .foregroundStyle(Color.hermosoPurple)
+                    .foregroundColor(Color.hermosoPurple)
             }
             .padding(20)
             .frame(maxWidth: .infinity)
@@ -66,15 +66,15 @@ struct MatchView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(match.name ?? "")
                         .font(.system(size: 14.5, weight: .bold))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                     Text(match.city ?? "")
                         .font(.system(size: 12))
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                 }
                 Spacer()
                 Text("Match \(match.matchPercent ?? 0)%")
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(Color.hermosoPurple)
+                    .foregroundColor(Color.hermosoPurple)
             }
 
             if let services = match.matchedServices, !services.isEmpty {
@@ -89,7 +89,7 @@ struct MatchView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(match.salonId != nil ? Color.hermosoPurple : Color.hermosoPurple.opacity(0.4))
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .disabled(match.salonId == nil)

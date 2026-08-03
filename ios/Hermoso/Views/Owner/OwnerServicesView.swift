@@ -11,7 +11,7 @@ struct OwnerServicesView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Services")
                     .font(.system(size: 18, weight: .heavy))
-                    .foregroundStyle(Color.hermosoCream)
+                    .foregroundColor(Color.hermosoCream)
 
                 if viewModel.isLoading {
                     ProgressView()
@@ -19,7 +19,7 @@ struct OwnerServicesView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 30)
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundStyle(Color(hex: "#FCA5A5"))
+                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
                 } else {
                     ForEach(viewModel.services) { service in
                         serviceRow(service)
@@ -38,15 +38,15 @@ struct OwnerServicesView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(service.name ?? "")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.hermosoCream)
+                    .foregroundColor(Color.hermosoCream)
                 Text("\(service.duration ?? 0) min")
                     .font(.system(size: 11))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
             }
             Spacer()
             Text("PKR \(Int(service.price ?? 0))")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.hermosoPurpleLight)
+                .foregroundColor(Color.hermosoPurpleLight)
         }
         .padding(14)
         .background(Color.hermosoPurpleDark)

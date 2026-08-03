@@ -32,10 +32,10 @@ struct ScanView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text("AI Skin Scan")
                 .font(.title2.bold())
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             Text("Professional facial analysis & liveness check")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundColor(.white.opacity(0.5))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
@@ -67,7 +67,7 @@ struct ScanView: View {
                 if let error = viewModel.errorMessage {
                     Text(error)
                         .font(.footnote)
-                        .foregroundStyle(Color.hermosoError)
+                        .foregroundColor(Color.hermosoError)
                         .padding(.horizontal, 16)
                 }
 
@@ -92,7 +92,7 @@ struct ScanView: View {
                         .tint(Color.hermosoPurpleLight)
                     Text("Analyzing Skin...")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundColor(.white)
                 }
             }
         }
@@ -105,7 +105,7 @@ struct ScanView: View {
                 .frame(width: 9, height: 9)
             Text(viewModel.validationMessage)
                 .font(.subheadline)
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -131,7 +131,7 @@ struct ScanView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(fill)
-            .foregroundStyle(tint)
+            .foregroundColor(tint)
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(active ? Color.hermosoPurpleLight : Color.clear, lineWidth: 1.4)
@@ -149,7 +149,7 @@ struct ScanView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
                 .background(enabled ? Color.hermosoPurple : Color.white.opacity(0.08))
-                .foregroundStyle(enabled ? .white : .white.opacity(0.4))
+                .foregroundColor(enabled ? .white : .white.opacity(0.4))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .disabled(!enabled)
@@ -173,7 +173,7 @@ struct ScanView: View {
                 if let summary = data.summary, !summary.isEmpty {
                     Text(summary)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundColor(.white)
                 }
 
                 ForEach(data.metrics ?? []) { metric in
@@ -184,7 +184,7 @@ struct ScanView: View {
                             Text("\(metric.score ?? 0)%")
                         }
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundColor(.white.opacity(0.7))
 
                         GeometryReader { geometry in
                             ZStack(alignment: .leading) {
@@ -214,7 +214,7 @@ struct ScanView: View {
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .foregroundStyle(.white)
+                            .foregroundColor(.white)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     .stroke(Color.white.opacity(0.25), lineWidth: 1.4)
@@ -226,7 +226,7 @@ struct ScanView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.hermosoPurple)
-                            .foregroundStyle(.white)
+                            .foregroundColor(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                 }

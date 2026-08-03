@@ -18,7 +18,7 @@ struct AppHeaderView: View {
 
             Text("Hermoso")
                 .font(.custom("CormorantGaramond-Light", size: 22))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
 
             Spacer()
 
@@ -30,12 +30,12 @@ struct AppHeaderView: View {
                         .overlay(
                             Image(systemName: "bell.fill")
                                 .font(.system(size: 14))
-                                .foregroundStyle(.white)
+                                .foregroundColor(.white)
                         )
                     if unreadCount > 0 {
                         Text(unreadCount > 9 ? "9+" : "\(unreadCount)")
                             .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundColor(.white)
                             .padding(3)
                             .background(Circle().fill(Color.hermosoNotificationBadge))
                             .offset(x: 4, y: -4)
@@ -59,7 +59,7 @@ struct AppHeaderView: View {
                     .overlay(
                         Text(userInitial)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundColor(.white)
                     )
             }
         }

@@ -25,10 +25,10 @@ struct TrackerView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Skin Progress Tracker")
                 .font(.system(size: 19, weight: .heavy))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             Text("Based on your first and latest valid scans")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundColor(.white.opacity(0.6))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
@@ -45,10 +45,10 @@ struct TrackerView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundStyle(Color.hermosoError).padding(20)
+            Text(error).foregroundColor(Color.hermosoError).padding(20)
         } else if !viewModel.hasEnoughData {
             Text("Need at least two successful scans to show progress.")
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
                 .padding(.top, 60)
                 .padding(.horizontal, 20)
                 .frame(maxWidth: .infinity)
@@ -75,7 +75,7 @@ struct TrackerView: View {
             }
         }
         .font(.system(size: 12.5))
-        .foregroundStyle(.white)
+        .foregroundColor(.white)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .background(Color.hermosoPurpleDark)
@@ -88,15 +88,15 @@ struct TrackerView: View {
         let after = max(0, min(item.after ?? 0, 100))
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(item.key ?? "").font(.system(size: 13.5, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+                Text(item.key ?? "").font(.system(size: 13.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
                 Spacer()
                 Text(delta >= 0 ? "+\(delta)" : "\(delta)")
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(positive ? Color.hermosoScoreHigh : Color.hermosoError)
+                    .foregroundColor(positive ? Color.hermosoScoreHigh : Color.hermosoError)
             }
             Text("Before \(item.before ?? 0) → After \(item.after ?? 0)")
                 .font(.system(size: 11))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.hermosoPurplePale)

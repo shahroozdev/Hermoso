@@ -13,7 +13,7 @@ struct OwnerClientsView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Clients")
                     .font(.system(size: 18, weight: .heavy))
-                    .foregroundStyle(Color.hermosoCream)
+                    .foregroundColor(Color.hermosoCream)
 
                 if viewModel.isLoading {
                     ProgressView()
@@ -21,7 +21,7 @@ struct OwnerClientsView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 30)
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundStyle(Color(hex: "#FCA5A5"))
+                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
                 } else {
                     ForEach(viewModel.customers) { customer in
                         customerRow(customer)
@@ -39,14 +39,14 @@ struct OwnerClientsView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(customer.name ?? "")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.hermosoCream)
+                .foregroundColor(Color.hermosoCream)
             Text(customer.email ?? "")
                 .font(.system(size: 11.5))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             if let phone = customer.phone, !phone.isEmpty {
                 Text(phone)
                     .font(.system(size: 11.5))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

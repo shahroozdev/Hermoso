@@ -9,7 +9,7 @@ struct ResultCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.hermosoTextDark)
+                .foregroundColor(Color.hermosoTextDark)
             content
         }
         .padding(16)
@@ -29,10 +29,10 @@ struct MetricProgressBar: View {
             HStack {
                 Text(label)
                 Spacer()
-                Text("\(value)%").foregroundStyle(Color.hermosoTextMuted)
+                Text("\(value)%").foregroundColor(Color.hermosoTextMuted)
             }
             .font(.system(size: 12.5))
-            .foregroundStyle(Color.hermosoTextDark)
+            .foregroundColor(Color.hermosoTextDark)
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -58,14 +58,14 @@ struct TreatmentTagsList: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Recommended Treatments")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
                 ForEach(tags, id: \.self) { tag in
                     Text(tag)
                         .font(.system(size: 11.5, weight: .semibold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color.hermosoPurpleDark.opacity(0.1))
-                        .foregroundStyle(Color.hermosoPurpleDark)
+                        .foregroundColor(Color.hermosoPurpleDark)
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
             }

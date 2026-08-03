@@ -33,20 +33,20 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(viewModel.greeting), \(viewModel.firstName)")
                     .font(.title2.bold())
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundColor(.white.opacity(0.75))
             }
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundColor(.white.opacity(0.75))
                 TextField(
                     "",
                     text: $viewModel.searchQuery,
-                    prompt: Text("Search salons by name...").foregroundStyle(.white.opacity(0.6))
+                    prompt: Text("Search salons by name...").foregroundColor(.white.opacity(0.6))
                 )
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             }
             .padding(.horizontal, 14)
             .frame(height: 44)
@@ -80,7 +80,7 @@ struct HomeView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                         .background(isSelected ? Color.hermosoPurple : Color.hermosoPurplePale)
-                        .foregroundStyle(isSelected ? .white : Color.hermosoPurple)
+                        .foregroundColor(isSelected ? .white : Color.hermosoPurple)
                         .clipShape(Capsule())
                         .onTapGesture { viewModel.selectedCategoryId = category.id }
                 }
@@ -95,12 +95,12 @@ struct HomeView: View {
             HStack {
                 Text("Top Salons")
                     .font(.system(size: 15.5, weight: .bold))
-                    .foregroundStyle(Color.hermosoTextDark)
+                    .foregroundColor(Color.hermosoTextDark)
                 Spacer()
                 Button(action: onSeeAllSalons) {
                     Text("See all")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.hermosoPurple)
+                        .foregroundColor(Color.hermosoPurple)
                 }
             }
             .padding(.horizontal, 20)
@@ -108,7 +108,7 @@ struct HomeView: View {
             if let error = viewModel.salonsError {
                 Text(error)
                     .font(.footnote)
-                    .foregroundStyle(Color.hermosoError)
+                    .foregroundColor(Color.hermosoError)
                     .padding(.horizontal, 20)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -134,13 +134,13 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Events")
                 .font(.system(size: 15.5, weight: .bold))
-                .foregroundStyle(Color.hermosoTextDark)
+                .foregroundColor(Color.hermosoTextDark)
                 .padding(.horizontal, 20)
 
             if let error = viewModel.eventsError {
                 Text(error)
                     .font(.footnote)
-                    .foregroundStyle(Color.hermosoError)
+                    .foregroundColor(Color.hermosoError)
                     .padding(.horizontal, 20)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {

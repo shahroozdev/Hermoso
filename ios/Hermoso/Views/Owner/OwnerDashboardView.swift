@@ -25,9 +25,9 @@ struct OwnerDashboardView: View {
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
             VStack(spacing: 12) {
-                Text(error).foregroundStyle(Color(hex: "#FCA5A5"))
+                Text(error).foregroundColor(Color(hex: "#FCA5A5"))
                 Button("Retry") { Task { await viewModel.load() } }
-                    .foregroundStyle(Color.hermosoPurpleLight)
+                    .foregroundColor(Color.hermosoPurpleLight)
             }
             .padding(.top, 60)
             .frame(maxWidth: .infinity)
@@ -35,7 +35,7 @@ struct OwnerDashboardView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Dashboard")
                     .font(.system(size: 18, weight: .heavy))
-                    .foregroundStyle(Color.hermosoCream)
+                    .foregroundColor(Color.hermosoCream)
 
                 HStack(spacing: 10) {
                     statCard("Today's Bookings", "\(viewModel.totals?.dailyBookings ?? 0)")
@@ -52,7 +52,7 @@ struct OwnerDashboardView: View {
 
                 Text("Bookings by Month")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.hermosoCream)
+                    .foregroundColor(Color.hermosoCream)
 
                 ForEach(viewModel.bookingsByMonth) { month in
                     monthRow(month)
@@ -65,10 +65,10 @@ struct OwnerDashboardView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.system(size: 11))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             Text(value)
                 .font(.system(size: value.count > 10 ? 15 : 20, weight: .heavy))
-                .foregroundStyle(Color.hermosoPurpleLight)
+                .foregroundColor(Color.hermosoPurpleLight)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -80,19 +80,19 @@ struct OwnerDashboardView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("✨ AI Scan Referrals")
                 .font(.system(size: 12.5, weight: .bold))
-                .foregroundStyle(Color(hex: "#10B981"))
+                .foregroundColor(Color(hex: "#10B981"))
             HStack(spacing: 24) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(viewModel.totals?.aiScanBookings ?? 0)")
                         .font(.system(size: 20, weight: .heavy))
-                        .foregroundStyle(Color(hex: "#10B981"))
-                    Text("Bookings").font(.system(size: 10.5)).foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color(hex: "#10B981"))
+                    Text("Bookings").font(.system(size: 10.5)).foregroundColor(Color.hermosoTextMuted)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("PKR \(Int(viewModel.totals?.aiScanRevenue ?? 0))")
                         .font(.system(size: 20, weight: .heavy))
-                        .foregroundStyle(Color(hex: "#10B981"))
-                    Text("Revenue").font(.system(size: 10.5)).foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color(hex: "#10B981"))
+                    Text("Revenue").font(.system(size: 10.5)).foregroundColor(Color.hermosoTextMuted)
                 }
             }
         }
@@ -104,10 +104,10 @@ struct OwnerDashboardView: View {
 
     private func monthRow(_ month: MonthBookingChartDto) -> some View {
         HStack {
-            Text(month.month ?? "").foregroundStyle(Color.hermosoCream)
+            Text(month.month ?? "").foregroundColor(Color.hermosoCream)
             Spacer()
             Text("\(month.totalBookings ?? 0) bookings")
-                .foregroundStyle(Color.hermosoPurpleLight)
+                .foregroundColor(Color.hermosoPurpleLight)
                 .fontWeight(.bold)
         }
         .font(.system(size: 12.5))

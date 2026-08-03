@@ -31,10 +31,10 @@ struct ScanResultsView: View {
         } else if let error = viewModel.errorMessage {
             VStack(spacing: 14) {
                 Text(error)
-                    .foregroundStyle(Color.hermosoError)
+                    .foregroundColor(Color.hermosoError)
                 Button(action: onReScan) {
                     Text("Go Back")
-                        .foregroundStyle(.white)
+                        .foregroundColor(.white)
                         .padding(.horizontal, 22)
                         .padding(.vertical, 11)
                         .background(Color.hermosoPurple)
@@ -53,7 +53,7 @@ struct ScanResultsView: View {
                         ResultCard(title: "Summary") {
                             Text(result.summary)
                                 .font(.subheadline)
-                                .foregroundStyle(Color.hermosoTextDark)
+                                .foregroundColor(Color.hermosoTextDark)
                         }
                     }
 
@@ -95,10 +95,10 @@ struct ScanResultsView: View {
                 VStack(spacing: 0) {
                     Text("\(score)")
                         .font(.system(size: 30, weight: .heavy))
-                        .foregroundStyle(color)
+                        .foregroundColor(color)
                     Text("/ 100")
                         .font(.system(size: 10))
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                 }
             }
             .frame(width: 120, height: 120)
@@ -111,12 +111,12 @@ struct ScanResultsView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Detected Tone: \(tone.tone.capitalized)")
                     .font(.system(size: 12.5))
-                    .foregroundStyle(Color.hermosoTextDark)
+                    .foregroundColor(Color.hermosoTextDark)
                 MetricProgressBar(label: "Evenness", value: tone.evenness, color: Color(hex: "#A855F7"))
                 if !tone.tanningPattern.isEmpty {
                     Text("Tanning Pattern: \(tone.tanningPattern.capitalized)")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                 }
                 TreatmentTagsList(tags: tone.recommendedTreatments)
             }
@@ -147,12 +147,12 @@ struct ScanResultsView: View {
                 if !hydration.dehydrationZones.isEmpty {
                     Text("Dehydration Zones: \(hydration.dehydrationZones.joined(separator: ", ").capitalized)")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                 }
                 if !hydration.poreCondition.isEmpty {
                     Text("Pores: \(hydration.poreCondition)")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                 }
                 TreatmentTagsList(tags: hydration.recommendedTreatments)
             }
@@ -175,12 +175,12 @@ struct ScanResultsView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(typeInfo.color.opacity(0.12))
-                    .foregroundStyle(typeInfo.color)
+                    .foregroundColor(typeInfo.color)
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 if !darkCircles.severity.isEmpty {
                     Text("Severity: \(darkCircles.severity.capitalized)")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                 }
                 MetricProgressBar(label: "Color Delta", value: darkCircles.colorDelta, color: typeInfo.color)
                 TreatmentTagsList(tags: darkCircles.recommendedTreatments)
@@ -196,13 +196,13 @@ struct ScanResultsView: View {
                 if activeZones.isEmpty {
                     Text("No active acne zones detected")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                 } else {
                     ForEach(activeZones) { zone in
                         VStack(alignment: .leading, spacing: 3) {
                             Text("\(zone.area.replacingOccurrences(of: "-", with: " ").capitalized) — \(zone.type.capitalized) · \(zone.severity)%")
                                 .font(.system(size: 12))
-                                .foregroundStyle(Color.hermosoTextDark)
+                                .foregroundColor(Color.hermosoTextDark)
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
                                     Capsule().fill(Color(hex: "#FEE2E2"))
@@ -226,7 +226,7 @@ struct ScanResultsView: View {
                 if !lip.darknessLevel.isEmpty {
                     Text("Darkness Level: \(lip.darknessLevel.capitalized)")
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                 }
                 MetricProgressBar(label: "Melanin Index", value: lip.melaninIndex, color: Color(hex: "#DB2777"))
                 HStack(alignment: .top, spacing: 16) {
@@ -245,22 +245,22 @@ struct ScanResultsView: View {
                     HStack(alignment: .top, spacing: 12) {
                         Text("\(item.priority)")
                             .font(.system(size: 13, weight: .heavy))
-                            .foregroundStyle(.white)
+                            .foregroundColor(.white)
                             .frame(width: 28, height: 28)
                             .background(priorityColor(item.priority))
                             .clipShape(Circle())
                         VStack(alignment: .leading, spacing: 3) {
                             Text(item.treatmentName)
                                 .font(.system(size: 13.5, weight: .bold))
-                                .foregroundStyle(Color.hermosoTextDark)
+                                .foregroundColor(Color.hermosoTextDark)
                             if !item.reason.isEmpty {
                                 Text(item.reason)
                                     .font(.system(size: 12))
-                                    .foregroundStyle(Color.hermosoTextMuted)
+                                    .foregroundColor(Color.hermosoTextMuted)
                             }
                             Text("PKR \(item.pkrPriceRange) · \(item.estimatedDuration)")
                                 .font(.system(size: 11))
-                                .foregroundStyle(Color.hermosoTextMuted)
+                                .foregroundColor(Color.hermosoTextMuted)
                         }
                     }
                 }
@@ -282,7 +282,7 @@ struct ScanResultsView: View {
                 if !diet.foodsToEat.isEmpty {
                     Text("Foods to Eat")
                         .font(.system(size: 12.5, weight: .bold))
-                        .foregroundStyle(Color.hermosoScoreHigh)
+                        .foregroundColor(Color.hermosoScoreHigh)
                     ForEach(diet.foodsToEat) { item in
                         dietRow(item, mark: "✓", color: .hermosoScoreHigh)
                     }
@@ -290,7 +290,7 @@ struct ScanResultsView: View {
                 if !diet.foodsToAvoid.isEmpty {
                     Text("Foods to Avoid")
                         .font(.system(size: 12.5, weight: .bold))
-                        .foregroundStyle(Color.hermosoError)
+                        .foregroundColor(Color.hermosoError)
                         .padding(.top, 4)
                     ForEach(diet.foodsToAvoid) { item in
                         dietRow(item, mark: "✗", color: .hermosoError)
@@ -302,10 +302,10 @@ struct ScanResultsView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("Daily Water Intake")
                                 .font(.system(size: 10.5))
-                                .foregroundStyle(Color.hermosoTextMuted)
+                                .foregroundColor(Color.hermosoTextMuted)
                             Text(diet.dailyWaterIntake)
                                 .font(.system(size: 13, weight: .bold))
-                                .foregroundStyle(Color.hermosoTextDark)
+                                .foregroundColor(Color.hermosoTextDark)
                         }
                     }
                     .padding(10)
@@ -319,11 +319,11 @@ struct ScanResultsView: View {
 
     private func dietRow(_ item: DietItemResult, mark: String, color: Color) -> some View {
         HStack(alignment: .top, spacing: 6) {
-            Text(mark).foregroundStyle(color)
+            Text(mark).foregroundColor(color)
             VStack(alignment: .leading, spacing: 1) {
-                Text(item.food).font(.system(size: 12.5, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+                Text(item.food).font(.system(size: 12.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
                 if !item.reason.isEmpty {
-                    Text(item.reason).font(.system(size: 11.5)).foregroundStyle(Color.hermosoTextMuted)
+                    Text(item.reason).font(.system(size: 11.5)).foregroundColor(Color.hermosoTextMuted)
                 }
             }
         }
@@ -331,8 +331,8 @@ struct ScanResultsView: View {
 
     private func labeledValue(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 11)).foregroundStyle(Color.hermosoTextMuted)
-            Text(value.isEmpty ? "—" : value).font(.system(size: 13, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+            Text(label).font(.system(size: 11)).foregroundColor(Color.hermosoTextMuted)
+            Text(value.isEmpty ? "—" : value).font(.system(size: 13, weight: .bold)).foregroundColor(Color.hermosoTextDark)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -345,7 +345,7 @@ struct ScanResultsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
                     .background(Color.hermosoPurpleDark)
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             Button(action: onReScan) {
@@ -353,7 +353,7 @@ struct ScanResultsView: View {
                     .font(.system(size: 14, weight: .bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
-                    .foregroundStyle(Color.hermosoPurpleDark)
+                    .foregroundColor(Color.hermosoPurpleDark)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .stroke(Color.hermosoPurpleDark, lineWidth: 1.4)

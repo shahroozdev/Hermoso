@@ -29,10 +29,10 @@ struct AuthView: View {
                 // Requires Cormorant Garamond (Light) bundled under Resources/Fonts —
                 // falls back to the system font if the asset isn't added yet.
                 .font(.custom("CormorantGaramond-Light", size: 42))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             Text("AI-Powered Aesthetics")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundColor(.white.opacity(0.7))
         }
         .padding(.top, 76)
         .padding(.bottom, 24)
@@ -43,7 +43,7 @@ struct AuthView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text(title)
                     .font(.title3.bold())
-                    .foregroundStyle(Color.hermosoTextDark)
+                    .foregroundColor(Color.hermosoTextDark)
 
                 if viewModel.mode == .otp {
                     otpFields
@@ -62,12 +62,12 @@ struct AuthView: View {
                 if let error = viewModel.errorMessage {
                     Text(error)
                         .font(.footnote)
-                        .foregroundStyle(Color.hermosoError)
+                        .foregroundColor(Color.hermosoError)
                 }
                 if let success = viewModel.successMessage {
                     Text(success)
                         .font(.footnote)
-                        .foregroundStyle(Color.hermosoOtpSuccess)
+                        .foregroundColor(Color.hermosoOtpSuccess)
                 }
 
                 submitButton
@@ -78,7 +78,7 @@ struct AuthView: View {
                     } label: {
                         Text("Resend OTP")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.hermosoPurple)
+                            .foregroundColor(Color.hermosoPurple)
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -86,7 +86,7 @@ struct AuthView: View {
                 Button(action: toggleMode) {
                     Text(toggleText)
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.hermosoPurple)
+                        .foregroundColor(Color.hermosoPurple)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.top, 4)
@@ -124,7 +124,7 @@ struct AuthView: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(label)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             TextField("", text: text)
                 .keyboardType(keyboard)
                 .autocapitalization(.none)
@@ -140,7 +140,7 @@ struct AuthView: View {
         VStack(alignment: .leading, spacing: 5) {
             Text("Password")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             HStack {
                 Group {
                     if isPasswordVisible {
@@ -153,7 +153,7 @@ struct AuthView: View {
                     isPasswordVisible.toggle()
                 } label: {
                     Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                 }
             }
             .padding(12)
@@ -168,7 +168,7 @@ struct AuthView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Enter the 6-digit code sent to \(viewModel.email)")
                 .font(.caption)
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             TextField("6-digit code", text: $viewModel.otp)
                 .keyboardType(.numberPad)
                 .multilineTextAlignment(.center)
@@ -198,7 +198,7 @@ struct AuthView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
                 .background(selected ? Color.hermosoPurplePale : Color.clear)
-                .foregroundStyle(selected ? Color.hermosoPurple : Color.hermosoTextMuted)
+                .foregroundColor(selected ? Color.hermosoPurple : Color.hermosoTextMuted)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(selected ? Color.hermosoPurple : Color(hex: "#E0E0E0"), lineWidth: 2)
@@ -213,7 +213,7 @@ struct AuthView: View {
         } label: {
             Text(submitLabel)
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.hermosoPurple)

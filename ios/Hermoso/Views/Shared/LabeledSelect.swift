@@ -19,12 +19,12 @@ struct LabeledSelect: View {
             HStack {
                 Text(displayText)
                     .font(.system(size: 13))
-                    .foregroundStyle(selectedIndex != nil ? Color.hermosoTextDark : Color.hermosoTextMuted)
+                    .foregroundColor(selectedIndex != nil ? Color.hermosoTextDark : Color.hermosoTextMuted)
                     .lineLimit(1)
                 Spacer()
                 Text("▾")
                     .font(.system(size: 10))
-                    .foregroundStyle(Color.hermosoPurple)
+                    .foregroundColor(Color.hermosoPurple)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)

@@ -30,10 +30,10 @@ struct NotificationsView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundStyle(Color.hermosoError)
+            Text(error).foregroundColor(Color.hermosoError)
         } else if viewModel.notifications.isEmpty {
             Text("No notifications yet.")
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else {
@@ -51,14 +51,14 @@ struct NotificationsView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(notification.title ?? "")
                     .font(.system(size: 13.5, weight: .bold))
-                    .foregroundStyle(Color.hermosoTextDark)
+                    .foregroundColor(Color.hermosoTextDark)
                 Text(notification.message ?? "")
                     .font(.system(size: 12))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
                 if let createdAt = notification.createdAt {
                     Text(HermosoDateFormat.timestamp(createdAt))
                         .font(.system(size: 10.5))
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                 }
             }
             Spacer()
@@ -68,7 +68,7 @@ struct NotificationsView: View {
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.hermosoPurple)
+                        .foregroundColor(Color.hermosoPurple)
                 }
             }
         }

@@ -20,10 +20,10 @@ struct BookingsListView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text("My Bookings")
                 .font(.system(size: 19, weight: .heavy))
-                .foregroundStyle(Color.hermosoTextDark)
+                .foregroundColor(Color.hermosoTextDark)
             Text("Your upcoming and recent appointments")
                 .font(.caption)
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
@@ -39,15 +39,15 @@ struct BookingsListView: View {
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
             VStack(spacing: 12) {
-                Text(error).foregroundStyle(Color.hermosoError)
+                Text(error).foregroundColor(Color.hermosoError)
                 Button("Retry") { Task { await viewModel.load() } }
-                    .foregroundStyle(Color.hermosoPurple)
+                    .foregroundColor(Color.hermosoPurple)
             }
             .padding(20)
             .frame(maxWidth: .infinity)
         } else if viewModel.bookings.isEmpty {
             Text("No bookings yet.")
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else {
@@ -65,22 +65,22 @@ struct BookingsListView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(booking.serviceId?.name ?? "")
                 .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(Color.hermosoTextDark)
+                .foregroundColor(Color.hermosoTextDark)
             Text(booking.salonId?.name ?? "")
                 .font(.system(size: 12))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             if let date = booking.bookingDate, let time = booking.bookingTime {
                 let formatted = HermosoDateFormat.date(date)
                 Text("\(formatted.isEmpty ? date : formatted) - \(time)")
                     .font(.system(size: 11.5))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
             }
             HStack {
                 StatusBadgeView(status: booking.status)
                 Spacer()
                 Text("PKR \(Int(booking.price ?? 0))")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.hermosoPurple)
+                    .foregroundColor(Color.hermosoPurple)
             }
             .padding(.top, 4)
         }

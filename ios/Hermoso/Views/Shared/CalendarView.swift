@@ -26,17 +26,17 @@ struct CalendarView: View {
                 Button {
                     changeMonth(by: -1)
                 } label: {
-                    Text("‹").font(.system(size: 18, weight: .bold)).foregroundStyle(Color.hermosoPurple)
+                    Text("‹").font(.system(size: 18, weight: .bold)).foregroundColor(Color.hermosoPurple)
                 }
                 Spacer()
                 Text(monthYearLabel)
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Color.hermosoTextDark)
+                    .foregroundColor(Color.hermosoTextDark)
                 Spacer()
                 Button {
                     changeMonth(by: 1)
                 } label: {
-                    Text("›").font(.system(size: 18, weight: .bold)).foregroundStyle(Color.hermosoPurple)
+                    Text("›").font(.system(size: 18, weight: .bold)).foregroundColor(Color.hermosoPurple)
                 }
             }
 
@@ -44,7 +44,7 @@ struct CalendarView: View {
                 ForEach(Array(["S", "M", "T", "W", "T", "F", "S"].enumerated()), id: \.offset) { _, day in
                     Text(day)
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -75,7 +75,7 @@ struct CalendarView: View {
 
         return Text("\(calendar.component(.day, from: date))")
             .font(.system(size: 14, weight: (isSelected || isToday) ? .bold : .regular))
-            .foregroundStyle(textColor)
+            .foregroundColor(textColor)
             .frame(width: 32, height: 32)
             .background(isSelected ? Color.hermosoPurple : Color.clear)
             .clipShape(Circle())

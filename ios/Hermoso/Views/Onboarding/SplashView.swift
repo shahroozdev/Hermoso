@@ -23,15 +23,15 @@ struct SplashView: View {
                     .overlay(
                         Text("H")
                             .font(.custom("CormorantGaramond-Light", size: 44))
-                            .foregroundStyle(.white)
+                            .foregroundColor(.white)
                     )
                 Text("Hermoso")
                     .font(.custom("CormorantGaramond-Light", size: 56))
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
                 Text("AI AESTHETICS")
                     .font(.footnote)
                     .tracking(1.2)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.6))
             }
             .scaleEffect(scale)
         }

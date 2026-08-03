@@ -27,7 +27,7 @@ struct EventCardView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .background(Color.white.opacity(0.25))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .clipShape(Capsule())
 
             Spacer()
@@ -35,11 +35,11 @@ struct EventCardView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.name ?? "")
                     .font(.system(size: 13.5, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
                     .lineLimit(1)
                 Text(categoryLine)
                     .font(.system(size: 10.5))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundColor(.white.opacity(0.75))
                     .lineLimit(1)
             }
         }

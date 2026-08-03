@@ -10,7 +10,7 @@ struct ServiceBookingCard: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(viewModel.service.name ?? "")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(Color.hermosoPurple)
+                .foregroundColor(Color.hermosoPurple)
 
             LabeledSelect(
                 options: viewModel.staff.map { $0.name ?? "" },
@@ -23,7 +23,7 @@ struct ServiceBookingCard: View {
 
             Text("Select Date")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
             CalendarView(
                 selectedDate: Binding(get: { viewModel.selectedDate }, set: { viewModel.selectDate($0) }),
                 minimumDate: Date()
@@ -32,15 +32,15 @@ struct ServiceBookingCard: View {
             if !viewModel.slots.isEmpty {
                 Text("Available Slots")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
                 slotGrid
             }
 
             if let error = viewModel.errorMessage {
-                Text(error).font(.system(size: 11)).foregroundStyle(Color.hermosoError)
+                Text(error).font(.system(size: 11)).foregroundColor(Color.hermosoError)
             }
             if let success = viewModel.successMessage {
-                Text(success).font(.system(size: 11)).foregroundStyle(Color.hermosoSuccess)
+                Text(success).font(.system(size: 11)).foregroundColor(Color.hermosoSuccess)
             }
 
             bookButton
@@ -61,7 +61,7 @@ struct ServiceBookingCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(isAvailable ? (isSelected ? Color.hermosoPurple : Color.white) : Color.gray.opacity(0.15))
-                    .foregroundStyle(isAvailable ? (isSelected ? Color.white : Color.hermosoTextDark) : Color.hermosoTextMuted.opacity(0.5))
+                    .foregroundColor(isAvailable ? (isSelected ? Color.white : Color.hermosoTextDark) : Color.hermosoTextMuted.opacity(0.5))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .stroke(isAvailable && !isSelected ? Color.hermosoPurplePale : Color.clear, lineWidth: 1)
@@ -88,7 +88,7 @@ struct ServiceBookingCard: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
                 .background(canBook ? Color.hermosoPurple : Color.hermosoPurple.opacity(0.4))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .disabled(!canBook)

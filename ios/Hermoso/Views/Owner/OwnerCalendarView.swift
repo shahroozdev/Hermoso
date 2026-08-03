@@ -14,10 +14,10 @@ struct OwnerCalendarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Today's Bookings")
                         .font(.system(size: 18, weight: .heavy))
-                        .foregroundStyle(Color.hermosoCream)
+                        .foregroundColor(Color.hermosoCream)
                     Text(Self.headerDateFormatter.string(from: Date()))
                         .font(.caption)
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                 }
 
                 if viewModel.isLoading {
@@ -26,9 +26,9 @@ struct OwnerCalendarView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 30)
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundStyle(Color(hex: "#FCA5A5"))
+                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
                 } else if viewModel.bookings.isEmpty {
-                    Text("No bookings today.").foregroundStyle(Color.hermosoTextMuted)
+                    Text("No bookings today.").foregroundColor(Color.hermosoTextMuted)
                 } else {
                     ForEach(viewModel.bookings) { booking in
                         bookingRow(booking)
@@ -46,10 +46,10 @@ struct OwnerCalendarView: View {
         VStack(alignment: .leading, spacing: 3) {
             Text("\(booking.bookingTime ?? "") — \(booking.userId?.name ?? "")")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.hermosoCream)
+                .foregroundColor(Color.hermosoCream)
             Text(booking.serviceId?.name ?? "")
                 .font(.system(size: 11.5))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)

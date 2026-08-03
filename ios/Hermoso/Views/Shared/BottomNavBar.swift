@@ -32,7 +32,7 @@ struct BottomNavBar: View {
                             .font(.system(size: 10.5, weight: isSelected ? .bold : .medium))
                             .lineLimit(1)
                     }
-                    .foregroundStyle(isSelected ? Color.hermosoPurple : Color.hermosoTextMuted)
+                    .foregroundColor(isSelected ? Color.hermosoPurple : Color.hermosoTextMuted)
                     .frame(maxWidth: .infinity)
                 }
             }

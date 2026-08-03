@@ -33,7 +33,7 @@ struct StatusBadgeView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(backgroundColor)
-            .foregroundStyle(textColor)
+            .foregroundColor(textColor)
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 }

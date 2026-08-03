@@ -43,7 +43,7 @@ struct SalonsListView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Explore Salons")
                 .font(.system(size: 16, weight: .heavy))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             searchField("Search by name...", text: $viewModel.searchQuery)
             searchField("Filter by city...", text: $viewModel.cityQuery)
         }
@@ -57,8 +57,8 @@ struct SalonsListView: View {
     }
 
     private func searchField(_ placeholder: String, text: Binding<String>) -> some View {
-        TextField("", text: text, prompt: Text(placeholder).foregroundStyle(.white.opacity(0.6)))
-            .foregroundStyle(.white)
+        TextField("", text: text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.6)))
+            .foregroundColor(.white)
             .padding(.horizontal, 12)
             .frame(height: 40)
             .background(Color.white.opacity(0.15))
@@ -73,7 +73,7 @@ struct SalonsListView: View {
                 .padding(.top, 40)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundStyle(Color.hermosoError).padding(20)
+            Text(error).foregroundColor(Color.hermosoError).padding(20)
         } else {
             VStack(spacing: 12) {
                 ForEach(viewModel.salons) { salon in
@@ -95,16 +95,16 @@ struct SalonsListView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(salon.name ?? "")
                         .font(.system(size: 14.5, weight: .bold))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                     HStack(spacing: 2) {
                         ForEach(0..<5, id: \.self) { index in
                             Image(systemName: index < Int(rating.rounded()) ? "star.fill" : "star")
                                 .font(.system(size: 11))
-                                .foregroundStyle(Color(hex: "#FFB800"))
+                                .foregroundColor(Color(hex: "#FFB800"))
                         }
                         Text("· \(distances[salon.id] ?? "-- km")")
                             .font(.system(size: 11.5))
-                            .foregroundStyle(Color.hermosoTextMuted)
+                            .foregroundColor(Color.hermosoTextMuted)
                     }
                 }
                 .padding(12)

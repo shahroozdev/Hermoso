@@ -33,24 +33,24 @@ struct RecommendationsView: View {
                     .overlay(
                         Text("\(viewModel.services.count)")
                             .font(.system(size: 22, weight: .heavy))
-                            .foregroundStyle(Color.hermosoPurple)
+                            .foregroundColor(Color.hermosoPurple)
                     )
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Recommended Treatments")
                         .font(.system(size: 17, weight: .bold))
                     Text("\(viewModel.services.count) service options")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.8))
+                        .foregroundColor(.white.opacity(0.8))
                 }
             }
             Button(action: onViewDetailedReport) {
                 Text("View Detailed Report →")
                     .font(.system(size: 12.5, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
             }
         }
         .padding(20)
-        .foregroundStyle(.white)
+        .foregroundColor(.white)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(colors: [Color.hermosoPurpleDark, Color.hermosoPurple], startPoint: .leading, endPoint: .trailing)
@@ -66,7 +66,7 @@ struct RecommendationsView: View {
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
             Text(error)
-                .foregroundStyle(Color.hermosoError)
+                .foregroundColor(Color.hermosoError)
                 .padding(20)
         } else {
             VStack(spacing: 10) {
@@ -89,18 +89,18 @@ struct RecommendationsView: View {
                     .overlay(
                         Text("S")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color.hermosoPurple)
+                            .foregroundColor(Color.hermosoPurple)
                     )
                 VStack(alignment: .leading, spacing: 2) {
                     Text(service.name ?? "")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.hermosoTextDark)
+                        .foregroundColor(Color.hermosoTextDark)
                     Text("Recommended from your latest scan")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color.hermosoTextMuted)
+                        .foregroundColor(Color.hermosoTextMuted)
                     Text("PKR \(Int(service.price ?? 0)) · \(service.duration ?? 0) min")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.hermosoPurple)
+                        .foregroundColor(Color.hermosoPurple)
                 }
                 Spacer()
             }

@@ -41,7 +41,7 @@ struct SalonServicesView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .foregroundStyle(.white)
+                        .foregroundColor(.white)
                         .padding(10)
                         .background(Circle().fill(Color.white.opacity(0.15)))
                 }
@@ -49,18 +49,18 @@ struct SalonServicesView: View {
 
                 Text(viewModel.salon?.name ?? "")
                     .font(.system(size: 20, weight: .heavy))
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
 
                 if let city = viewModel.salon?.location?.city {
                     HStack(spacing: 4) {
-                        Image(systemName: "mappin.circle.fill").foregroundStyle(Color.hermosoPurpleLight)
-                        Text(city).font(.system(size: 12)).foregroundStyle(.white.opacity(0.85))
+                        Image(systemName: "mappin.circle.fill").foregroundColor(Color.hermosoPurpleLight)
+                        Text(city).font(.system(size: 12)).foregroundColor(.white.opacity(0.85))
                     }
                 }
                 if let description = viewModel.salon?.description, !description.isEmpty {
                     Text(description)
                         .font(.system(size: 11.5))
-                        .foregroundStyle(.white.opacity(0.75))
+                        .foregroundColor(.white.opacity(0.75))
                         .lineLimit(3)
                 }
             }
@@ -77,10 +77,10 @@ struct SalonServicesView: View {
                 .padding(.top, 40)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundStyle(Color.hermosoError).padding(20)
+            Text(error).foregroundColor(Color.hermosoError).padding(20)
         } else {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Services").font(.system(size: 14, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+                Text("Services").font(.system(size: 14, weight: .bold)).foregroundColor(Color.hermosoTextDark)
                 ForEach(viewModel.salon?.services ?? []) { service in
                     serviceRow(service)
                 }
@@ -97,11 +97,11 @@ struct SalonServicesView: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(service.name ?? "").font(.system(size: 13.5, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
-                    Text("\(service.duration ?? 0) min").font(.system(size: 11)).foregroundStyle(Color.hermosoTextMuted)
+                    Text(service.name ?? "").font(.system(size: 13.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
+                    Text("\(service.duration ?? 0) min").font(.system(size: 11)).foregroundColor(Color.hermosoTextMuted)
                 }
                 Spacer()
-                Text("PKR \(Int(service.price ?? 0))").font(.system(size: 13, weight: .bold)).foregroundStyle(Color.hermosoPurple)
+                Text("PKR \(Int(service.price ?? 0))").font(.system(size: 13, weight: .bold)).foregroundColor(Color.hermosoPurple)
             }
             .padding(14)
             .background(isSelected ? Color.hermosoPurple.opacity(0.1) : Color.white)
@@ -117,8 +117,8 @@ struct SalonServicesView: View {
     private var bookingBar: some View {
         HStack {
             VStack(alignment: .leading, spacing: 1) {
-                Text("Selected").font(.system(size: 10.5)).foregroundStyle(Color.hermosoTextMuted)
-                Text(viewModel.selectedService?.name ?? "").font(.system(size: 12.5, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+                Text("Selected").font(.system(size: 10.5)).foregroundColor(Color.hermosoTextMuted)
+                Text(viewModel.selectedService?.name ?? "").font(.system(size: 12.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
             }
             Spacer()
             Button {
@@ -131,7 +131,7 @@ struct SalonServicesView: View {
                     .padding(.horizontal, 22)
                     .padding(.vertical, 11)
                     .background(Color.hermosoPurple)
-                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
         }

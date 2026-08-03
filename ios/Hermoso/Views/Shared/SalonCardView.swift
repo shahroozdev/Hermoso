@@ -20,10 +20,10 @@ struct SalonCardView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "star.fill")
                             .font(.system(size: 9))
-                            .foregroundStyle(Color(hex: "#FBBF24"))
+                            .foregroundColor(Color(hex: "#FBBF24"))
                         Text(String(format: "%.1f", rating))
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Color.hermosoTextDark)
+                            .foregroundColor(Color.hermosoTextDark)
                     }
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
@@ -35,7 +35,7 @@ struct SalonCardView: View {
 
             Text(card.salon.name ?? "")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.hermosoTextDark)
+                .foregroundColor(Color.hermosoTextDark)
                 .lineLimit(1)
 
             HStack(spacing: 4) {
@@ -45,7 +45,7 @@ struct SalonCardView: View {
                 Text("· \(card.distanceText ?? "-- km")")
             }
             .font(.system(size: 11))
-            .foregroundStyle(Color.hermosoTextMuted)
+            .foregroundColor(Color.hermosoTextMuted)
         }
         .frame(width: 150, alignment: .leading)
     }

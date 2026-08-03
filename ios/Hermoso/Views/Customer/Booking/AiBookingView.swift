@@ -29,7 +29,7 @@ struct AiBookingView: View {
     private var header: some View {
         Text("AI Recommended Treatments")
             .font(.system(size: 16, weight: .heavy))
-            .foregroundStyle(.white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
@@ -43,14 +43,14 @@ struct AiBookingView: View {
 
     private var infoBanner: some View {
         HStack(alignment: .top, spacing: 10) {
-            Text("★").foregroundStyle(Color.hermosoPurple)
+            Text("★").foregroundColor(Color.hermosoPurple)
             VStack(alignment: .leading, spacing: 2) {
                 Text("AI-Recommended")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.hermosoPurple)
+                    .foregroundColor(Color.hermosoPurple)
                 Text("Book each treatment separately with your preferred staff")
                     .font(.system(size: 11.5))
-                    .foregroundStyle(Color.hermosoTextMuted)
+                    .foregroundColor(Color.hermosoTextMuted)
             }
         }
         .padding(14)
@@ -66,7 +66,7 @@ struct AiBookingView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 30)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundStyle(Color.hermosoError)
+            Text(error).foregroundColor(Color.hermosoError)
         } else {
             ForEach(viewModel.cardViewModels) { cardViewModel in
                 ServiceBookingCard(viewModel: cardViewModel)

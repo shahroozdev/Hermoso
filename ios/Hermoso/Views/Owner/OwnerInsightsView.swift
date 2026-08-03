@@ -9,7 +9,7 @@ struct OwnerInsightsView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Insights")
                     .font(.system(size: 18, weight: .heavy))
-                    .foregroundStyle(Color.hermosoCream)
+                    .foregroundColor(Color.hermosoCream)
 
                 if viewModel.isLoading {
                     ProgressView()
@@ -19,14 +19,14 @@ struct OwnerInsightsView: View {
                 } else if let text = viewModel.insightText {
                     Text(text)
                         .font(.system(size: 12.5))
-                        .foregroundStyle(Color.hermosoCream)
+                        .foregroundColor(Color.hermosoCream)
                         .lineSpacing(4)
                         .padding(14)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.hermosoPurpleDark)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundStyle(Color(hex: "#FCA5A5"))
+                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
                 }
             }
             .padding(16)

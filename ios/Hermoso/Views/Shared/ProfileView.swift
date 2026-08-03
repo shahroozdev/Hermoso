@@ -46,10 +46,10 @@ struct ProfileView: View {
     @ViewBuilder
     private var saveMessages: some View {
         if let error = viewModel.errorMessage {
-            Text(error).font(.footnote).foregroundStyle(Color.hermosoError)
+            Text(error).font(.footnote).foregroundColor(Color.hermosoError)
         }
         if let success = viewModel.successMessage {
-            Text(success).font(.footnote).foregroundStyle(Color.hermosoSuccess)
+            Text(success).font(.footnote).foregroundColor(Color.hermosoSuccess)
         }
     }
 
@@ -62,7 +62,7 @@ struct ProfileView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.hermosoPurple)
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .disabled(viewModel.isSaving)
@@ -70,13 +70,13 @@ struct ProfileView: View {
 
     private var settingsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Settings").font(.system(size: 13.5, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+            Text("Settings").font(.system(size: 13.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
             Toggle("Scan Result Alerts", isOn: $viewModel.scanAlertsEnabled)
             Toggle("Booking Reminders", isOn: $viewModel.bookingRemindersEnabled)
         }
         .tint(Color.hermosoPurple)
         .font(.system(size: 13))
-        .foregroundStyle(Color.hermosoTextDark)
+        .foregroundColor(Color.hermosoTextDark)
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -84,7 +84,7 @@ struct ProfileView: View {
 
     private var passwordCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Change Password").font(.system(size: 13.5, weight: .bold)).foregroundStyle(Color.hermosoTextDark)
+            Text("Change Password").font(.system(size: 13.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
             secureField("Current Password", $viewModel.currentPassword)
             secureField("New Password", $viewModel.newPassword)
             passwordMessages
@@ -98,10 +98,10 @@ struct ProfileView: View {
     @ViewBuilder
     private var passwordMessages: some View {
         if let error = viewModel.passwordErrorMessage {
-            Text(error).font(.footnote).foregroundStyle(Color.hermosoError)
+            Text(error).font(.footnote).foregroundColor(Color.hermosoError)
         }
         if let success = viewModel.passwordSuccessMessage {
-            Text(success).font(.footnote).foregroundStyle(Color.hermosoSuccess)
+            Text(success).font(.footnote).foregroundColor(Color.hermosoSuccess)
         }
     }
 
@@ -113,7 +113,7 @@ struct ProfileView: View {
                 .font(.system(size: 14, weight: .bold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .foregroundStyle(Color.hermosoPurple)
+                .foregroundColor(Color.hermosoPurple)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(Color.hermosoPurple, lineWidth: 1.4)
@@ -124,7 +124,7 @@ struct ProfileView: View {
 
     private func field(_ label: String, _ text: Binding<String>, keyboard: UIKeyboardType = .default) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(label).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(Color.hermosoTextMuted)
+            Text(label).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Color.hermosoTextMuted)
             TextField("", text: text)
                 .keyboardType(keyboard)
                 .padding(12)
@@ -137,10 +137,10 @@ struct ProfileView: View {
 
     private func disabledField(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(label).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(Color.hermosoTextMuted)
+            Text(label).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Color.hermosoTextMuted)
             Text(value)
                 .font(.system(size: 13))
-                .foregroundStyle(Color.hermosoTextMuted)
+                .foregroundColor(Color.hermosoTextMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
                 .background(Color(hex: "#F5F5F5"))
@@ -150,7 +150,7 @@ struct ProfileView: View {
 
     private func secureField(_ label: String, _ text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(label).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(Color.hermosoTextMuted)
+            Text(label).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Color.hermosoTextMuted)
             SecureField("", text: text)
                 .padding(12)
                 .background(

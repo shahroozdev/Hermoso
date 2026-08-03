@@ -56,7 +56,7 @@ struct FlowTagsView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(background)
-                    .foregroundStyle(foreground)
+                    .foregroundColor(foreground)
                     .clipShape(Capsule())
             }
         }

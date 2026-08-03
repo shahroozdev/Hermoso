@@ -50,7 +50,7 @@ struct BookingView: View {
     private var header: some View {
         Text("Booking Details")
             .font(.system(size: 16, weight: .heavy))
-            .foregroundStyle(.white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
@@ -65,7 +65,7 @@ struct BookingView: View {
     private func stepLabel(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 12.5, weight: .bold))
-            .foregroundStyle(Color.hermosoTextDark)
+            .foregroundColor(Color.hermosoTextDark)
     }
 
     private var salonSelect: some View {
@@ -117,7 +117,7 @@ struct BookingView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(isAvailable ? (isSelected ? Color.hermosoPurple : Color.white) : Color.gray.opacity(0.15))
-            .foregroundStyle(isAvailable ? (isSelected ? Color.white : Color.hermosoTextDark) : Color.hermosoTextMuted.opacity(0.5))
+            .foregroundColor(isAvailable ? (isSelected ? Color.white : Color.hermosoTextDark) : Color.hermosoTextMuted.opacity(0.5))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(isAvailable && !isSelected ? Color.hermosoPurplePale : Color.clear, lineWidth: 1)
@@ -132,10 +132,10 @@ struct BookingView: View {
     @ViewBuilder
     private var messages: some View {
         if let error = viewModel.errorMessage {
-            Text(error).font(.footnote).foregroundStyle(Color.hermosoError)
+            Text(error).font(.footnote).foregroundColor(Color.hermosoError)
         }
         if let success = viewModel.successMessage {
-            Text(success).font(.footnote).foregroundStyle(Color.hermosoSuccess)
+            Text(success).font(.footnote).foregroundColor(Color.hermosoSuccess)
         }
     }
 
@@ -143,7 +143,7 @@ struct BookingView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Booking Summary")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.hermosoTextDark)
+                .foregroundColor(Color.hermosoTextDark)
             summaryRow("Salon", viewModel.selectedSalonName ?? "—")
             summaryRow("Service", viewModel.selectedServiceName ?? "—")
             summaryRow("Specialist", viewModel.selectedStaffName ?? "—")
@@ -155,7 +155,7 @@ struct BookingView: View {
                 Spacer()
                 Text("PKR \(Int(viewModel.selectedServicePrice ?? 0))").font(.system(size: 14, weight: .heavy))
             }
-            .foregroundStyle(Color.hermosoPurple)
+            .foregroundColor(Color.hermosoPurple)
         }
         .padding(16)
         .background(Color.white)
@@ -164,9 +164,9 @@ struct BookingView: View {
 
     private func summaryRow(_ label: String, _ value: String) -> some View {
         HStack {
-            Text(label).foregroundStyle(Color.hermosoTextMuted)
+            Text(label).foregroundColor(Color.hermosoTextMuted)
             Spacer()
-            Text(value).foregroundStyle(Color.hermosoTextDark).fontWeight(.semibold)
+            Text(value).foregroundColor(Color.hermosoTextDark).fontWeight(.semibold)
         }
         .font(.system(size: 12))
     }
@@ -180,7 +180,7 @@ struct BookingView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(viewModel.canSubmit ? Color.hermosoPurple : Color.hermosoPurple.opacity(0.4))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .disabled(!viewModel.canSubmit)
