@@ -24,6 +24,7 @@ targets:
     sources:
       - path: Hermoso
     info:
+      path: Hermoso/Info.plist
       properties:
         CFBundleDisplayName: Hermoso
         UILaunchScreen: {}
