@@ -329,7 +329,8 @@ data class BookingItemDto(
     val price: Double?,
     val salonId: SalonDto?,
     val serviceId: ServiceDto?,
-    val staffId: StaffDto?
+    val staffId: StaffDto?,
+    val userId: UserDto?
 )
 
 data class CreateBookingRequest(
@@ -355,6 +356,29 @@ data class EventDto(
     val category: String?,
     val services: List<ServiceDto>?,
     val description: String?
+)
+
+data class OwnerDashboardTotalsDto(
+    val dailyBookings: Int?,
+    val upcomingAppointments: Int?,
+    val grossRevenue: Double?,
+    val netRevenue: Double?,
+    val aiScanBookings: Int?,
+    val aiScanRevenue: Double?
+)
+
+data class MonthBookingChartDto(
+    val month: String?,
+    val totalBookings: Int?
+)
+
+data class OwnerDashboardChartsDto(
+    val bookingsByMonth: List<MonthBookingChartDto>?
+)
+
+data class OwnerDashboardDataDto(
+    val totals: OwnerDashboardTotalsDto?,
+    val charts: OwnerDashboardChartsDto?
 )
 data class SalonDetailDto(
     val _id: String?,
@@ -490,6 +514,21 @@ interface AuthApi {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): ApiResponse<List<EventDto>>
+
+    @GET("customers")
+    suspend fun getCustomers(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): ListResponse<UserProfileDto>
+
+    @GET("analytics/owner/dashboard")
+    suspend fun getOwnerDashboard(): ApiResponse<OwnerDashboardDataDto>
+
+    @GET("services")
+    suspend fun getServices(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): ListResponse<ServiceDto>
 }
 
 object SessionManager {

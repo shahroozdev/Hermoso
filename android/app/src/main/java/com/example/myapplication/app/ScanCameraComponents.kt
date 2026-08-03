@@ -1,14 +1,17 @@
 package com.example.myapplication.app
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -16,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceLandmark
 import com.example.myapplication.ui.theme.*
 
 /**
@@ -43,13 +47,13 @@ fun FaceDetectionPointsOverlay(
             val face = faces[0]
 
             // Get face landmarks
-            val leftEye = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.LEFT_EYE)
-            val rightEye = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.RIGHT_EYE)
-            val nose = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.NOSE)
-            val leftMouth = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.LEFT_MOUTH)
-            val rightMouth = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.RIGHT_MOUTH)
-            val leftEar = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.LEFT_EAR)
-            val rightEar = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.RIGHT_EAR)
+            val leftEye = face.getLandmark(FaceLandmark.LEFT_EYE)
+            val rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE)
+            val nose = face.getLandmark(FaceLandmark.NOSE_BASE)
+            val leftMouth = face.getLandmark(FaceLandmark.MOUTH_LEFT)
+            val rightMouth = face.getLandmark(FaceLandmark.MOUTH_RIGHT)
+            val leftEar = face.getLandmark(FaceLandmark.LEFT_EAR)
+            val rightEar = face.getLandmark(FaceLandmark.RIGHT_EAR)
 
             // Face bounding box
             val boundingBox = face.boundingBox
@@ -57,25 +61,25 @@ fun FaceDetectionPointsOverlay(
             // Calculate detection points
             val detectionPoints = listOf(
                 // 1. Forehead (top center of face)
-                Offset(boundingBox.centerX(), boundingBox.top + 20),
+                Offset(boundingBox.centerX().toFloat(), (boundingBox.top + 20).toFloat()),
                 // 2. Left Eye
-                leftEye?.position ?: Offset(boundingBox.left + 30, boundingBox.top + 50),
+                leftEye?.position?.let { Offset(it.x, it.y) } ?: Offset((boundingBox.left + 30).toFloat(), (boundingBox.top + 50).toFloat()),
                 // 3. Right Eye
-                rightEye?.position ?: Offset(boundingBox.right - 30, boundingBox.top + 50),
+                rightEye?.position?.let { Offset(it.x, it.y) } ?: Offset((boundingBox.right - 30).toFloat(), (boundingBox.top + 50).toFloat()),
                 // 4. Nose
-                nose?.position ?: Offset(boundingBox.centerX(), boundingBox.centerY()),
+                nose?.position?.let { Offset(it.x, it.y) } ?: Offset(boundingBox.centerX().toFloat(), boundingBox.centerY().toFloat()),
                 // 5. Left Cheek
-                Offset(boundingBox.left + 20, boundingBox.centerY() + 30),
+                Offset((boundingBox.left + 20).toFloat(), (boundingBox.centerY() + 30).toFloat()),
                 // 6. Right Cheek
-                Offset(boundingBox.right - 20, boundingBox.centerY() + 30),
+                Offset((boundingBox.right - 20).toFloat(), (boundingBox.centerY() + 30).toFloat()),
                 // 7. Chin
-                Offset(boundingBox.centerX(), boundingBox.bottom - 20),
+                Offset(boundingBox.centerX().toFloat(), (boundingBox.bottom - 20).toFloat()),
                 // 8. Lips (average of mouth corners)
                 Offset(
-                    ((leftMouth?.position?.x ?: boundingBox.centerX()) +
-                     (rightMouth?.position?.x ?: boundingBox.centerX())) / 2,
-                    ((leftMouth?.position?.y ?: boundingBox.centerY()) +
-                     (rightMouth?.position?.y ?: boundingBox.centerY())) / 2
+                    ((leftMouth?.position?.x ?: boundingBox.centerX().toFloat()) +
+                     (rightMouth?.position?.x ?: boundingBox.centerX().toFloat())) / 2f,
+                    ((leftMouth?.position?.y ?: boundingBox.centerY().toFloat()) +
+                     (rightMouth?.position?.y ?: boundingBox.centerY().toFloat())) / 2f
                 )
             )
 
@@ -357,10 +361,8 @@ fun EnhancedScanBeamAnimation(modifier: Modifier = Modifier) {
                 startY = beamY - beamHeight,
                 endY = beamY + beamHeight
             ),
-            left = 0f,
-            top = beamY - beamHeight,
-            right = size.width,
-            bottom = beamY + beamHeight
+            topLeft = Offset(0f, beamY - beamHeight),
+            size = Size(size.width, beamHeight * 2)
         )
     }
 }

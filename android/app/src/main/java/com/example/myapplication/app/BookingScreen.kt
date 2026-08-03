@@ -58,7 +58,7 @@ fun BookingScreen(
     var selectedServiceId by rememberSaveable { mutableStateOf(preSelectedServiceId.orEmpty()) }
     var selectedStaffId by rememberSaveable { mutableStateOf("") }
     var selectedBookingTime by rememberSaveable { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
 
     var loadingSalons by remember { mutableStateOf(false) }
     var loadingOptions by remember { mutableStateOf(false) }

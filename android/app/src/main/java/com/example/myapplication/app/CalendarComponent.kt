@@ -79,7 +79,8 @@ fun CalendarView(selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
             items(days) { day ->
                 val date = currentMonth.atDay(day)
                 val isSelected = date == selectedDate
-                val isToday = date == LocalDate.now()
+                val today = remember { LocalDate.now() }
+                val isToday = date == today
 
                 Box(
                     modifier = Modifier

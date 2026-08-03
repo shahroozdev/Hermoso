@@ -14,6 +14,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +35,9 @@ fun OverallSkinScoreRing(
         label = "score_animation"
     )
 
+    val density = LocalDensity.current
+    val radialRadius = with(density) { 120.dp.toPx() }
+
     Box(
         modifier = modifier
             .size(200.dp)
@@ -43,7 +47,7 @@ fun OverallSkinScoreRing(
                         Color.White.copy(alpha = 0.1f),
                         Color.White.copy(alpha = 0.05f)
                     ),
-                    radius = 120.dp.toPx()
+                    radius = radialRadius
                 ),
                 shape = CircleShape
             ),
@@ -185,6 +189,7 @@ fun EyebrowAssessmentSection(data: EyebrowAssessmentDto?) {
 /**
  * CR-10: Hydration & Texture
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HydrationSection(data: HydrationDto?) {
     if (data == null) return
@@ -677,6 +682,7 @@ fun MetricRow(label: String, value: String, isText: Boolean = false) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TreatmentRecommendations(treatments: List<String>?) {
     if (treatments.isNullOrEmpty()) return

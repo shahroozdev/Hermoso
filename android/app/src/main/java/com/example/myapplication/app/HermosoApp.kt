@@ -164,7 +164,7 @@ fun HermosoApp() {
 
     Scaffold(
         containerColor = when (userRole) {
-            "owner" -> PurpleDeeper
+            "salon_owner" -> PurpleDeeper
             else -> Cream
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -174,7 +174,7 @@ fun HermosoApp() {
                     onProfileClick = { navController.navigate(Dest.Profile) },
                     onNotificationsClick = { navController.navigate(Dest.Notifications) },
                     unreadCount = unreadCount,
-                    isOwnerTheme = userRole == "owner",
+                    isOwnerTheme = userRole == "salon_owner",
                     onLogoutClick = {
                         scope.launch {
                             val token = SessionManager.refreshToken
@@ -211,7 +211,7 @@ fun HermosoApp() {
                 SplashScreen(onNext = {
                     if (isLoggedIn) {
                         val startDest = when (userRole) {
-                            "owner" -> Dest.OwnerDashboard
+                            "salon_owner" -> Dest.OwnerDashboard
                             else -> Dest.Home
                         }
                         navController.navigate(startDest) {
@@ -229,7 +229,7 @@ fun HermosoApp() {
                     isLoggedIn = true
                     userRole = role
                     val startDest = when (role) {
-                        "owner" -> Dest.OwnerDashboard
+                        "salon_owner" -> Dest.OwnerDashboard
                         else -> Dest.Home
                     }
                     navController.navigate(startDest) {
@@ -240,57 +240,158 @@ fun HermosoApp() {
             // Customer screens
             composable(Dest.Home) { HomeScreen(navController) }
             composable(Dest.Scan) {
-                // CR-01 through CR-06: AI Face Scan Camera Screen
-                ScanCameraScreen(
-                    onScanComplete = { imageBytes ->
-                        // Navigate to results screen after scan
-                        navController.navigate(Dest.ScanResults)
-                    },
-                    onBack = { navController.navigateUp() }
-                )
+                // CR-01 through CR-06: AI Face Scan Camera Screen with backend integration
+                ScanScreen(navController)
             }
             composable(Dest.ScanResults) {
-                // CR-07 through CR-17: Scan Results Screen
-                // TODO: Fetch actual scan result from API
-                // For now using mock data structure
-                val mockResult = ScanResult(
-                    scanId = "mock-id",
-                    faceValid = true,
-                    faceGuidance = emptyList(),
-                    overallSkinScore = 78,
-                    summary = "Your skin analysis is complete. Overall skin health is good with some areas for improvement.",
-                    skinTone = SkinToneResult("Medium", 72, "Even tone with slight variation in cheek areas", 3, listOf("Brightening Facial", "Vitamin C Treatment")),
-                    eyebrows = null,
-                    hydration = HydrationResult(65, listOf("forehead", "cheeks"), 70, "Slightly enlarged pores in T-zone", listOf("Hydra Facial", "Moisture Boost")),
-                    darkCircles = DarkCirclesResult(2, "moderate", 45f, listOf("Under-Eye Treatment", "LED Light Therapy")),
-                    acne = AcneResult(emptyList(), 15, listOf("Salicylic Acid Treatment")),
-                    lipPigmentation = LipPigmentationResult(52, "medium", 38, 42, listOf("Lip Lightening", "Exfoliation")),
-                    treatmentPlan = listOf(
-                        TreatmentPlanItem(1, "Hydra Facial", "Boost hydration levels which are below optimal", "PKR 4,000-5,000", "60 min"),
-                        TreatmentPlanItem(2, "Under-Eye Treatment", "Address moderate dark circles", "PKR 3,000-4,000", "45 min")
-                    ),
-                    dietPlan = DietPlanResult(
-                        foodsToEat = listOf(
-                            DietFood("Almonds & Walnuts", "Rich in vitamin E for skin health"),
-                            DietFood("Green Tea", "Antioxidants reduce inflammation")
-                        ),
-                        foodsToAvoid = listOf(
-                            DietFood("Sugary Drinks", "Can trigger breakouts"),
-                            DietFood("Processed Foods", "May worsen skin inflammation")
-                        ),
-                        dailyWaterIntake = "8-10 glasses (2-2.5 liters)",
-                        specificToSkinTone = true
-                    ),
-                    metrics = emptyList()
-                )
+                // CR-07 through CR-17: Scan Results Screen - Fetch from API
+                var loading by remember { mutableStateOf(true) }
+                var scanData by remember { mutableStateOf<ScanAnalyzeData?>(null) }
+                var error by remember { mutableStateOf("") }
 
-                ScanResultsScreen(
-                    scanResult = mockResult,
-                    onViewMatchedSalons = { navController.navigate(Dest.Match) },
-                    onReScan = { navController.navigate(Dest.Scan) },
-                    onShare = { /* TODO: Implement share functionality */ },
-                    onBack = { navController.navigateUp() }
-                )
+                LaunchedEffect(Unit) {
+                    loading = true
+                    error = ""
+                    try {
+                        val response = withContext(Dispatchers.IO) {
+                            AuthApiClient.api.getLatestScan()
+                        }
+                        if (response.success) {
+                            scanData = response.data
+                        } else {
+                            error = response.message ?: "No scan results found"
+                        }
+                    } catch (t: Throwable) {
+                        error = t.message ?: "Failed to load scan results"
+                    } finally {
+                        loading = false
+                    }
+                }
+
+                when {
+                    loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Cream),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Purple)
+                        }
+                    }
+                    error.isNotBlank() -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize().background(Cream).padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(error, color = Color(0xFFB00020))
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = { navController.navigateUp() },
+                                colors = ButtonDefaults.buttonColors(containerColor = Purple)
+                            ) {
+                                Text("Go Back")
+                            }
+                        }
+                    }
+                    scanData != null -> {
+                        val data = scanData!!
+                        ScanResultsScreen(
+                            scanResult = ScanResult(
+                                scanId = data.scanId ?: "",
+                                faceValid = data.faceValid ?: true,
+                                faceGuidance = data.faceGuidance ?: emptyList(),
+                                overallSkinScore = data.overallSkinScore ?: 0,
+                                summary = data.summary ?: "",
+                                skinTone = data.skinTone?.let {
+                                    SkinToneResult(
+                                        tone = it.tone ?: "",
+                                        evenness = it.evenness ?: 0,
+                                        tanningPattern = it.tanningPattern ?: "",
+                                        severity = it.severity ?: 0,
+                                        recommendedTreatments = it.recommendedTreatments ?: emptyList()
+                                    )
+                                } ?: SkinToneResult("", 0, "", 0, emptyList()),
+                                eyebrows = data.eyebrows?.let {
+                                    EyebrowResult(
+                                        archShape = it.archShape ?: "",
+                                        fullness = it.fullness ?: 0,
+                                        leftRightSymmetry = it.leftRightSymmetry ?: 0,
+                                        tailLength = it.tailLength ?: "",
+                                        sparseness = it.sparseness ?: 0,
+                                        recommendedTreatments = it.recommendedTreatments ?: emptyList()
+                                    )
+                                },
+                                hydration = data.hydration?.let {
+                                    HydrationResult(
+                                        hydrationPercent = it.hydrationPercent ?: 0,
+                                        dehydrationZones = it.dehydrationZones ?: emptyList(),
+                                        textureRating = it.textureRating ?: 0,
+                                        poreCondition = it.poreCondition ?: "",
+                                        recommendedTreatments = it.recommendedTreatments ?: emptyList()
+                                    )
+                                } ?: HydrationResult(0, emptyList(), 0, "", emptyList()),
+                                darkCircles = data.darkCircles?.let {
+                                    DarkCirclesResult(
+                                        type = it.type ?: 0,
+                                        severity = it.severity ?: "",
+                                        colorDelta = it.colorDelta?.toFloat() ?: 0f,
+                                        recommendedTreatments = it.recommendedTreatments ?: emptyList()
+                                    )
+                                } ?: DarkCirclesResult(0, "", 0f, emptyList()),
+                                acne = data.acne?.let {
+                                    AcneResult(
+                                        zones = it.zones?.map { zone ->
+                                            AcneZone(
+                                                area = zone.area ?: "",
+                                                severity = zone.severity ?: 0,
+                                                type = zone.type ?: ""
+                                            )
+                                        } ?: emptyList(),
+                                        overallSeverity = it.overallSeverity ?: 0,
+                                        recommendedTreatments = it.recommendedTreatments ?: emptyList()
+                                    )
+                                } ?: AcneResult(emptyList(), 0, emptyList()),
+                                lipPigmentation = data.lipPigmentation?.let {
+                                    LipPigmentationResult(
+                                        melaninIndex = it.melaninIndex ?: 0,
+                                        darknessLevel = it.darknessLevel ?: "",
+                                        unevenness = it.unevenness ?: 0,
+                                        drynessLevel = it.drynessLevel ?: 0,
+                                        recommendedTreatments = it.recommendedTreatments ?: emptyList()
+                                    )
+                                } ?: LipPigmentationResult(0, "", 0, 0, emptyList()),
+                                treatmentPlan = data.treatmentPlan?.map {
+                                    TreatmentPlanItem(
+                                        priority = it.priority ?: 0,
+                                        treatmentName = it.treatmentName ?: "",
+                                        reason = it.reason ?: "",
+                                        pkrPriceRange = it.pkrPriceRange ?: "",
+                                        estimatedDuration = it.estimatedDuration ?: ""
+                                    )
+                                } ?: emptyList(),
+                                dietPlan = data.dietPlan?.let {
+                                    DietPlanResult(
+                                        foodsToEat = it.foodsToEat?.map { food ->
+                                            DietFood(food.food ?: "", food.reason ?: "")
+                                        } ?: emptyList(),
+                                        foodsToAvoid = it.foodsToAvoid?.map { food ->
+                                            DietFood(food.food ?: "", food.reason ?: "")
+                                        } ?: emptyList(),
+                                        dailyWaterIntake = it.dailyWaterIntake ?: "",
+                                        specificToSkinTone = it.specificToSkinTone ?: false
+                                    )
+                                } ?: DietPlanResult(emptyList(), emptyList(), "", false),
+                                metrics = data.metrics?.map {
+                                    ScanMetric(it.key ?: "", it.score ?: 0, it.label ?: "")
+                                } ?: emptyList()
+                            ),
+                            onViewMatchedSalons = { navController.navigate(Dest.Match) },
+                            onReScan = { navController.navigate(Dest.Scan) },
+                            onShare = { /* TODO: Implement share functionality */ },
+                            onBack = { navController.navigateUp() }
+                        )
+                    }
+                }
             }
             composable(Dest.Recs) { RecommendationsScreen(navController) }
             composable(Dest.Match) { MatchScreen(navController) }
@@ -375,7 +476,7 @@ private fun BottomNav(current: String, navController: NavHostController, userRol
     val dynamicFontSize = (configuration.screenWidthDp / 36).sp
 
     val items = when (userRole) {
-        "owner" -> listOf(
+        "salon_owner" -> listOf(
             Triple(Dest.OwnerDashboard, "Dashboard", Icons.Default.Home),
             Triple(Dest.OwnerCalendar, "Calendar", Icons.Default.DateRange),
             Triple(Dest.OwnerServices, "Services", Icons.Default.Face),

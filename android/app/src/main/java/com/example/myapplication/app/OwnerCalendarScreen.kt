@@ -67,7 +67,7 @@ fun OwnerCalendarScreen() {
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("${b.bookingTime ?: "-"} - ${b.customerId?.name ?: "Client"}", color = Cream, fontWeight = FontWeight.Bold)
+                    Text("${b.bookingTime ?: "-"} - ${b.userId?.name ?: "Client"}", color = Cream, fontWeight = FontWeight.Bold)
                     Text(b.serviceId?.name ?: "Service", color = TextMuted)
                 }
             }

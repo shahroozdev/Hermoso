@@ -42,17 +42,17 @@ fun ProfileScreen() {
     var saving by remember { mutableStateOf(false) }
     var changingPassword by remember { mutableStateOf(false) }
 
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("") }
-    var bankAccount by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var phone by rememberSaveable { mutableStateOf("") }
+    var city by rememberSaveable { mutableStateOf("") }
+    var country by rememberSaveable { mutableStateOf("") }
+    var bankAccount by rememberSaveable { mutableStateOf("") }
 
-    var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
-    var scanAlerts by remember { mutableStateOf(true) }
-    var bookingReminders by remember { mutableStateOf(true) }
+    var currentPassword by rememberSaveable { mutableStateOf("") }
+    var newPassword by rememberSaveable { mutableStateOf("") }
+    var scanAlerts by rememberSaveable { mutableStateOf(true) }
+    var bookingReminders by rememberSaveable { mutableStateOf(true) }
 
     var error by remember { mutableStateOf("") }
     var success by remember { mutableStateOf("") }
@@ -110,9 +110,17 @@ fun ProfileScreen() {
 
                         Button(
                             onClick = {
-                                saving = true
-                                success = ""
-                                error = ""
+                                // Validate inputs
+                                when {
+                                    name.isBlank() -> error = "Name is required"
+                                    name.length < 2 -> error = "Name must be at least 2 characters"
+                                    phone.isNotBlank() && phone.length < 10 -> error = "Phone number must be at least 10 digits"
+                                    else -> {
+                                        saving = true
+                                        success = ""
+                                        error = ""
+                                    }
+                                }
                             },
                             enabled = !saving,
                             colors = ButtonDefaults.buttonColors(containerColor = Purple),
@@ -168,9 +176,18 @@ fun ProfileScreen() {
                         )
                         Button(
                             onClick = {
-                                changingPassword = true
-                                success = ""
-                                error = ""
+                                // Validate password inputs
+                                when {
+                                    currentPassword.isBlank() -> error = "Current password is required"
+                                    newPassword.isBlank() -> error = "New password is required"
+                                    newPassword.length < 6 -> error = "New password must be at least 6 characters"
+                                    currentPassword == newPassword -> error = "New password must be different from current password"
+                                    else -> {
+                                        changingPassword = true
+                                        success = ""
+                                        error = ""
+                                    }
+                                }
                             },
                             enabled = !changingPassword,
                             colors = ButtonDefaults.buttonColors(containerColor = PurpleDark),

@@ -52,6 +52,51 @@ fun AuthScreen(onLoginSuccess: (String?) -> Unit) {
     fun handleSubmit() {
         error = ""
         message = ""
+
+        // Input validation
+        when {
+            otpMode && otp.isBlank() -> {
+                error = "Please enter OTP"
+                return
+            }
+            otpMode && otp.length != 6 -> {
+                error = "OTP must be 6 digits"
+                return
+            }
+            !otpMode && email.isBlank() -> {
+                error = "Email is required"
+                return
+            }
+            !otpMode && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                error = "Please enter a valid email address"
+                return
+            }
+            !otpMode && password.isBlank() -> {
+                error = "Password is required"
+                return
+            }
+            !otpMode && password.length < 6 -> {
+                error = "Password must be at least 6 characters"
+                return
+            }
+            !isLogin && !otpMode && name.isBlank() -> {
+                error = "Name is required"
+                return
+            }
+            !isLogin && !otpMode && name.length < 2 -> {
+                error = "Name must be at least 2 characters"
+                return
+            }
+            !isLogin && !otpMode && phone.isBlank() -> {
+                error = "Phone number is required"
+                return
+            }
+            !isLogin && !otpMode && phone.length < 10 -> {
+                error = "Phone number must be at least 10 digits"
+                return
+            }
+        }
+
         scope.launch {
             loading = true
             try {
@@ -200,21 +245,21 @@ fun AuthScreen(onLoginSuccess: (String?) -> Unit) {
                             }
 
                             OutlinedButton(
-                                onClick = { selectedRole = "owner" },
+                                onClick = { selectedRole = "salon_owner" },
                                 modifier = Modifier.weight(1f).height(48.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = if (selectedRole == "owner") PurplePale else Color.Transparent,
-                                    contentColor = if (selectedRole == "owner") Purple else TextMuted
+                                    containerColor = if (selectedRole == "salon_owner") PurplePale else Color.Transparent,
+                                    contentColor = if (selectedRole == "salon_owner") Purple else TextMuted
                                 ),
                                 border = androidx.compose.foundation.BorderStroke(
                                     width = 2.dp,
-                                    color = if (selectedRole == "owner") Purple else Color(0xFFE0E0E0)
+                                    color = if (selectedRole == "salon_owner") Purple else Color(0xFFE0E0E0)
                                 )
                             ) {
                                 Text(
                                     text = "Salon Owner",
-                                    fontWeight = if (selectedRole == "owner") FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (selectedRole == "salon_owner") FontWeight.Bold else FontWeight.Normal
                                 )
                             }
                         }

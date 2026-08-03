@@ -1,0 +1,15 @@
+# XcodeGen regenerates this from project.yml — don't commit it
+*.xcodeproj/
+
+# Xcode
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# macOS
+.DS_Store
