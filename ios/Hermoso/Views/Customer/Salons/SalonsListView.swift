@@ -73,7 +73,7 @@ struct SalonsListView: View {
                 .padding(.top, 40)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundColor(Color.hermosoError).padding(20)
+            ErrorRetryView(message: error).padding(20)
         } else {
             VStack(spacing: 12) {
                 ForEach(viewModel.salons) { salon in
@@ -102,10 +102,13 @@ struct SalonsListView: View {
                                 .font(.system(size: 11))
                                 .foregroundColor(Color(hex: "#FFB800"))
                         }
+                        .accessibilityHidden(true)
                         Text("· \(distances[salon.id] ?? "-- km")")
                             .font(.system(size: 11.5))
                             .foregroundColor(Color.hermosoTextMuted)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Rated \(String(format: "%.1f", rating)) out of 5, \(distances[salon.id] ?? "distance unknown")")
                 }
                 .padding(12)
             }

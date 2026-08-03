@@ -83,7 +83,7 @@ struct ServiceBookingCard: View {
         Button {
             Task { await viewModel.book() }
         } label: {
-            Text("Book \(viewModel.service.name ?? "")")
+            Text(viewModel.isSubmitting ? "Booking..." : "Book \(viewModel.service.name ?? "")")
                 .font(.system(size: 13, weight: .bold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)

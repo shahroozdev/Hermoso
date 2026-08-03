@@ -85,24 +85,8 @@ struct ScanResultsView: View {
     private func overallScoreCard(_ score: Int) -> some View {
         let color: Color = score >= 75 ? .hermosoScoreHigh : (score >= 50 ? .hermosoScoreMid : .hermosoScoreLow)
         return ResultCard(title: "Overall Skin Health Score") {
-            ZStack {
-                Circle()
-                    .stroke(Color(hex: "#EEE9F6"), lineWidth: 16)
-                Circle()
-                    .trim(from: 0, to: CGFloat(max(0, min(score, 100))) / 100)
-                    .stroke(color, style: StrokeStyle(lineWidth: 16, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                VStack(spacing: 0) {
-                    Text("\(score)")
-                        .font(.system(size: 30, weight: .heavy))
-                        .foregroundColor(color)
-                    Text("/ 100")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color.hermosoTextMuted)
-                }
-            }
-            .frame(width: 120, height: 120)
-            .frame(maxWidth: .infinity)
+            ScoreRingView(score: score, color: color)
+                .frame(maxWidth: .infinity)
         }
     }
 

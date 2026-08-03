@@ -43,13 +43,9 @@ struct MatchView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            VStack(spacing: 12) {
-                Text(error).foregroundColor(Color.hermosoError)
-                Button("Retry") { Task { await viewModel.load() } }
-                    .foregroundColor(Color.hermosoPurple)
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity)
+            ErrorRetryView(message: error) { Task { await viewModel.load() } }
+                .padding(20)
+                .frame(maxWidth: .infinity)
         } else {
             VStack(spacing: 12) {
                 ForEach(viewModel.matches) { match in

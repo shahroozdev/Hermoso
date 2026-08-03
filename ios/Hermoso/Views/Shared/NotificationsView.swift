@@ -30,12 +30,9 @@ struct NotificationsView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundColor(Color.hermosoError)
+            ErrorRetryView(message: error)
         } else if viewModel.notifications.isEmpty {
-            Text("No notifications yet.")
-                .foregroundColor(Color.hermosoTextMuted)
-                .padding(.top, 60)
-                .frame(maxWidth: .infinity)
+            EmptyStateView(message: "No notifications yet.", topPadding: 60, centered: true)
         } else {
             VStack(spacing: 8) {
                 ForEach(viewModel.notifications) { notification in
@@ -70,6 +67,7 @@ struct NotificationsView: View {
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(Color.hermosoPurple)
                 }
+                .accessibilityLabel("Mark as read")
             }
         }
         .padding(14)

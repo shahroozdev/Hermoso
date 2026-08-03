@@ -24,10 +24,8 @@ struct OwnerDashboardView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            VStack(spacing: 12) {
-                Text(error).foregroundColor(Color(hex: "#FCA5A5"))
-                Button("Retry") { Task { await viewModel.load() } }
-                    .foregroundColor(Color.hermosoPurpleLight)
+            ErrorRetryView(message: error, textColor: Color(hex: "#FCA5A5"), retryColor: .hermosoPurpleLight) {
+                Task { await viewModel.load() }
             }
             .padding(.top, 60)
             .frame(maxWidth: .infinity)

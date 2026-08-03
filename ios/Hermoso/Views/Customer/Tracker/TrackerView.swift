@@ -45,13 +45,10 @@ struct TrackerView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundColor(Color.hermosoError).padding(20)
+            ErrorRetryView(message: error).padding(20)
         } else if !viewModel.hasEnoughData {
-            Text("Need at least two successful scans to show progress.")
-                .foregroundColor(Color.hermosoTextMuted)
-                .padding(.top, 60)
+            EmptyStateView(message: "Need at least two successful scans to show progress.", topPadding: 60, centered: true)
                 .padding(.horizontal, 20)
-                .frame(maxWidth: .infinity)
         } else if let data = viewModel.improvements {
             VStack(alignment: .leading, spacing: 12) {
                 summaryCard(data)

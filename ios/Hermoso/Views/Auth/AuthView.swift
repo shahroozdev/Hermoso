@@ -155,6 +155,7 @@ struct AuthView: View {
                     Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
                         .foregroundColor(Color.hermosoTextMuted)
                 }
+                .accessibilityLabel(isPasswordVisible ? "Hide password" : "Show password")
             }
             .padding(12)
             .background(

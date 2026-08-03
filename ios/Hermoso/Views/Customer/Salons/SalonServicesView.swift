@@ -45,6 +45,7 @@ struct SalonServicesView: View {
                         .padding(10)
                         .background(Circle().fill(Color.white.opacity(0.15)))
                 }
+                .accessibilityLabel("Back")
                 .padding(.bottom, 8)
 
                 Text(viewModel.salon?.name ?? "")
@@ -77,7 +78,7 @@ struct SalonServicesView: View {
                 .padding(.top, 40)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error).foregroundColor(Color.hermosoError).padding(20)
+            ErrorRetryView(message: error).padding(20)
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Services").font(.system(size: 14, weight: .bold)).foregroundColor(Color.hermosoTextDark)

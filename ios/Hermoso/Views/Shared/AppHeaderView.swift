@@ -42,6 +42,7 @@ struct AppHeaderView: View {
                     }
                 }
             }
+            .accessibilityLabel(unreadCount > 0 ? "Notifications, \(unreadCount) unread" : "Notifications")
 
             Menu {
                 Button("Profile", action: onProfileTap)
@@ -62,6 +63,7 @@ struct AppHeaderView: View {
                             .foregroundColor(.white)
                     )
             }
+            .accessibilityLabel("Account menu")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

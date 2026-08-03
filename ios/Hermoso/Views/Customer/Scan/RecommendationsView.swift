@@ -65,9 +65,7 @@ struct RecommendationsView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            Text(error)
-                .foregroundColor(Color.hermosoError)
-                .padding(20)
+            ErrorRetryView(message: error).padding(20)
         } else {
             VStack(spacing: 10) {
                 ForEach(viewModel.services) { service in

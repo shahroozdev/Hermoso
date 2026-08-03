@@ -38,18 +38,11 @@ struct BookingsListView: View {
                 .padding(.top, 60)
                 .frame(maxWidth: .infinity)
         } else if let error = viewModel.errorMessage {
-            VStack(spacing: 12) {
-                Text(error).foregroundColor(Color.hermosoError)
-                Button("Retry") { Task { await viewModel.load() } }
-                    .foregroundColor(Color.hermosoPurple)
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity)
-        } else if viewModel.bookings.isEmpty {
-            Text("No bookings yet.")
-                .foregroundColor(Color.hermosoTextMuted)
-                .padding(.top, 60)
+            ErrorRetryView(message: error) { Task { await viewModel.load() } }
+                .padding(20)
                 .frame(maxWidth: .infinity)
+        } else if viewModel.bookings.isEmpty {
+            EmptyStateView(message: "No bookings yet.", topPadding: 60, centered: true)
         } else {
             VStack(spacing: 8) {
                 ForEach(viewModel.bookings) { booking in

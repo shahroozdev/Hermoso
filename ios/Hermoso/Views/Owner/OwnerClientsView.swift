@@ -21,7 +21,7 @@ struct OwnerClientsView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 30)
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
+                    ErrorRetryView(message: error, textColor: Color(hex: "#FCA5A5"))
                 } else {
                     ForEach(viewModel.customers) { customer in
                         customerRow(customer)

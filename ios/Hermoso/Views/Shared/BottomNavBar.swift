@@ -35,6 +35,7 @@ struct BottomNavBar: View {
                     .foregroundColor(isSelected ? Color.hermosoPurple : Color.hermosoTextMuted)
                     .frame(maxWidth: .infinity)
                 }
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
         .padding(.top, 8)

@@ -26,7 +26,7 @@ struct OwnerInsightsView: View {
                         .background(Color.hermosoPurpleDark)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
+                    ErrorRetryView(message: error, textColor: Color(hex: "#FCA5A5"))
                 }
             }
             .padding(16)

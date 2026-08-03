@@ -27,7 +27,8 @@ targets:
       path: Hermoso/Info.plist
       properties:
         CFBundleDisplayName: Hermoso
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackgroundColor
         NSCameraUsageDescription: "Hermoso needs camera access to perform your AI skin scan."
         NSLocationWhenInUseUsageDescription: "Hermoso uses your location to show nearby salons and estimate distance."
         UIAppFonts:
@@ -43,6 +44,7 @@ targets:
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
 schemes:
   Hermoso:

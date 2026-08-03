@@ -92,18 +92,8 @@ struct HomeView: View {
 
     private var salonsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("Top Salons")
-                    .font(.system(size: 15.5, weight: .bold))
-                    .foregroundColor(Color.hermosoTextDark)
-                Spacer()
-                Button(action: onSeeAllSalons) {
-                    Text("See all")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color.hermosoPurple)
-                }
-            }
-            .padding(.horizontal, 20)
+            SectionHeaderView(title: "Top Salons", actionLabel: "See all", action: onSeeAllSalons)
+                .padding(.horizontal, 20)
 
             if let error = viewModel.salonsError {
                 Text(error)
@@ -132,9 +122,7 @@ struct HomeView: View {
 
     private var eventsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Events")
-                .font(.system(size: 15.5, weight: .bold))
-                .foregroundColor(Color.hermosoTextDark)
+            SectionHeaderView(title: "Events")
                 .padding(.horizontal, 20)
 
             if let error = viewModel.eventsError {

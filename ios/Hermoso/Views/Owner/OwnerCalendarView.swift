@@ -26,9 +26,9 @@ struct OwnerCalendarView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 30)
                 } else if let error = viewModel.errorMessage {
-                    Text(error).foregroundColor(Color(hex: "#FCA5A5"))
+                    ErrorRetryView(message: error, textColor: Color(hex: "#FCA5A5"))
                 } else if viewModel.bookings.isEmpty {
-                    Text("No bookings today.").foregroundColor(Color.hermosoTextMuted)
+                    EmptyStateView(message: "No bookings today.")
                 } else {
                     ForEach(viewModel.bookings) { booking in
                         bookingRow(booking)

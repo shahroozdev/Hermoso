@@ -144,11 +144,11 @@ struct BookingView: View {
             Text("Booking Summary")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(Color.hermosoTextDark)
-            summaryRow("Salon", viewModel.selectedSalonName ?? "—")
-            summaryRow("Service", viewModel.selectedServiceName ?? "—")
-            summaryRow("Specialist", viewModel.selectedStaffName ?? "—")
-            summaryRow("Date", Self.summaryDateFormatter.string(from: viewModel.selectedDate))
-            summaryRow("Time", viewModel.selectedTime ?? "—")
+            SummaryRowView(label: "Salon", value: viewModel.selectedSalonName ?? "—")
+            SummaryRowView(label: "Service", value: viewModel.selectedServiceName ?? "—")
+            SummaryRowView(label: "Specialist", value: viewModel.selectedStaffName ?? "—")
+            SummaryRowView(label: "Date", value: Self.summaryDateFormatter.string(from: viewModel.selectedDate))
+            SummaryRowView(label: "Time", value: viewModel.selectedTime ?? "—")
             Divider()
             HStack {
                 Text("Total").font(.system(size: 14, weight: .heavy))
@@ -162,20 +162,11 @@ struct BookingView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private func summaryRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label).foregroundColor(Color.hermosoTextMuted)
-            Spacer()
-            Text(value).foregroundColor(Color.hermosoTextDark).fontWeight(.semibold)
-        }
-        .font(.system(size: 12))
-    }
-
     private var confirmButton: some View {
         Button {
             Task { await viewModel.submitBooking() }
         } label: {
-            Text("Confirm Booking")
+            Text(viewModel.isSubmitting ? "Booking..." : "Confirm Booking")
                 .font(.system(size: 15, weight: .bold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
