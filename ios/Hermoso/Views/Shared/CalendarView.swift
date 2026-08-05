@@ -28,6 +28,7 @@ struct CalendarView: View {
                 } label: {
                     Text("‹").font(.system(size: 18, weight: .bold)).foregroundColor(Color.hermosoPurple)
                 }
+                .accessibilityLabel("Previous month")
                 Spacer()
                 Text(monthYearLabel)
                     .font(.system(size: 14, weight: .bold))
@@ -38,6 +39,7 @@ struct CalendarView: View {
                 } label: {
                     Text("›").font(.system(size: 18, weight: .bold)).foregroundColor(Color.hermosoPurple)
                 }
+                .accessibilityLabel("Next month")
             }
 
             HStack {
