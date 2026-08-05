@@ -15,7 +15,9 @@ final class HomeViewModel: ObservableObject {
     @Published var selectedCategoryId: String?
     @Published var searchQuery = ""
 
+    @Published var isLoadingCategories = false
     @Published var isLoadingSalons = false
+    @Published var isLoadingEvents = false
     @Published var salonsError: String?
     @Published var eventsError: String?
 
@@ -68,6 +70,8 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func loadCategories() async {
+        isLoadingCategories = true
+        defer { isLoadingCategories = false }
         do {
             let response = try await api.getCategories()
             var all = [CategoryDto(_id: nil, name: "All")]
@@ -107,7 +111,9 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func loadEvents() async {
+        isLoadingEvents = true
         eventsError = nil
+        defer { isLoadingEvents = false }
         do {
             let response = try await api.getEvents(page: 1, limit: 10)
             events = response.data ?? []

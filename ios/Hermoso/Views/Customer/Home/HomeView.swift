@@ -70,23 +70,36 @@ struct HomeView: View {
         return "Your AI beauty companion is ready"
     }
 
+    @ViewBuilder
     private var categoriesRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(viewModel.categories) { category in
-                    let isSelected = (viewModel.selectedCategoryId ?? viewModel.categories.first?.id) == category.id
-                    Text(category.name ?? "")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(isSelected ? Color.hermosoPurple : Color.hermosoPurplePale)
-                        .foregroundColor(isSelected ? .white : Color.hermosoPurple)
-                        .clipShape(Capsule())
-                        .onTapGesture { viewModel.selectedCategoryId = category.id }
+        if viewModel.isLoadingCategories && viewModel.categories.count <= 1 {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(0..<5, id: \.self) { _ in
+                        CategoryChipSkeletonView()
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+        } else if viewModel.categories.count > 1 {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(viewModel.categories) { category in
+                        let isSelected = (viewModel.selectedCategoryId ?? viewModel.categories.first?.id) == category.id
+                        Text(category.name ?? "")
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(isSelected ? Color.hermosoPurple : Color.hermosoPurplePale)
+                            .foregroundColor(isSelected ? .white : Color.hermosoPurple)
+                            .clipShape(Capsule())
+                            .onTapGesture { viewModel.selectedCategoryId = category.id }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
+            }
         }
     }
 
@@ -95,7 +108,17 @@ struct HomeView: View {
             SectionHeaderView(title: "Top Salons", actionLabel: "See all", action: onSeeAllSalons)
                 .padding(.horizontal, 20)
 
-            if let error = viewModel.salonsError {
+            if viewModel.isLoadingSalons && viewModel.salons.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(0..<5, id: \.self) { _ in
+                            SalonCardSkeletonView()
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 6)
+                }
+            } else if let error = viewModel.salonsError {
                 Text(error)
                     .font(.footnote)
                     .foregroundColor(Color.hermosoError)
@@ -125,7 +148,17 @@ struct HomeView: View {
             SectionHeaderView(title: "Events")
                 .padding(.horizontal, 20)
 
-            if let error = viewModel.eventsError {
+            if viewModel.isLoadingEvents && viewModel.events.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(0..<5, id: \.self) { _ in
+                            EventCardSkeletonView()
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 6)
+                }
+            } else if let error = viewModel.eventsError {
                 Text(error)
                     .font(.footnote)
                     .foregroundColor(Color.hermosoError)
