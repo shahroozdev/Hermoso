@@ -12,3 +12,4 @@ server/node_modules/
 *.log
 *.hprof
 .mcp.json
+ios/context
