@@ -91,14 +91,17 @@ Roles route to distinct sections after login, enforced by `ProtectedRoute` (`cli
 1. **Dashboard** (`/admin`) — platform-wide overview.
 2. **Analytics** (`/admin/analytics`) — usage/growth metrics.
 3. **Salons** (`/admin/salons`) — approve/reject/suspend salons (test `PENDING` → `APPROVED` transitions using seeded pending salons).
-4. **Bookings** (`/admin/bookings`) — platform-wide booking oversight, status updates.
-5. **Customers** (`/admin/customers`) — customer account management.
-6. **Reviews** (`/admin/reviews`) — moderate reviews.
-7. **Revenue** (`/admin/revenue`) — platform revenue view.
-8. **Payouts** (`/admin/payouts`) — approve/track salon payouts.
-9. **Notifications** (`/admin/notifications`) — send/manage system notifications.
-10. **Settings** (`/admin/settings`) — platform configuration.
-11. **Profile** (`/admin/profile`) — admin account settings.
+4. **Salon Owners** (`/admin/owners`) — **new**. List all salon owner accounts (name, phone, location, salon count, status). "+ Add Owner" creates a new owner (email/password optional — leave blank to auto-generate; generated credentials are shown once in a banner after creation, so capture them immediately). Suspend/Activate toggles an owner's access. See §7 for the retest steps for this flow specifically.
+5. **Bookings** (`/admin/bookings`) — platform-wide booking oversight, status updates.
+6. **Customers** (`/admin/customers`) — customer account management.
+7. **Reviews** (`/admin/reviews`) — moderate reviews.
+8. **Revenue** (`/admin/revenue`) — platform revenue view.
+9. **Payouts** (`/admin/payouts`) — approve/track salon payouts.
+10. **Notifications** (`/admin/notifications`) — send/manage system notifications.
+11. **Settings** (`/admin/settings`) — platform configuration, plus the **Admin Access** panel (**new/fixed** — was previously hardcoded placeholder data). Only visible/usable to accounts with the `super_admin` role — an `admin`-role account sees a message that only a super admin can manage admin accounts, and gets a 403 if it calls the API directly. "+ Invite Admin" creates a new `admin`-role account the same way owner creation works (optional email/password, generated credentials shown once). See §7.
+12. **Profile** (`/admin/profile`) — admin account settings.
+
+**Roles note:** the platform now has two admin-tier roles: `super_admin` (the original seeded account, full access including managing other admins) and `admin` (same access as super_admin everywhere *except* it cannot view/create/suspend other admin accounts — that's `super_admin`-only, enforced server-side).
 
 ---
 
@@ -159,6 +162,29 @@ Run the same test user through both clients to confirm parity:
 
 ---
 
-## 7. Reporting Bugs
+## 7. Access Management — Retest Steps
+
+Two gaps were reported in a previous QA pass: the admin panel didn't show/manage salon owners, and super admin couldn't add/manage admin accounts through the web UI. Both are now fixed; retest as follows.
+
+### 7.1 Salon Owner management
+1. Log in as `super_admin` (or an `admin`-role account — both have equal access here) and go to **Admin → Salon Owners** (`/admin/owners`).
+2. Confirm the list loads with real owner data (name, email, phone, city/country, salon count, status) — not placeholders.
+3. Click **+ Add Owner**, fill in name/city/country (email/password optional), submit.
+4. **Expected:** a banner shows the generated email/password if you left those blank — record these, they're needed to log in as this owner elsewhere (e.g. to create a salon under this account, or hand to another QA tester as a fresh owner login).
+5. Click **Suspend** on the new owner, confirm status flips to `suspended`. Click **Activate** to reverse it.
+6. Confirm the new owner also appears in the owner dropdown when creating a salon (`/admin/salons` → + Add Salon).
+
+### 7.2 Admin account management
+1. Log in as the **super admin** account (`admin@hermoso.app`, or your fresh reset admin per §1.1) and go to **Admin → Settings** (`/admin/settings`).
+2. In the **Admin Access** card, confirm the table shows real accounts (starting with just the super admin) — not the old hardcoded "Armaan / Sales Manager" row.
+3. Click **+ Invite Admin**, fill in a name (email/password optional), submit.
+4. **Expected:** a banner shows the generated email/password if left blank — record these as the fresh admin test account.
+5. Log out, log in as the newly created admin account. Confirm it can reach all the same `/admin/*` pages as super admin, **including** creating salon owners (§7.1).
+6. Still logged in as the new admin, go to Settings → Admin Access. **Expected:** a message that only a super admin can manage admin accounts — the new admin should **not** be able to see or invite other admins, and should not be able to suspend the super admin's account.
+7. Log back in as the super admin and confirm you **can** suspend/activate the admin account created in step 3 from the Admin Access table.
+
+---
+
+## 8. Reporting Bugs
 
 Log defects against the current branch/commit (`git log -1`) with: role used, exact test account, platform (web/mobile + OS version), steps, expected vs. actual, and screenshots. Cross-reference `docs/trello-board.md` for existing tracked issues before filing duplicates.

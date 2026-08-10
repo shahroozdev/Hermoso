@@ -39,6 +39,12 @@ export const navGroups: NavGroup[] = [
         badgeType: "amber",
       },
       {
+        key: "owners",
+        label: "Salon Owners",
+        to: "/admin/owners",
+        icon: "Users.svg",
+      },
+      {
         key: "customers",
         label: "Customers",
         to: "/admin/customers",
@@ -242,6 +248,11 @@ export const pageMeta: Record<
     title: "Salons & Clinics",
     sub: "Manage, approve & configure service providers",
     action: "+ Add Salon",
+  },
+  owners: {
+    title: "Salon Owners",
+    sub: "Create and manage salon owner accounts",
+    action: "+ Add Owner",
   },
   customers: {
     title: "Customer Management",

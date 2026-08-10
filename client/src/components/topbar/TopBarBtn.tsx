@@ -7,6 +7,7 @@ export const resolvePageKey = (path: string): string => {
   if (path === "/admin" || path === "/admin/") return "overview";
   if (path.includes("/admin/analytics")) return "analytics";
   if (path.includes("/admin/salons")) return "salons";
+  if (path.includes("/admin/owners")) return "owners";
   if (path.includes("/admin/customers")) return "customers";
   if (path.includes("/admin/bookings")) return "bookings";
   if (path.includes("/admin/reviews")) return "reviews";
@@ -35,11 +36,16 @@ const clickFirstButtonMatchingText = (texts: string[]) => {
 const TopBarBtn = () => {
   const location = useLocation();
   const key = resolvePageKey(location.pathname);
-  const { openSalonModal } = useUIStore();
+  const { openSalonModal, openOwnerModal } = useUIStore();
     const meta = pageMeta[key] || pageMeta.overview
   const handleTopbarAction = () => {
     if (key === "overview" || key === "salons") {
       openSalonModal();
+      return;
+    }
+
+    if (key === "owners") {
+      openOwnerModal();
       return;
     }
 

@@ -16,6 +16,9 @@ interface UIState {
   openSalonModal: () => void;
   setSalonModal: (isOpen: boolean) => void;
   closeSalonModal: () => void;
+  ownerModalOpen: boolean;
+  openOwnerModal: () => void;
+  setOwnerModal: (isOpen: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -35,5 +38,8 @@ export const useUIStore = create<UIState>((set) => ({
   salonModalOpen: false,
   openSalonModal: () => set({ salonModalOpen: true }),
   setSalonModal: (isOpen: boolean) => set({ salonModalOpen: isOpen }),
-  closeSalonModal: () => set({ salonModalOpen: false })
+  closeSalonModal: () => set({ salonModalOpen: false }),
+  ownerModalOpen: false,
+  openOwnerModal: () => set({ ownerModalOpen: true }),
+  setOwnerModal: (isOpen: boolean) => set({ ownerModalOpen: isOpen })
 }));

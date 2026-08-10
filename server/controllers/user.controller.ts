@@ -44,6 +44,7 @@ const serializeUser = (user: any) => ({
   bankAccount: user.bankAccount || '',
   role: user.role,
   status: user.status,
+  createdAt: user.createdAt,
   salonId: user.salonId || null
 });
 
@@ -129,15 +130,33 @@ export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Respo
     return next(new ApiError(400, 'Invalid status. Must be active, suspended, or inactive.'));
   }
 
-  const user = await User.findByIdAndUpdate(req.params.id, { status }, { new: true }).select('-password');
-  if (!user) return next(new ApiError(404, 'User not found'));
+  const target = await User.findById(req.params.id);
+  if (!target) return next(new ApiError(404, 'User not found'));
 
-  res.json({ success: true, data: serializeUser(user) });
+  // Only a true super admin (not an admin riding the route-level alias) may act on other admin accounts.
+  const targetIsAdmin = target.role === Roles.ADMIN || target.role === Roles.SUPER_ADMIN;
+  if (targetIsAdmin && req.user?.role !== Roles.SUPER_ADMIN) {
+    return next(new ApiError(403, 'Only a super admin can manage admin accounts'));
+  }
+
+  target.status = status as typeof target.status;
+  await target.save();
+
+  res.json({ success: true, data: serializeUser(target) });
 });
 
-export const listOwners = asyncHandler(async (_req: AuthRequest, res: Response) => {
+export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { page = 1, limit = 10, search = '' } = req.query;
+  const match: Record<string, unknown> = { role: Roles.SALON_OWNER };
+  if (search) {
+    match.$or = [{ name: new RegExp(search as string, 'i') }, { email: new RegExp(search as string, 'i') }];
+  }
+
   const owners = await User.aggregate([
-    { $match: { role: Roles.SALON_OWNER } },
+    { $match: match },
+    { $sort: { name: 1 } },
+    { $skip: (Number(page) - 1) * Number(limit) },
+    { $limit: Number(limit) },
     {
       $lookup: {
         from: 'salons',
@@ -158,13 +177,15 @@ export const listOwners = asyncHandler(async (_req: AuthRequest, res: Response) 
         phone: 1,
         location: 1,
         bankAccount: 1,
+        status: 1,
+        createdAt: 1,
         salonsCount: 1
       }
-    },
-    { $sort: { name: 1 } }
+    }
   ]);
 
-  res.json({ success: true, data: owners });
+  const total = await User.countDocuments(match);
+  res.json({ success: true, data: owners, meta: { page: Number(page), limit: Number(limit), total } });
 });
 
 export const createOwner = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -209,6 +230,65 @@ export const createOwner = asyncHandler(async (req: AuthRequest, res: Response) 
     },
     credentials: {
       email: owner.email,
+      password: finalPassword,
+      generated: !email || !password
+    }
+  });
+});
+
+interface CreateAdminBody {
+  name: string;
+  email?: string;
+  password?: string;
+  phone?: string;
+}
+
+const requireSuperAdmin = (req: AuthRequest) => {
+  if (req.user?.role !== Roles.SUPER_ADMIN) {
+    throw new ApiError(403, 'Only a super admin can manage admin accounts');
+  }
+};
+
+export const listAdmins = asyncHandler(async (req: AuthRequest, res: Response) => {
+  requireSuperAdmin(req);
+
+  const admins = await User.find({ role: { $in: [Roles.ADMIN, Roles.SUPER_ADMIN] } })
+    .select('name email phone status createdAt role')
+    .sort({ role: 1, name: 1 });
+
+  res.json({ success: true, data: admins.map(serializeUser) });
+});
+
+export const createAdmin = asyncHandler(async (req: AuthRequest, res: Response) => {
+  requireSuperAdmin(req);
+
+  const { name, email, password, phone } = req.body as CreateAdminBody;
+  if (!name?.trim()) {
+    throw new ApiError(400, 'Name is required');
+  }
+
+  const finalEmail = email?.trim().toLowerCase() || `${normalizeEmailBase(name)}.${Date.now()}@hermoso.local`;
+  const finalPassword = password?.trim() || `Admin@${Math.random().toString(36).slice(-8)}A1`;
+
+  const exists = await User.findOne({ email: finalEmail });
+  if (exists) {
+    throw new ApiError(409, 'Email already registered');
+  }
+
+  const admin = await User.create({
+    name: name.trim(),
+    email: finalEmail,
+    password: finalPassword,
+    phone: phone?.trim() || '',
+    role: Roles.ADMIN,
+    isVerified: true
+  });
+
+  res.status(201).json({
+    success: true,
+    data: serializeUser(admin),
+    credentials: {
+      email: admin.email,
       password: finalPassword,
       generated: !email || !password
     }

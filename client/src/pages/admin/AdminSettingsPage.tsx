@@ -1,9 +1,23 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { useApi } from '../../hooks/useApi';
+import { useInvalidate } from '../../hooks/useInvalidate';
+import { adminService, type AdminRecord } from '@/services/adminService';
+import ErrorBlock from '../../components/ErrorBlock';
+import CreateAdminModal from '@/components/createAdmin';
 
 const AdminSettingsPage = () => {
   const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === 'super_admin';
   const [status, setStatus] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [newAdminCredentials, setNewAdminCredentials] = useState<{
+    email?: string;
+    password?: string;
+    generated?: boolean;
+  } | null>(null);
+  const invalidate = useInvalidate();
   const [toggles, setToggles] = useState({
     aiSkinScan: true,
     eventBookings: true,
@@ -12,12 +26,26 @@ const AdminSettingsPage = () => {
     maintenanceMode: false
   });
 
+  const adminsReq = useApi(() => adminService.list(), ['admins']);
+  const admins = (adminsReq.data as { data?: AdminRecord[] } | null)?.data || [];
+
   const setToggle = (key) => {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const saveSettings = () => {
     setStatus('Settings saved locally for UI. Connect to platform settings API to persist.');
+  };
+
+  const toggleAdminStatus = async (admin: AdminRecord) => {
+    setActionError('');
+    const isSuspended = admin.status === 'suspended' || admin.status === 'inactive';
+    try {
+      await adminService.updateStatus(admin._id, isSuspended ? 'active' : 'suspended');
+      invalidate(['admins']);
+    } catch (err) {
+      setActionError(err.response?.data?.message || 'Failed to update admin status');
+    }
   };
 
   return (
@@ -45,52 +73,116 @@ const AdminSettingsPage = () => {
               </div>
             ))}
           </div>
+          <button className="ha-topbar-btn primary" style={{ width: '100%', marginTop: 14 }} onClick={saveSettings}>
+            Save Changes
+          </button>
         </div>
 
         <div className="ha-card">
           <div className="ha-card-title">Admin Access</div>
-          <table className="ha-salon-table" style={{ minWidth: '100%' }}>
-            <thead>
-              <tr>
-                <th>Admin</th>
-                <th>Role</th>
-                <th>Last Login</th>
-                <th>Access</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div className="ha-salon-cell">
-                    <div className="ha-admin-av">{(user?.name || 'W').slice(0, 1).toUpperCase()}</div>
-                    <div className="ha-salon-name" style={{ fontSize: 13 }}>{user?.name || 'Platform Admin'}</div>
-                  </div>
-                </td>
-                <td><span className="ha-pill ha-pill-vip">Super Admin</span></td>
-                <td>Today</td>
-                <td><span className="ha-pill ha-pill-active">Full Access</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <div className="ha-salon-cell">
-                    <div className="ha-salon-av">A</div>
-                    <div className="ha-salon-name" style={{ fontSize: 13 }}>Armaan</div>
-                  </div>
-                </td>
-                <td><span className="ha-pill ha-pill-booking">Sales Manager</span></td>
-                <td>Yesterday</td>
-                <td><span className="ha-pill ha-pill-active">Salons Only</span></td>
-              </tr>
-            </tbody>
-          </table>
 
-          <button className="ha-topbar-btn primary" style={{ width: '100%', marginTop: 14 }} onClick={saveSettings}>
-            + Invite Admin
-          </button>
+          {!isSuperAdmin ? (
+            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              Only a super admin can view or manage admin accounts.
+            </p>
+          ) : (
+            <>
+              {actionError ? (
+                <div style={{ marginBottom: 10 }}>
+                  <ErrorBlock text={actionError} />
+                </div>
+              ) : null}
+
+              {newAdminCredentials?.generated ? (
+                <div className="ha-form-hint" style={{ marginBottom: 12 }}>
+                  Admin created with generated login: {newAdminCredentials.email} /{' '}
+                  {newAdminCredentials.password}
+                </div>
+              ) : null}
+
+              {adminsReq.error ? (
+                <ErrorBlock text={adminsReq.error} />
+              ) : (
+                <table className="ha-salon-table" style={{ minWidth: '100%' }}>
+                  <thead>
+                    <tr>
+                      <th>Admin</th>
+                      <th>Role</th>
+                      <th>Joined</th>
+                      <th>Access</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.map((admin) => {
+                      const isSuspended = admin.status === 'suspended' || admin.status === 'inactive';
+                      const isSelf = admin._id === user?._id;
+                      return (
+                        <tr key={admin._id}>
+                          <td>
+                            <div className="ha-salon-cell">
+                              <div className="ha-admin-av">{(admin.name || 'A').slice(0, 1).toUpperCase()}</div>
+                              <div>
+                                <div className="ha-salon-name" style={{ fontSize: 13 }}>{admin.name}</div>
+                                <div className="ha-salon-sub">{admin.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="ha-pill ha-pill-vip">
+                              {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                            </span>
+                          </td>
+                          <td>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : '-'}</td>
+                          <td>
+                            <span className={isSuspended ? 'ha-pill ha-pill-suspended' : 'ha-pill ha-pill-active'}>
+                              {isSuspended ? 'Suspended' : 'Full Access'}
+                            </span>
+                          </td>
+                          <td>
+                            {admin.role === 'super_admin' ? (
+                              <span className="ha-salon-sub">-</span>
+                            ) : (
+                              <button
+                                className={isSuspended ? 'ha-act-btn' : 'ha-act-btn danger'}
+                                disabled={isSelf}
+                                title={isSelf ? "You can't change your own access" : undefined}
+                                onClick={() => toggleAdminStatus(admin)}
+                              >
+                                {isSuspended ? 'Activate' : 'Suspend'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+
+              <button
+                className="ha-topbar-btn primary"
+                style={{ width: '100%', marginTop: 14 }}
+                onClick={() => setInviteModalOpen(true)}
+              >
+                + Invite Admin
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {status ? <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{status}</p> : null}
+
+      {inviteModalOpen && (
+        <CreateAdminModal
+          onClose={() => setInviteModalOpen(false)}
+          onCreated={(_admin, credentials) => {
+            setNewAdminCredentials(credentials || null);
+            invalidate(['admins']);
+          }}
+        />
+      )}
     </>
   );
 };

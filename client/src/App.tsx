@@ -6,6 +6,7 @@ import VerifyOtpPage from './pages/shared/VerifyOtpPage';
 import NotFoundPage from './pages/shared/NotFoundPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminSalonsPage from './pages/admin/AdminSalonsPage';
+import AdminOwnersPage from './pages/admin/AdminOwnersPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
 import AdminCustomersPage from './pages/admin/AdminCustomersPage';
 import AdminReviewsPage from './pages/admin/AdminReviewsPage';
@@ -51,6 +52,7 @@ const App = () => (
           <Route index element={<AdminDashboardPage />} />
           <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="salons" element={<AdminSalonsPage />} />
+          <Route path="owners" element={<AdminOwnersPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
