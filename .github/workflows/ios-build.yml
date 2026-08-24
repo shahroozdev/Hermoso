@@ -1,31 +1,54 @@
 name: iOS Build
 
-# Compiles the Hermoso iOS app on a macOS runner — this is the verification
-# step the app has never been through, since it was written on Windows
-# (no local Xcode/Swift toolchain available there). Runs on every push/PR
-# that touches ios/, and can be triggered manually.
+# Compiles the Hermoso iOS apps on a macOS runner — this is the verification
+# step these apps have never been through, since they were written on
+# Windows (no local Xcode/Swift toolchain available there). Runs on every
+# push/PR that touches any of the three iOS project dirs, and can be
+# triggered manually.
+#
+# Matrix covers ios-customer and ios-owner (the split "Hermoso App" /
+# "Hermoso Business" apps) plus the legacy combined ios/ app, which is kept
+# read-only as reference until both split apps are verified end-to-end —
+# see docs/APP_SPLIT_PLAN.md §4. Drop the `legacy` entry once ios/ is deleted.
 on:
   push:
     branches: [main]
     paths:
       - "ios/**"
+      - "ios-customer/**"
+      - "ios-owner/**"
       - ".github/workflows/ios-build.yml"
   pull_request:
     paths:
       - "ios/**"
+      - "ios-customer/**"
+      - "ios-owner/**"
       - ".github/workflows/ios-build.yml"
   workflow_dispatch: {}
 
 jobs:
   build:
     # Pinned rather than macos-latest: macos-15 ships Xcode 16.0–16.4 (default
-    # 16.4), which matches this project's IPHONEOS_DEPLOYMENT_TARGET of 16.0.
+    # 16.4), which matches these projects' IPHONEOS_DEPLOYMENT_TARGET of 16.0.
     # macos-latest moved to macos-26 in mid-2026 — bump this once that image's
-    # Xcode/Swift version has been verified against this project.
+    # Xcode/Swift version has been verified against these projects.
     runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dir: ios-customer
+            project: HermosoApp.xcodeproj
+            scheme: HermosoApp
+          - dir: ios-owner
+            project: HermosoBusiness.xcodeproj
+            scheme: HermosoBusiness
+          - dir: ios
+            project: Hermoso.xcodeproj
+            scheme: Hermoso
     defaults:
       run:
-        working-directory: ios
+        working-directory: ${{ matrix.dir }}
 
     steps:
       - name: Checkout
@@ -45,8 +68,8 @@ jobs:
       - name: Build for iOS Simulator
         run: |
           xcodebuild build \
-            -project Hermoso.xcodeproj \
-            -scheme Hermoso \
+            -project ${{ matrix.project }} \
+            -scheme ${{ matrix.scheme }} \
             -destination "generic/platform=iOS Simulator" \
             -sdk iphonesimulator \
             CODE_SIGNING_ALLOWED=NO

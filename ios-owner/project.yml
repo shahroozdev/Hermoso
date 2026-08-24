@@ -1,0 +1,55 @@
+name: HermosoBusiness
+options:
+  bundleIdPrefix: com.hermoso
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+configs:
+  Debug: debug
+  Release: release
+
+packages:
+  Kingfisher:
+    url: https://github.com/onevcat/Kingfisher.git
+    from: 7.11.0
+  KeychainAccess:
+    url: https://github.com/kishikawakatsumi/KeychainAccess.git
+    from: 4.2.2
+
+targets:
+  HermosoBusiness:
+    type: application
+    platform: iOS
+    sources:
+      - path: Hermoso
+    info:
+      path: Hermoso/Info.plist
+      properties:
+        CFBundleDisplayName: Hermoso Business
+        UILaunchScreen:
+          UIColorName: LaunchBackgroundColor
+        UIAppFonts:
+          - CormorantGaramond-Light.ttf
+    dependencies:
+      - package: Kingfisher
+      - package: KeychainAccess
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hermoso.business
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+schemes:
+  HermosoBusiness:
+    build:
+      targets:
+        HermosoBusiness: all
+    run:
+      config: Debug
+    test:
+      config: Debug

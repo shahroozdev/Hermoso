@@ -14,7 +14,7 @@ This document walks QA through exercising the Hermoso platform end-to-end on bot
 | Web app | https://hermoso-seven.vercel.app/ |
 | Mobile app | Latest APK (provided separately alongside this doc) — install directly on a device/emulator, no build step needed |
 
-**Before testing:** confirm with the dev team whether the live database already has the seeded test accounts from §2, or whether separate staging credentials have been issued for the live environment — the seed script (§1.2) wipes and regenerates data, so it must **not** be run against the live/production database without explicit sign-off.
+**The live database was reset for this QA pass (2026-08-10).** It now contains only a fresh super admin account (§2) and the platform's category taxonomy — no salons, owners, staff, customers, bookings, or reviews. This is intentional: use the new **Salon Owners** (§3.4) and **Admin Access** (§3.4, §7) flows to create your own fresh owner/admin test accounts as part of this pass, rather than relying on old seeded data. Do **not** run `npm run seed` (§1.2) against this database — that would repopulate it with 100 mock salons/owners and defeat the point of the reset.
 
 Also confirm the provided APK is built against `https://hermoso-rx6j.vercel.app/` — if a QA build accidentally points at a local/staging API, mobile requests will fail silently or time out, which is worth ruling out first if nothing loads.
 
@@ -31,17 +31,30 @@ The web client's API base URL is set via `VITE_API_URL` (defaults to `http://loc
 
 ---
 
-## 2. Test Users (from `server/scripts/seed.ts`)
+## 2. Test Users
 
-Running `npm run seed` in `server/` creates the following accounts. All seeded accounts are pre-verified (`isVerified: true`), so they can log in immediately — **no OTP step needed** for these.
+### 2.1 Live environment (current, post-reset)
 
-**On the live environment**, these exact credentials only work if this seed has been run against the production database — verify with the dev team first (see §1.1). If the live DB has different/curated test accounts, swap the table below for those and keep the rest of this doc (flows, screens, routes) as-is, since it's environment-independent.
+| Role | Email | Password | Notes |
+|---|---|---|---|
+| Super Admin | `admin@hermoso.app` | `Hermoso@wAppDJhF4oQa1` | The only account that exists right now. Full platform access, including managing other admin accounts. Rotate this password once QA wraps up. |
+
+Everything else — salon owners, staff, customers, salons, bookings — is **empty on the live DB by design** (see §1.1). Use this super admin login to:
+- Create salon owner test accounts via **Admin → Salon Owners** (§3.4, §7.1).
+- Create additional admin test accounts via **Admin → Settings → Admin Access** (§3.4, §7.2).
+- Register fresh customer accounts yourself via `/register` (§3.1) — customers aren't admin-creatable, they self-register.
+
+Staff accounts still have no dedicated creation UI (see §6) — create them via the owner's Staff page (`/owner/staff`) once you have an owner account, or via the Postman collection.
+
+### 2.2 Local dev seed data (from `server/scripts/seed.ts`, §1.2 only)
+
+Running `npm run seed` in `server/` populates a **local** database with 100 mock salons/owners/staff/customers for offline testing. All seeded accounts are pre-verified, so they can log in immediately — no OTP step needed. **Do not run this against the live database** (see §1.1).
 
 | Role | Email pattern | Password | Notes |
 |---|---|---|---|
 | Super Admin | `admin@hermoso.app` | `Admin@123` | Single account, full platform access |
 | Salon Owner | `shahrooz.alta.dev+owner0@gmail.com` ... `+owner99@gmail.com` | `Owner@123` | 100 owners, one per seeded salon |
-| Staff | `shahrooz.alta.dev+staff0@gmail.com`, etc. | `Staff@123` | 3–8 per salon; not exposed in the web app's own login role selector but usable via API (staff currently have no dedicated web/mobile UI — see §6) |
+| Staff | `shahrooz.alta.dev+staff0@gmail.com`, etc. | `Staff@123` | 3–8 per salon; not exposed in the web app's own login role selector but usable via API |
 | Customer | `shahro.naro89+customer0@gmail.com` ... `+customer49@gmail.com` | `Customer@123` | 50 customers, randomly assigned cities |
 
 To test the **registration + OTP flow** itself, use a fresh email not in the seed set (see §3.1) — the seeded accounts skip this step by design.
