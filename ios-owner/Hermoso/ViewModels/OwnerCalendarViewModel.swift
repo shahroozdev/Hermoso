@@ -18,7 +18,7 @@ final class OwnerCalendarViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
-        let today = BookingViewModel.dateFormatter.string(from: Date())
+        let today = Self.dateFormatter.string(from: Date())
         do {
             let response = try await api.getBookings(page: 1, limit: 50, date: today, status: nil)
             bookings = response.data ?? []
@@ -26,4 +26,10 @@ final class OwnerCalendarViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 }
