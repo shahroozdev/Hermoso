@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { tokenCookies } from '../utils/tokenCookies';
 import { useUIStore } from '../store/uiStore';
+import { legalLinks } from './LegalLayout';
 const iconClass = 'h-5 w-5';
 const normalizeRole = (role?: string) => {
   if (role === 'admin') return 'super_admin';
@@ -50,12 +51,18 @@ const PublicLayout = () => {
             )}
       </button>
       <Outlet />
-      <footer className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-6 pb-6 text-xs text-[var(--muted)]">
-        <Link to="/privacy-policy" className="hover:text-[var(--accent)]">Privacy Policy</Link>
-        <Link to="/terms-and-conditions" className="hover:text-[var(--accent)]">Terms and Conditions</Link>
-        <Link to="/refund-policy" className="hover:text-[var(--accent)]">Cancellation & Refund Policy</Link>
-        <Link to="/ownership-statement" className="hover:text-[var(--accent)]">Ownership Statement</Link>
-      </footer>
+    <footer className="border-t border-[var(--border)] bg-[var(--surface)] px-6 py-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 text-sm">
+        <nav className="flex flex-wrap gap-x-5 gap-y-2">
+          {legalLinks.map((link) => (
+            <Link key={link.to} to={link.to} className="text-[var(--muted)] hover:text-[var(--accent)]">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <p className="text-[var(--muted)]">&copy; {new Date().getFullYear()} Hermoso. All rights reserved.</p>
+      </div>
+    </footer>
     </>
   );
 };

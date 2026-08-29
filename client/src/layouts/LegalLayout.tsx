@@ -1,6 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 
-const legalLinks = [
+export const legalLinks = [
   { to: '/privacy-policy', label: 'Privacy Policy' },
   { to: '/terms-and-conditions', label: 'Terms and Conditions' },
   { to: '/refund-policy', label: 'Cancellation & Refund Policy' },
@@ -15,7 +15,7 @@ const LegalLayout = () => (
       </Link>
     </header>
 
-    <main className="flex-1">
+    <main className="flex-1"> 
       <Outlet />
     </main>
 
