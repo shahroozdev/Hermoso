@@ -1,7 +1,7 @@
 import LegalPageShell from './LegalPageShell';
 
 const PrivacyPolicyPage = () => (
-  <LegalPageShell title="Privacy Policy" lastUpdated="[PLACEHOLDER: DD Month YYYY]">
+  <LegalPageShell title="Privacy Policy" lastUpdated="March 2026">
     <p>
       Hermoso ("Hermoso", "we", "us", or "our") is owned and operated by ONE2W, with its Pakistan
       office at Office 4th, Floor 3rd, Haq Centre, Commercial Market Rd, near Tehzib Bakers,

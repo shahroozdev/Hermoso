@@ -1,7 +1,7 @@
 import LegalPageShell from './LegalPageShell';
 
 const RefundPolicyPage = () => (
-  <LegalPageShell title="Cancellation & Refund Policy" lastUpdated="[PLACEHOLDER: DD Month YYYY]">
+  <LegalPageShell title="Cancellation & Refund Policy" lastUpdated="March 2026">
     <p>
       This Cancellation &amp; Refund Policy applies to salon service bookings made and paid for through the
       Hermoso website and mobile apps ("the Service"), operated by ONE2W. Because Hermoso facilitates bookings

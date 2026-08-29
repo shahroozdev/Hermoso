@@ -1,7 +1,7 @@
 import LegalPageShell from './LegalPageShell';
 
 const TermsAndConditionsPage = () => (
-  <LegalPageShell title="Terms and Conditions" lastUpdated="[PLACEHOLDER: DD Month YYYY]">
+  <LegalPageShell title="Terms and Conditions" lastUpdated="March 2026">
     <p>
       These Terms and Conditions ("Terms") govern your access to and use of the Hermoso website and mobile
       applications (the "Service"), owned and operated by ONE2W, Office 4th, Floor 3rd, Haq Centre, Commercial

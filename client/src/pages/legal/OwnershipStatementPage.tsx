@@ -1,7 +1,7 @@
 import LegalPageShell from './LegalPageShell';
 
 const OwnershipStatementPage = () => (
-  <LegalPageShell title="Ownership Statement" lastUpdated="[PLACEHOLDER: DD Month YYYY]">
+  <LegalPageShell title="Ownership Statement" lastUpdated="March 2026">
     <p>This statement confirms the ownership and operation of the Hermoso website and mobile applications.</p>
 
     <h2>1. Declaration</h2>
@@ -29,7 +29,7 @@ const OwnershipStatementPage = () => (
     <ul>
       <li><strong>Name:</strong> [PLACEHOLDER: authorized representative's full name]</li>
       <li><strong>Designation:</strong> [PLACEHOLDER: e.g. Director / Owner]</li>
-      <li><strong>Date:</strong> [PLACEHOLDER: DD Month YYYY]</li>
+      <li><strong>Date:</strong> March 2026</li>
     </ul>
 
     <p>
