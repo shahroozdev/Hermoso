@@ -53,7 +53,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex-1 items-center justify-center bg-[var(--surface)] p-6">
+    <div className="flex-1 flex items-center justify-center bg-[var(--surface)] p-6">
       <Form
         schema={schema}
         defaultValues={defaultValues}
