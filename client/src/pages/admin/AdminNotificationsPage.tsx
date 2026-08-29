@@ -97,7 +97,7 @@ const AdminNotificationsPage = () => {
             </span>,
             roleLabel(item.targetRole),
             <span className="ha-pill ha-pill-booking">
-              {item.type.replace("_", " ")}
+              {(item.type || "system").replace("_", " ")}
             </span>,
             <p>
               {formatDateInput(item.createdAt)} <br />

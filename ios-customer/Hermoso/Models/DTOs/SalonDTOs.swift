@@ -5,6 +5,12 @@ struct SalonLocationDto: Codable {
     let address: String?
 }
 
+struct CreateReviewRequest: Codable {
+    let salonId: String
+    let rating: Int
+    let comment: String
+}
+
 struct SalonDto: Codable, Identifiable {
     let _id: String?
     let name: String?

@@ -196,24 +196,21 @@ export const getSalons = asyncHandler(
 
 export const getSalonById = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const query: Record<string, unknown> = { _id: req.params.id };
+    const match: Record<string, unknown> = { _id: new mongoose.Types.ObjectId(req.params.id) };
 
     if (req.user?.role === Roles.CUSTOMER) {
-      query.status = SalonStatus.APPROVED;
-      query.verified = true;
+      match.status = SalonStatus.APPROVED;
+      match.verified = true;
     }
 
     if (req.user?.role === Roles.SALON_OWNER) {
-      query.ownerId = req.user._id;
+      match.ownerId = new mongoose.Types.ObjectId(req.user._id);
     }
 
     const salon = await Salon.aggregate([
-      // 1. Match salon
-      {
-        $match: {
-          _id: new mongoose.Types.ObjectId(req.params.id),
-        },
-      },
+      // 1. Match salon (scoped by role: customers only see approved+verified
+      // salons, owners only see their own — see match above)
+      { $match: match },
 
       // 2. Lookup reviews
       {
@@ -250,7 +247,7 @@ export const getSalonById = asyncHandler(
         },
       },
     ]);
-    if (!salon) return next(new ApiError(404, "Salon not found"));
+    if (salon.length === 0) return next(new ApiError(404, "Salon not found"));
     const services = await Service.find({ salonId: salon[0]._id });
     res.json({ success: true, data: { ...salon[0], services } });
   },

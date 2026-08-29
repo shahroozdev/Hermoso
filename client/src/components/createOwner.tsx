@@ -19,43 +19,53 @@ const schema = z.object({
   bankAccount: z.string().optional(),
 });
 
-const defaultValues = {
-  name: "",
-  city: "",
-  country: "Pakistan",
-  email: "",
-  phone: "",
-  bankAccount: "",
-};
-
 interface CreateOwnerModalProps {
+  owner?: OwnerRecord;
   onClose: () => void;
   onCreated: (owner: OwnerRecord, meta?: { email?: string; password?: string; generated?: boolean }) => void;
 }
 
-const CreateOwnerModal = ({ onClose, onCreated }: CreateOwnerModalProps) => {
+const CreateOwnerModal = ({ owner, onClose, onCreated }: CreateOwnerModalProps) => {
+  const isEdit = Boolean(owner);
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const defaultValues = {
+    name: owner?.name || "",
+    city: owner?.location?.city || "",
+    country: owner?.location?.country || "Pakistan",
+    email: owner?.email || "",
+    phone: owner?.phone || "",
+    bankAccount: owner?.bankAccount || "",
+  };
 
   const handleSubmit = async (data) => {
     setServerError("");
     setIsSubmitting(true);
 
     try {
-      const result = await ownerService.create({
-        name: data.name,
-        city: data.city,
-        country: data.country,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
-        bankAccount: data.bankAccount || undefined,
-      });
+      const result = isEdit
+        ? await ownerService.update(owner!._id, {
+            name: data.name,
+            city: data.city,
+            country: data.country,
+            phone: data.phone || undefined,
+            bankAccount: data.bankAccount || undefined,
+          })
+        : await ownerService.create({
+            name: data.name,
+            city: data.city,
+            country: data.country,
+            email: data.email || undefined,
+            phone: data.phone || undefined,
+            bankAccount: data.bankAccount || undefined,
+          });
 
       onCreated(result.data, result.credentials);
       onClose();
       return result;
     } catch (err) {
-      setServerError(err.response?.data?.message || "Failed to create owner");
+      setServerError(err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} owner`);
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -65,9 +75,9 @@ const CreateOwnerModal = ({ onClose, onCreated }: CreateOwnerModalProps) => {
   return (
     <Form schema={schema} defaultValues={defaultValues} onSubmit={handleSubmit}>
       <GenericModal
-        title="+ Create Owner"
+        title={isEdit ? "Edit Owner" : "+ Create Owner"}
         onClose={onClose}
-        footer={<FormButtons onCancel={onClose} isSubmitting={isSubmitting} />}
+        footer={<FormButtons onCancel={onClose} isSubmitting={isSubmitting} isEdit={isEdit} />}
       >
         <>
           {serverError ? <div className="ha-error-banner">{serverError}</div> : null}
@@ -97,12 +107,19 @@ const CreateOwnerModal = ({ onClose, onCreated }: CreateOwnerModalProps) => {
             <FormInput name="country" label="Country" required />
           </div>
 
-          <FormInput
-            name="email"
-            type="email"
-            label="Email"
-            placeholder="Optional. Leave blank to auto-generate."
-          />
+          {isEdit ? (
+            <div className="ha-form-group">
+              <label>Email</label>
+              <p className="ha-form-hint">{owner?.email} (email cannot be changed)</p>
+            </div>
+          ) : (
+            <FormInput
+              name="email"
+              type="email"
+              label="Email"
+              placeholder="Optional. Leave blank to auto-generate."
+            />
+          )}
 
           <FormInput
             name="bankAccount"
@@ -115,13 +132,13 @@ const CreateOwnerModal = ({ onClose, onCreated }: CreateOwnerModalProps) => {
   );
 };
 
-const FormButtons = ({ onCancel, isSubmitting }) => (
+const FormButtons = ({ onCancel, isSubmitting, isEdit }: { onCancel: () => void; isSubmitting: boolean; isEdit: boolean }) => (
   <>
     <button type="button" className="ha-btn-secondary" onClick={onCancel}>
       Cancel
     </button>
     <button type="submit" className="ha-btn-primary" disabled={isSubmitting}>
-      {isSubmitting ? "Creating..." : "Create Owner"}
+      {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Create Owner"}
     </button>
   </>
 );

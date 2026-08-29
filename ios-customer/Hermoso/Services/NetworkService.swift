@@ -2,7 +2,7 @@ import Foundation
 
 enum NetworkError: Error, LocalizedError {
     case invalidResponse
-    case server(status: Int, message: String?)
+    case server(status: Int, message: String?, code: String? = nil)
     case decoding(Error)
     case unauthorized
 
@@ -10,7 +10,7 @@ enum NetworkError: Error, LocalizedError {
         switch self {
         case .invalidResponse:
             return "The server returned an unexpected response."
-        case .server(_, let message):
+        case .server(_, let message, _):
             return message ?? "Something went wrong. Please try again."
         case .decoding:
             return "Couldn't read the server's response."
@@ -51,35 +51,6 @@ actor NetworkService {
         let data = try await rawRequest(path, method: method, query: query, body: body, requiresAuth: requiresAuth, retry: true)
         do {
             return try decoder.decode(T.self, from: data)
-        } catch {
-            throw NetworkError.decoding(error)
-        }
-    }
-
-    /// Multipart upload. The field name must be literally "image" to match the
-    /// backend contract (see ios/context/API_REFERENCE.md, /scans/analyze).
-    func upload<T: Decodable>(
-        _ path: String,
-        fieldName: String,
-        fileName: String,
-        mimeType: String,
-        data fileData: Data
-    ) async throws -> T {
-        var request = try buildRequest(path: path, method: "POST", query: nil, requiresAuth: true)
-        let boundary = "Boundary-\(UUID().uuidString)"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(fileData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        let responseData = try await send(request, retry: true)
-        do {
-            return try decoder.decode(T.self, from: responseData)
         } catch {
             throw NetworkError.decoding(error)
         }
@@ -137,8 +108,8 @@ actor NetworkService {
         }
 
         guard (200...299).contains(http.statusCode) else {
-            let message = try? decoder.decode(ApiResponse<EmptyCodable>.self, from: data).message
-            throw NetworkError.server(status: http.statusCode, message: message)
+            let decoded = try? decoder.decode(ApiResponse<EmptyCodable>.self, from: data)
+            throw NetworkError.server(status: http.statusCode, message: decoded?.message, code: decoded?.code)
         }
         return data
     }

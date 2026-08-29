@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,7 +41,10 @@ import kotlinx.coroutines.withContext
 fun TrackerScreen() {
     var loading by rememberSaveable { mutableStateOf(true) }
     var error by rememberSaveable { mutableStateOf("") }
-    var data by rememberSaveable { mutableStateOf<ScanImprovementsData?>(null) }
+    // Not rememberSaveable: ScanImprovementsData isn't Parcelable/Serializable, and
+    // Compose Navigation crashes trying to save it into the back stack's bundle when
+    // leaving this screen (e.g. switching bottom-nav tabs) — see BUG-011.
+    var data by remember { mutableStateOf<ScanImprovementsData?>(null) }
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(reloadKey) {

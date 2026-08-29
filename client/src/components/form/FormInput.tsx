@@ -22,6 +22,7 @@ interface FormInputProps {
   rows?: number;
   noStar?: boolean;
   className?: string;
+  autoComplete?: string;
 }
 
 const FormInput = ({
@@ -34,6 +35,7 @@ const FormInput = ({
   rows,
   noStar,
   className = "",
+  autoComplete,
 }: FormInputProps) => {
   const {
     register,
@@ -49,6 +51,7 @@ const FormInput = ({
     id: name,
     className: `ha-input ${className}`.trim(),
     placeholder,
+    autoComplete,
     ...register(name),
   };
   const renderInput = () => {

@@ -42,6 +42,12 @@ export const UserStatus = Object.freeze({
 
 export type UserStatusType = typeof UserStatus[keyof typeof UserStatus];
 
+// Machine-readable ApiError codes, for clients that need to react to a specific
+// failure (not just display err.message) — e.g. switching straight to OTP entry.
+export const ErrorCodes = Object.freeze({
+  ACCOUNT_NOT_VERIFIED: 'ACCOUNT_NOT_VERIFIED'
+} as const);
+
 export const EventCategory = Object.freeze({
   BRIDAL: 'bridal',
   PARTY: 'party',

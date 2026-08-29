@@ -2,39 +2,59 @@ import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useApi } from '../../hooks/useApi';
 import { useInvalidate } from '../../hooks/useInvalidate';
+import { useToastStore } from '../../store/toastStore';
 import { adminService, type AdminRecord } from '@/services/adminService';
+import { settingsService, type PlatformSettingsRecord } from '@/services/settingsService';
 import ErrorBlock from '../../components/ErrorBlock';
 import CreateAdminModal from '@/components/createAdmin';
+import ActionsMenu from '@/components/ActionsMenu';
+import OwnerCredentialsModal from '@/components/OwnerCredentialsModal';
+
+const DEFAULT_TOGGLES: PlatformSettingsRecord = {
+  aiSkinScan: true,
+  eventBookings: true,
+  pushNotifications: true,
+  selfRegistration: true,
+  maintenanceMode: false
+};
 
 const AdminSettingsPage = () => {
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role === 'super_admin';
-  const [status, setStatus] = useState('');
+  const { showToast } = useToastStore();
   const [actionError, setActionError] = useState('');
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [editAdmin, setEditAdmin] = useState<AdminRecord | null>(null);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const [newAdminCredentials, setNewAdminCredentials] = useState<{
     email?: string;
     password?: string;
     generated?: boolean;
   } | null>(null);
   const invalidate = useInvalidate();
-  const [toggles, setToggles] = useState({
-    aiSkinScan: true,
-    eventBookings: true,
-    pushNotifications: true,
-    selfRegistration: true,
-    maintenanceMode: false
-  });
+  const settingsReq = useApi(() => settingsService.get(), ['platform-settings']);
+  const loadedSettings = (settingsReq.data as { data?: PlatformSettingsRecord } | null)?.data;
+  const [localToggles, setLocalToggles] = useState<PlatformSettingsRecord | null>(null);
+  const toggles = localToggles ?? loadedSettings ?? DEFAULT_TOGGLES;
 
-  const adminsReq = useApi(() => adminService.list(), ['admins']);
+  const adminsReq = useApi(() => adminService.list({ search: adminSearch }), ['admins', adminSearch]);
   const admins = (adminsReq.data as { data?: AdminRecord[] } | null)?.data || [];
 
-  const setToggle = (key) => {
-    setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+  const setToggle = (key: keyof PlatformSettingsRecord) => {
+    setLocalToggles((prev) => ({ ...(prev ?? DEFAULT_TOGGLES), [key]: !(prev ?? DEFAULT_TOGGLES)[key] }));
   };
 
-  const saveSettings = () => {
-    setStatus('Settings saved locally for UI. Connect to platform settings API to persist.');
+  const saveSettings = async () => {
+    setIsSaving(true);
+    try {
+      await settingsService.update(toggles);
+      showToast('Settings saved successfully.');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to save settings', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const toggleAdminStatus = async (admin: AdminRecord) => {
@@ -43,6 +63,7 @@ const AdminSettingsPage = () => {
     try {
       await adminService.updateStatus(admin._id, isSuspended ? 'active' : 'suspended');
       invalidate(['admins']);
+      showToast(isSuspended ? 'Admin activated.' : 'Admin suspended.');
     } catch (err) {
       setActionError(err.response?.data?.message || 'Failed to update admin status');
     }
@@ -73,8 +94,8 @@ const AdminSettingsPage = () => {
               </div>
             ))}
           </div>
-          <button className="ha-topbar-btn primary" style={{ width: '100%', marginTop: 14 }} onClick={saveSettings}>
-            Save Changes
+          <button className="ha-topbar-btn primary" style={{ width: '100%', marginTop: 14 }} onClick={saveSettings} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
@@ -87,16 +108,19 @@ const AdminSettingsPage = () => {
             </p>
           ) : (
             <>
+              <div style={{ marginBottom: 10 }}>
+                <input
+                  type="text"
+                  className="ha-input"
+                  placeholder="Search admins by name or email..."
+                  value={adminSearch}
+                  onChange={(e) => setAdminSearch(e.target.value)}
+                />
+              </div>
+
               {actionError ? (
                 <div style={{ marginBottom: 10 }}>
                   <ErrorBlock text={actionError} />
-                </div>
-              ) : null}
-
-              {newAdminCredentials?.generated ? (
-                <div className="ha-form-hint" style={{ marginBottom: 12 }}>
-                  Admin created with generated login: {newAdminCredentials.email} /{' '}
-                  {newAdminCredentials.password}
                 </div>
               ) : null}
 
@@ -140,18 +164,23 @@ const AdminSettingsPage = () => {
                             </span>
                           </td>
                           <td>
-                            {admin.role === 'super_admin' ? (
-                              <span className="ha-salon-sub">-</span>
-                            ) : (
-                              <button
-                                className={isSuspended ? 'ha-act-btn' : 'ha-act-btn danger'}
-                                disabled={isSelf}
-                                title={isSelf ? "You can't change your own access" : undefined}
-                                onClick={() => toggleAdminStatus(admin)}
-                              >
-                                {isSuspended ? 'Activate' : 'Suspend'}
-                              </button>
-                            )}
+                            <ActionsMenu
+                              items={[
+                                { label: 'Edit', onClick: () => setEditAdmin(admin) },
+                                ...(admin.role === 'super_admin'
+                                  ? []
+                                  : [
+                                      {
+                                        label: isSuspended ? 'Activate' : 'Suspend',
+                                        danger: !isSuspended,
+                                        onClick: () => {
+                                          if (isSelf) return;
+                                          toggleAdminStatus(admin);
+                                        },
+                                      },
+                                    ]),
+                              ]}
+                            />
                           </td>
                         </tr>
                       );
@@ -172,15 +201,33 @@ const AdminSettingsPage = () => {
         </div>
       </div>
 
-      {status ? <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{status}</p> : null}
-
       {inviteModalOpen && (
         <CreateAdminModal
           onClose={() => setInviteModalOpen(false)}
           onCreated={(_admin, credentials) => {
-            setNewAdminCredentials(credentials || null);
+            setNewAdminCredentials(credentials?.generated ? credentials : null);
             invalidate(['admins']);
+            if (!credentials?.generated) showToast('Admin invited successfully.');
           }}
+        />
+      )}
+
+      {editAdmin && (
+        <CreateAdminModal
+          admin={editAdmin}
+          onClose={() => setEditAdmin(null)}
+          onCreated={() => {
+            invalidate(['admins']);
+            showToast('Admin updated successfully.');
+          }}
+        />
+      )}
+
+      {newAdminCredentials?.generated && (
+        <OwnerCredentialsModal
+          email={newAdminCredentials.email}
+          password={newAdminCredentials.password}
+          onClose={() => setNewAdminCredentials(null)}
         />
       )}
     </>

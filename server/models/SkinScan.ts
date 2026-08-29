@@ -82,6 +82,7 @@ export interface IDietPlan {
 // Main Skin Scan Document Interface
 export interface ISkinScan extends Document {
   customerId: mongoose.Types.ObjectId;
+  imageUrl?: string;
   imageMimeType: string;
   faceValid: boolean;
   faceGuidance: string[];
@@ -237,7 +238,8 @@ const legacyMetricSchema = new Schema(
 const skinScanSchema = new Schema<ISkinScan>(
   {
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    imageMimeType: { type: String, required: true },
+    imageUrl: { type: String },
+    imageMimeType: { type: String, default: 'image/jpeg' },
     faceValid: { type: Boolean, required: true, index: true },
     faceGuidance: [{ type: String }],
 

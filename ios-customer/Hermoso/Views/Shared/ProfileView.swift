@@ -13,6 +13,7 @@ struct ProfileView: View {
                 profileCard
                 settingsCard
                 passwordCard
+                legalCard
             }
             .padding(16)
         }
@@ -120,6 +121,25 @@ struct ProfileView: View {
                 )
         }
         .disabled(viewModel.isChangingPassword)
+    }
+
+    private var legalCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Legal").font(.system(size: 13.5, weight: .bold)).foregroundColor(Color.hermosoTextDark)
+            legalLink("Privacy Policy", path: "privacy-policy")
+            legalLink("Terms and Conditions", path: "terms-and-conditions")
+            legalLink("Cancellation & Refund Policy", path: "refund-policy")
+            legalLink("Ownership Statement", path: "ownership-statement")
+        }
+        .padding(16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func legalLink(_ label: String, path: String) -> some View {
+        Link(label, destination: Config.webBaseURL.appendingPathComponent(path))
+            .font(.system(size: 13))
+            .foregroundColor(Color.hermosoPurple)
     }
 
     private func field(_ label: String, _ text: Binding<String>, keyboard: UIKeyboardType = .default) -> some View {

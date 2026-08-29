@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Link, Navigate, Outlet } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { tokenCookies } from '../utils/tokenCookies';
@@ -50,6 +50,12 @@ const PublicLayout = () => {
             )}
       </button>
       <Outlet />
+      <footer className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-6 pb-6 text-xs text-[var(--muted)]">
+        <Link to="/privacy-policy" className="hover:text-[var(--accent)]">Privacy Policy</Link>
+        <Link to="/terms-and-conditions" className="hover:text-[var(--accent)]">Terms and Conditions</Link>
+        <Link to="/refund-policy" className="hover:text-[var(--accent)]">Cancellation & Refund Policy</Link>
+        <Link to="/ownership-statement" className="hover:text-[var(--accent)]">Ownership Statement</Link>
+      </footer>
     </>
   );
 };

@@ -22,6 +22,9 @@ android {
         val apiBaseUrl = project.findProperty("API_BASE_URL")?.toString()
             ?: "http://10.0.2.2:5000/api/"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        val webBaseUrl = project.findProperty("WEB_BASE_URL")?.toString()
+            ?: "https://hermoso-seven.vercel.app/"
+        buildConfigField("String", "WEB_BASE_URL", "\"$webBaseUrl\"")
     }
 
     buildTypes {

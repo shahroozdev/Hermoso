@@ -9,8 +9,12 @@ const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Enter a valid email address'),
   phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number format'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
   role: z.enum(['customer', 'salon_owner']),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
@@ -38,7 +42,11 @@ const RegisterPage = () => {
       const result = await authService.register(form);
       navigate(`/verify-otp?email=${encodeURIComponent(result?.data?.email || form.email)}`);
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      const apiErrors = err.response?.data?.errors;
+      const detail = Array.isArray(apiErrors) && apiErrors.length
+        ? apiErrors.map((e) => e.message).join(' ')
+        : err.response?.data?.message;
+      setError(detail || "Registration failed");
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +75,7 @@ const RegisterPage = () => {
             label="Email"
             placeholder="Enter your email"
             required
+            autoComplete="email"
           />
           <FormInput
             name="phone"
@@ -74,6 +83,7 @@ const RegisterPage = () => {
             label="Phone"
             placeholder="Enter your Whatsapp number"
             required
+            autoComplete="tel"
           />
           <FormInput
             name="password"
@@ -81,13 +91,18 @@ const RegisterPage = () => {
             label="Password"
             placeholder="Enter your password"
             required
+            autoComplete="new-password"
           />
+          <p className="-mt-2 text-xs text-slate-500">
+            At least 8 characters, with an uppercase letter, a lowercase letter, and a number.
+          </p>
           <FormInput
             name="confirmPassword"
             type="password"
             label="Confirm Password"
             placeholder="Confirm your password"
             required
+            autoComplete="new-password"
           />
           <FormInput
             name="role"

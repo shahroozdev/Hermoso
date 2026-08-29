@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hermoso.customer.ui.theme.*
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import retrofit2.HttpException
 
 // Hermoso App (customer) — sign-up always registers as "customer".
@@ -44,11 +45,21 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    fun parseApiError(throwable: Throwable): String {
-        return if (throwable is HttpException) {
-            throwable.response()?.errorBody()?.string() ?: (throwable.message ?: "Request failed")
-        } else {
-            throwable.message ?: "Something went wrong"
+    // errorBody() is a one-shot stream, so message + structured code must be read
+    // from a single .string() call rather than two separate parse functions.
+    data class ApiErrorInfo(val message: String, val code: String?)
+
+    fun parseApiError(throwable: Throwable): ApiErrorInfo {
+        if (throwable !is HttpException) {
+            return ApiErrorInfo(throwable.message ?: "Something went wrong", null)
+        }
+        val raw = throwable.response()?.errorBody()?.string()
+            ?: return ApiErrorInfo(throwable.message ?: "Request failed", null)
+        return try {
+            val json = JSONObject(raw)
+            ApiErrorInfo(json.optString("message").ifBlank { raw }, json.optString("code").ifBlank { null })
+        } catch (e: Exception) {
+            ApiErrorInfo(raw, null)
         }
     }
 
@@ -152,7 +163,17 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                     }
                 }
             } catch (t: Throwable) {
-                error = parseApiError(t)
+                val info = parseApiError(t)
+                if (info.code == "ACCOUNT_NOT_VERIFIED") {
+                    // Account exists but was never verified (e.g. signed up, then closed
+                    // the app before entering the OTP). Route straight into OTP entry
+                    // instead of showing a raw "not verified" error on the login form.
+                    otpMode = true
+                    password = ""
+                    message = "Please verify your account. Enter the code sent to your email, or tap Resend OTP."
+                } else {
+                    error = info.message
+                }
             } finally {
                 loading = false
             }
@@ -205,7 +226,7 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Full Name") },
+                            label = { Text("Full Name *") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -215,7 +236,7 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                         OutlinedTextField(
                             value = phone,
                             onValueChange = { phone = it },
-                            label = { Text("Phone") },
+                            label = { Text("Phone *") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -226,7 +247,7 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email Address") },
+                        label = { Text("Email Address *") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(imeAction = if (otpMode) ImeAction.Done else ImeAction.Next),
@@ -270,7 +291,7 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                                         val result = AuthApiClient.api.resendOtp(ResendOtpRequest(email = email))
                                         message = result.message ?: "OTP resent."
                                     } catch (t: Throwable) {
-                                        error = parseApiError(t)
+                                        error = parseApiError(t).message
                                     } finally {
                                         loading = false
                                     }
@@ -283,7 +304,7 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
-                            label = { Text("Password") },
+                            label = { Text("Password *") },
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {

@@ -4,7 +4,10 @@ import ErrorBlock from "../../components/ErrorBlock";
 import { useApi } from "../../hooks/useApi";
 import { salonService } from "../../services/salonService";
 import { useUIStore } from "../../store/uiStore";
+import { useToastStore } from "../../store/toastStore";
 import SalonModal from "@/components/SalonModal";
+import SalonViewModal from "@/components/SalonViewModal";
+import ActionsMenu from "@/components/ActionsMenu";
 import { salonsStats } from "@/components/constant";
 import TABLE from "@/components/table";
 import { SalonItem } from "../shared/SalonListPage";
@@ -20,7 +23,10 @@ const AdminSalonsPage = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const [errorAction, setErrorAction] = useState("");
   const { salonModalOpen, setSalonModal } = useUIStore();
+  const { showToast } = useToastStore();
   const [editDefaultValues, setEditDefaultValues] = useState(null);
+  const [viewSalon, setViewSalon] = useState(null);
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
   const { data, loading, error } = useApi(
     () =>
@@ -51,16 +57,23 @@ const AdminSalonsPage = () => {
 
   const patchStatus = async (id, status) => {
     setErrorAction("");
+    setPendingActionId(id);
     try {
       await salonService.updateStatus(id, { status });
       setReloadKey((v) => v + 1);
+      showToast(
+        status === "approved" ? "Salon approved." : status === "suspended" ? "Salon suspended." : "Salon status updated."
+      );
     } catch (err) {
       setErrorAction(err.response?.data?.message || "Status update failed");
+    } finally {
+      setPendingActionId(null);
     }
   };
 
   const handleCreated = () => {
     setReloadKey((v) => v + 1);
+    showToast(editDefaultValues ? "Salon updated successfully." : "Salon created successfully.");
   };
 
   if (loading) return <AdminPageSkeleton variant="table" />;
@@ -142,49 +155,34 @@ const AdminSalonsPage = () => {
               Math.round(salon.revenue || 0).toLocaleString(),
               salon.commissionRate ?? 10,
               <span className={statusClass(salon.status)}>{salon.status}</span>,
-              <span className={`ha-dot ${salon.active ? "on" : "off"}`} />,
-              <div className="ha-actions">
-                <button className="ha-act-btn">View</button>
-                <button
-                  className="ha-act-btn"
-                  onClick={() => {
-                    setEditDefaultValues(salon);
-                    setSalonModal(true);
-                  }}
-                >
-                  Edit
-                </button>
-                {salon.status === "pending" ? (
-                  <>
-                    <button
-                      className="ha-act-btn"
-                      onClick={() => patchStatus(salon._id, "approved")}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="ha-act-btn danger"
-                      onClick={() => patchStatus(salon._id, "suspended")}
-                    >
-                      Reject
-                    </button>
-                  </>
-                ) : salon.status === "suspended" ? (
-                  <button
-                    className="ha-act-btn"
-                    onClick={() => patchStatus(salon._id, "approved")}
-                  >
-                    Reinstate
-                  </button>
-                ) : (
-                  <button
-                    className="ha-act-btn danger"
-                    onClick={() => patchStatus(salon._id, "suspended")}
-                  >
-                    Suspend
-                  </button>
-                )}
-              </div>,
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span className={`ha-dot ${salon.active ? "on" : "off"}`} />
+                {salon.active ? "Active" : "Inactive"}
+              </span>,
+              (() => {
+                const isPending = pendingActionId === salon._id;
+                const items = [
+                  { label: "View", onClick: () => setViewSalon(salon) },
+                  {
+                    label: "Edit",
+                    onClick: () => {
+                      setEditDefaultValues(salon);
+                      setSalonModal(true);
+                    },
+                  },
+                ];
+                if (salon.status === "pending") {
+                  items.push(
+                    { label: isPending ? "Approving..." : "Approve", onClick: () => patchStatus(salon._id, "approved") },
+                    { label: isPending ? "Rejecting..." : "Reject", danger: true, onClick: () => patchStatus(salon._id, "suspended") },
+                  );
+                } else if (salon.status === "suspended") {
+                  items.push({ label: isPending ? "Activating..." : "Activate", onClick: () => patchStatus(salon._id, "approved") });
+                } else {
+                  items.push({ label: isPending ? "Suspending..." : "Suspend", danger: true, onClick: () => patchStatus(salon._id, "suspended") });
+                }
+                return <ActionsMenu items={items} />;
+              })(),
             ])
           }
         />
@@ -200,6 +198,8 @@ const AdminSalonsPage = () => {
           editDefaultValues={editDefaultValues}
         />
       )}
+
+      {viewSalon && <SalonViewModal salon={viewSalon} onClose={() => setViewSalon(null)} />}
     </>
   );
 };

@@ -4,11 +4,72 @@ import { Service } from '../models/Service.js';
 import { User } from '../models/User.js';
 import { Salon } from '../models/Salon.js';
 import { SalonStatus } from '../utils/constants.js';
-import { analyzeFaceComprehensive } from '../services/openrouter.service.js';
+import { analyzeFaceComprehensive, checkOpenRouterAvailability, type EyebrowLandmarks } from '../services/openrouter.service.js';
 import { generateDietPlanFromAnalysis } from '../services/diet.service.js';
+import { signUploadParams } from '../config/cloudinary.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
+
+const SCAN_COOLDOWN_MS = 24 * 60 * 60 * 1000; // CR-32: 1 scan/day to limit AI token consumption
+
+/**
+ * Returns when the customer can next scan, or null if they're eligible now.
+ * Only successful (faceValid) scans count against the cooldown, so a rejected
+ * photo (bad lighting, no face, etc.) doesn't cost the user their daily scan.
+ */
+async function getNextScanAt(customerId: string): Promise<Date | null> {
+  const lastScan = await SkinScan.findOne({ customerId, faceValid: true })
+    .sort({ createdAt: -1 })
+    .select('createdAt');
+
+  if (!lastScan) return null;
+
+  const nextAt = new Date(lastScan.createdAt.getTime() + SCAN_COOLDOWN_MS);
+  return nextAt > new Date() ? nextAt : null;
+}
+
+/**
+ * Returns a signed Cloudinary upload payload so the mobile client can upload the
+ * scan photo directly to Cloudinary, bypassing the backend entirely for the binary
+ * transfer (works around Vercel serverless functions' 4.5MB request body cap).
+ */
+export const getScanUploadSignature = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = `scans/${req.user?._id}`;
+  const signature = signUploadParams({ timestamp, folder });
+
+  res.json({
+    success: true,
+    data: {
+      timestamp,
+      signature,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      folder
+    }
+  });
+});
+
+/**
+ * AI availability + daily scan eligibility, for the mobile "AI online/offline"
+ * indicator and the 1-scan-per-day gate.
+ */
+export const getScanStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const [aiAvailable, nextScanAt] = await Promise.all([
+    checkOpenRouterAvailability(),
+    getNextScanAt(String(req.user?._id))
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      aiAvailable,
+      canScan: !nextScanAt,
+      nextScanAt
+    }
+  });
+});
 
 /**
  * Analyze face image with comprehensive AI skin analysis
@@ -16,19 +77,25 @@ import type { AuthRequest } from '../middleware/auth.middleware.js';
  * CR-05: South Asian calibration
  * CR-29: Scan history storage with comprehensive data
  * CR-31: Diet plan generation
+ * CR-32: 1 scan/day limit
  */
 export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const file: any = (req as any).file;
-  if (!file?.buffer || !file?.mimetype) {
-    return next(new ApiError(400, 'Image file is required as multipart field "image"'));
+  const { imageUrl, eyebrowData } = req.body as { imageUrl?: string; eyebrowData?: EyebrowLandmarks };
+  if (!imageUrl) {
+    return next(new ApiError(400, 'imageUrl is required'));
   }
 
-  // Extract eyebrow landmarks from request body if provided by mobile device (MediaPipe)
-  const eyebrowData = req.body.eyebrowData ? JSON.parse(req.body.eyebrowData) : undefined;
+  const nextScanAt = await getNextScanAt(String(req.user?._id));
+  if (nextScanAt) {
+    return res.status(429).json({
+      success: false,
+      message: 'Daily scan limit reached. You can scan again tomorrow.',
+      data: { nextScanAt }
+    });
+  }
 
   // Perform comprehensive AI analysis with South Asian calibration
-  const analysis = await analyzeFaceComprehensive(file.buffer, file.mimetype, eyebrowData);
+  const analysis = await analyzeFaceComprehensive(imageUrl, eyebrowData);
 
   // Handle rate limit / service unavailable
   if (analysis.error) {
@@ -39,7 +106,7 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
   if (!analysis.faceValid) {
     const rejected = await SkinScan.create({
       customerId: req.user?._id,
-      imageMimeType: file.mimetype,
+      imageUrl,
       faceValid: false,
       faceGuidance: analysis.faceGuidance.slice(0, 5),
       overallSkinScore: 0,
@@ -101,7 +168,7 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
   // Create comprehensive scan record (CR-29)
   const scan = await SkinScan.create({
     customerId: req.user?._id,
-    imageMimeType: file.mimetype,
+    imageUrl,
     faceValid: true,
     faceGuidance: analysis.faceGuidance.slice(0, 5),
     overallSkinScore: analysis.overallSkinScore,

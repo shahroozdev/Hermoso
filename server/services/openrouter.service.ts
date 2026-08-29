@@ -69,7 +69,7 @@ interface ComprehensiveAnalysisResult {
   recommendations: string[];
 }
 
-interface EyebrowLandmarks {
+export interface EyebrowLandmarks {
   archShape: 'flat' | 'natural' | 'over-arched' | 'uneven';
   fullness: number;
   leftRightSymmetry: number;
@@ -396,14 +396,12 @@ async function callOpenRouterWithKey(
 /**
  * Analyze face image with comprehensive South Asian-calibrated AI analysis
  *
- * @param imageBuffer - Face image buffer
- * @param mimeType - Image MIME type
+ * @param imageUrl - Publicly reachable URL of the face image (e.g. a Cloudinary secure_url)
  * @param eyebrowData - Optional eyebrow landmarks from MediaPipe (mobile side)
  * @returns Comprehensive analysis result
  */
 export const analyzeFaceComprehensive = async (
-  imageBuffer: Buffer,
-  mimeType: string,
+  imageUrl: string,
   eyebrowData?: EyebrowLandmarks
 ): Promise<ComprehensiveAnalysisResult> => {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -415,18 +413,15 @@ export const analyzeFaceComprehensive = async (
   const fallbackApiKey = process.env.OPENROUTER_API_KEY_FALLBACK;
   const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o';
 
-  const imageBase64 = imageBuffer.toString('base64');
-  const imageDataUrl = `data:${mimeType};base64,${imageBase64}`;
-
   const prompt = buildComprehensivePrompt(eyebrowData);
 
   try {
-    const { result, status } = await callOpenRouterWithKey(apiKey, model, imageDataUrl, prompt);
+    const { result, status } = await callOpenRouterWithKey(apiKey, model, imageUrl, prompt);
     if (result) return result;
 
     if (status === 429 && fallbackApiKey) {
       console.warn('Primary OpenRouter key rate limited, trying fallback key');
-      const fallback = await callOpenRouterWithKey(fallbackApiKey, model, imageDataUrl, prompt);
+      const fallback = await callOpenRouterWithKey(fallbackApiKey, model, imageUrl, prompt);
       if (fallback.result) return fallback.result;
 
       if (fallback.status === 429) {
@@ -444,44 +439,36 @@ export const analyzeFaceComprehensive = async (
   }
 };
 
-/**
- * Legacy function for backward compatibility
- * Converts comprehensive analysis to old format
- */
-export const analyzeFaceWithOpenRouter = async (
-  imageBuffer: Buffer,
-  mimeType: string
-): Promise<{
-  faceValid: boolean;
-  faceGuidance: string[];
-  summary: string;
-  metrics: Array<{ key: string; score: number; label: string }>;
-  recommendations: string[];
-}> => {
-  const comprehensive = await analyzeFaceComprehensive(imageBuffer, mimeType);
+let cachedAvailability: { available: boolean; checkedAt: number } | null = null;
+const AVAILABILITY_CACHE_MS = 60_000;
 
-  // Convert to legacy format
-  return {
-    faceValid: comprehensive.faceValid,
-    faceGuidance: comprehensive.faceGuidance,
-    summary: comprehensive.summary,
-    metrics: [
-      {
-        key: 'hydration',
-        score: comprehensive.hydration.hydrationPercent,
-        label: 'Hydration Level'
-      },
-      {
-        key: 'skinClarity',
-        score: comprehensive.hydration.textureRating,
-        label: 'Skin Clarity'
-      },
-      {
-        key: 'pigmentation',
-        score: 100 - comprehensive.skinTone.severity,
-        label: 'Pigmentation Balance'
-      }
-    ],
-    recommendations: comprehensive.recommendations
-  };
+/**
+ * Lightweight OpenRouter reachability check for the mobile "AI online/offline" indicator.
+ * Hits the free /models endpoint (no tokens consumed) and caches the result briefly
+ * so the status screen doesn't hammer OpenRouter on every app open.
+ */
+export const checkOpenRouterAvailability = async (): Promise<boolean> => {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return false;
+
+  if (cachedAvailability && Date.now() - cachedAvailability.checkedAt < AVAILABILITY_CACHE_MS) {
+    return cachedAvailability.available;
+  }
+
+  let available: boolean;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    available = response.ok;
+  } catch {
+    available = false;
+  }
+
+  cachedAvailability = { available, checkedAt: Date.now() };
+  return available;
 };

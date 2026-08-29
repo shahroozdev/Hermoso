@@ -45,5 +45,9 @@ export const ownerService = {
   updateStatus: async (id: string, status: string) => {
     const { data } = await api.patch(`/users/${id}/status`, { status });
     return data;
+  },
+  update: async (id: string, payload: Partial<CreateOwnerPayload>) => {
+    const { data } = await api.patch(`/users/${id}`, payload);
+    return data;
   }
 };

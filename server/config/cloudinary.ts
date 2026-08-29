@@ -12,8 +12,16 @@ export const uploadToCloudinary = (buffer: Buffer, folder = 'salons'): Promise<s
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder },
       (error, result) => {
-        if (error) reject(error);
-        else resolve(result!.secure_url);
+        if (error) {
+          // The Cloudinary SDK rejects with a plain object, not an Error instance, so it
+          // was falling through asyncHandler's type checks into a generic 500 message
+          // that hid the real cause (e.g. a restricted API key missing upload permission).
+          // eslint-disable-next-line no-console
+          console.error('Cloudinary upload failed:', error);
+          reject(new Error(error.message || 'Image upload failed'));
+        } else {
+          resolve(result!.secure_url);
+        }
       },
     );
     const readable = new Readable();
@@ -21,6 +29,10 @@ export const uploadToCloudinary = (buffer: Buffer, folder = 'salons'): Promise<s
     readable.push(null);
     readable.pipe(uploadStream);
   });
+};
+
+export const signUploadParams = (paramsToSign: Record<string, string | number>): string => {
+  return cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET as string);
 };
 
 export { cloudinary };

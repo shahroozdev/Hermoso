@@ -21,6 +21,15 @@ extension Color {
     static let hermosoTextDark = Color(hex: "#1A0F2E")
     static let hermosoTextMuted = Color(hex: "#7C6890")
 
+    // MARK: - Owner/Business palette (matches android-owner's Color.kt) — used on
+    // AuthView so the owner app doesn't look identical to the customer app.
+    static let hermosoOwnerNavy = Color(hex: "#0D1B2A")
+    static let hermosoOwnerNavyMid = Color(hex: "#162032")
+    static let hermosoOwnerNavyCard = Color(hex: "#1A2A3E")
+    static let hermosoOwnerGold = Color(hex: "#D4A843")
+    static let hermosoOwnerGoldLight = Color(hex: "#F0C96A")
+    static let hermosoOwnerTextLight = Color(hex: "#E2EAF4")
+
     // MARK: - One-off colors (scattered per-screen in the source app, kept exact)
     static let hermosoError = Color(hex: "#B00020")
     static let hermosoSuccess = Color(hex: "#0A7D3B")

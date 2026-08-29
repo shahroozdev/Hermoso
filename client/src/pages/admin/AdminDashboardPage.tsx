@@ -50,11 +50,10 @@ const AdminDashboardPage = () => {
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Platform Revenue</div>
-          <div className="ha-kpi-val">{Math.round(data?.data?.totals?.platformRevenue)?.toLocaleString()}
+          <div className="ha-kpi-val">{Math.round(data?.data?.totals?.platformRevenue || 0).toLocaleString()}</div>
           <div className="ha-kpi-change up">Commission earned</div>
         </div>
       </div>
-    </div>
       <div className="ha-row-2">
         <div className="ha-card">
           <div className="ha-card-title">Monthly Bookings Trend <span>Last 7 months</span></div>

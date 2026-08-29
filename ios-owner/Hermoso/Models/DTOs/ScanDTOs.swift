@@ -8,6 +8,24 @@ struct ScanMetricDto: Codable, Identifiable {
     var id: String { key ?? UUID().uuidString }
 }
 
+struct ScanUploadSignatureData: Codable {
+    let timestamp: Int?
+    let signature: String?
+    let apiKey: String?
+    let cloudName: String?
+    let folder: String?
+}
+
+struct ScanStatusData: Codable {
+    let aiAvailable: Bool?
+    let canScan: Bool?
+    let nextScanAt: String?
+}
+
+struct AnalyzeScanRequest: Codable {
+    let imageUrl: String
+}
+
 struct SkinToneDto: Codable {
     let tone: String?
     let evenness: Int?

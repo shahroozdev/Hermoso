@@ -124,6 +124,42 @@ export const changeMyPassword = asyncHandler(async (req: AuthRequest, res: Respo
   res.json({ success: true, message: 'Password updated successfully' });
 });
 
+export const updateUser = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { name, phone, city, country, bankAccount } = req.body as UpdateProfileBody;
+
+  const target = await User.findById(req.params.id);
+  if (!target) return next(new ApiError(404, 'User not found'));
+
+  const targetIsAdmin = target.role === Roles.ADMIN || target.role === Roles.SUPER_ADMIN;
+  if (targetIsAdmin && req.user?.role !== Roles.SUPER_ADMIN) {
+    return next(new ApiError(403, 'Only a super admin can manage admin accounts'));
+  }
+
+  if (name !== undefined) {
+    if (!name.trim()) return next(new ApiError(400, 'Name is required'));
+    target.name = name.trim();
+  }
+
+  if (phone !== undefined) {
+    target.phone = phone.trim();
+  }
+
+  if (city !== undefined || country !== undefined) {
+    target.location = {
+      city: city !== undefined ? city.trim() : target.location?.city || '',
+      country: country !== undefined ? country.trim() : target.location?.country || ''
+    };
+  }
+
+  if (bankAccount !== undefined) {
+    target.bankAccount = bankAccount.trim();
+  }
+
+  await target.save();
+
+  res.json({ success: true, data: serializeUser(target) });
+});
+
 export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { status } = req.body as { status: string };
   if (!['active', 'suspended', 'inactive'].includes(status)) {
@@ -252,7 +288,13 @@ const requireSuperAdmin = (req: AuthRequest) => {
 export const listAdmins = asyncHandler(async (req: AuthRequest, res: Response) => {
   requireSuperAdmin(req);
 
-  const admins = await User.find({ role: { $in: [Roles.ADMIN, Roles.SUPER_ADMIN] } })
+  const { search = '' } = req.query;
+  const match: Record<string, unknown> = { role: { $in: [Roles.ADMIN, Roles.SUPER_ADMIN] } };
+  if (search) {
+    match.$or = [{ name: new RegExp(search as string, 'i') }, { email: new RegExp(search as string, 'i') }];
+  }
+
+  const admins = await User.find(match)
     .select('name email phone status createdAt role')
     .sort({ role: 1, name: 1 });
 

@@ -17,9 +17,13 @@ interface CreateAdminPayload {
   phone?: string;
 }
 
+interface ListAdminsParams {
+  search?: string;
+}
+
 export const adminService = {
-  list: async () => {
-    const { data } = await api.get('/users/admins');
+  list: async (params: ListAdminsParams = {}) => {
+    const { data } = await api.get('/users/admins', { params });
     return data;
   },
   create: async (payload: CreateAdminPayload) => {
@@ -28,6 +32,10 @@ export const adminService = {
   },
   updateStatus: async (id: string, status: string) => {
     const { data } = await api.patch(`/users/${id}/status`, { status });
+    return data;
+  },
+  update: async (id: string, payload: Partial<CreateAdminPayload>) => {
+    const { data } = await api.patch(`/users/${id}`, payload);
     return data;
   }
 };

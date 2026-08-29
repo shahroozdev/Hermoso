@@ -11,7 +11,7 @@ struct AuthView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color.hermosoPurpleDeeper, Color.hermosoPurpleDark],
+                colors: [Color.hermosoOwnerNavy, Color.hermosoOwnerNavyMid],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -26,7 +26,7 @@ struct AuthView: View {
 
     private var header: some View {
         VStack(spacing: 4) {
-            Text("Hermoso Business")
+            Text("Hermoso App")
                 .font(.custom("CormorantGaramond-Light", size: 42))
                 .foregroundColor(.white)
             Text("Salon Management")
@@ -74,7 +74,7 @@ struct AuthView: View {
                     } label: {
                         Text("Resend OTP")
                             .font(.footnote.weight(.semibold))
-                            .foregroundColor(Color.hermosoPurple)
+                            .foregroundColor(Color.hermosoOwnerGold)
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -82,7 +82,7 @@ struct AuthView: View {
                 Button(action: toggleMode) {
                     Text(toggleText)
                         .font(.footnote.weight(.semibold))
-                        .foregroundColor(Color.hermosoPurple)
+                        .foregroundColor(Color.hermosoOwnerGold)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.top, 4)
@@ -173,7 +173,7 @@ struct AuthView: View {
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.hermosoPurple, lineWidth: 1.6)
+                        .stroke(Color.hermosoOwnerGold, lineWidth: 1.6)
                 )
         }
     }
@@ -184,10 +184,10 @@ struct AuthView: View {
         } label: {
             Text(submitLabel)
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(Color.hermosoOwnerNavy)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.hermosoPurple)
+                .background(Color.hermosoOwnerGold)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .disabled(viewModel.isSubmitting)

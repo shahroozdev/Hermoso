@@ -4,7 +4,7 @@ import { User, type IUser } from '../models/User.js';
 import { RefreshToken } from '../models/RefreshToken.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../services/auth.service.js';
 import { generateOtp, getOtpExpiry, hashOtp, sendOtpEmail, sendOtpPhone } from '../services/otp.service.js';
-import { Roles} from '../utils/constants.js';
+import { Roles, ErrorCodes } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendEmail } from '../services/email.service.js';
@@ -59,9 +59,15 @@ export const register = asyncHandler(
       otpExpiresAt: getOtpExpiry()
     });
 
-    await Promise.all([
-      sendOtpEmail(email, name, otp),
-    ]);
+    try {
+      await sendOtpEmail(email, name, otp);
+    } catch (error) {
+      // The account + OTP are already persisted; a delivery failure here shouldn't
+      // fail the whole signup and orphan the user behind a raw SMTP error. They can
+      // recover via resendOtp once the mail issue is fixed.
+      // eslint-disable-next-line no-console
+      console.error('Failed to send OTP email during registration:', error);
+    }
 
     res.status(201).json({
       success: true,
@@ -84,7 +90,9 @@ export const login = asyncHandler(
 
     const match = await user.comparePassword(password);
     if (!match) return next(new ApiError(422, 'Invalid credentials'));
-    if (!user.isVerified) return next(new ApiError(403, 'Account not verified. Please verify OTP first.'));
+    if (!user.isVerified) {
+      return next(new ApiError(403, 'Account not verified. Please verify OTP first.', undefined, ErrorCodes.ACCOUNT_NOT_VERIFIED));
+    }
     if (user.status === 'suspended' || user.status === 'inactive') return next(new ApiError(403, 'Account has been suspended. Contact support.'));
 
     const tokens = await buildAuthPayload(user);

@@ -14,7 +14,7 @@ export const serviceService = {
     const { data } = await api.get('/services', { params });
     return data;
   },
-  create: async (payload: { name: string; description?: string; price: number; duration: number; categoryId: string }) => {
+  create: async (payload: { name: string; description?: string; price: number; duration: number; categoryId: string; salonId?: string }) => {
     const { data } = await api.post('/services', payload);
     return data;
   },

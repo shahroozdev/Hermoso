@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Matches ios/context/SCREENS.md screen 13 / SalonServicesScreen.kt. Sticky
 /// bottom booking bar only appears once a service is selected.
@@ -18,6 +19,7 @@ struct SalonServicesView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     hero
                     servicesList
+                    reviewSection
                 }
             }
             .background(Color.hermosoCream)
@@ -29,6 +31,18 @@ struct SalonServicesView: View {
         .navigationBarHidden(true)
         .ignoresSafeArea(edges: .top)
         .task { await viewModel.load() }
+    }
+
+    /// No Google Maps API key is configured in this project, so instead of an
+    /// embedded map, tapping the location opens it in Apple Maps (no key needed).
+    private func openInMaps() {
+        let addressText = viewModel.salon?.address ?? viewModel.salon?.location?.city ?? ""
+        let query = "\(viewModel.salon?.name ?? "") \(addressText)".trimmingCharacters(in: .whitespaces)
+        guard
+            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            let url = URL(string: "https://maps.apple.com/?q=\(encoded)")
+        else { return }
+        UIApplication.shared.open(url)
     }
 
     private var hero: some View {
@@ -55,8 +69,12 @@ struct SalonServicesView: View {
                 if let city = viewModel.salon?.location?.city {
                     HStack(spacing: 4) {
                         Image(systemName: "mappin.circle.fill").foregroundColor(Color.hermosoPurpleLight)
-                        Text(city).font(.system(size: 12)).foregroundColor(.white.opacity(0.85))
+                        Text(city)
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.85))
+                            .underline()
                     }
+                    .onTapGesture { openInMaps() }
                 }
                 if let description = viewModel.salon?.description, !description.isEmpty {
                     Text(description)
@@ -87,7 +105,6 @@ struct SalonServicesView: View {
                 }
             }
             .padding(16)
-            .padding(.bottom, 100)
         }
     }
 
@@ -113,6 +130,55 @@ struct SalonServicesView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    private var reviewSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Write a Review").font(.system(size: 14, weight: .bold)).foregroundColor(Color.hermosoTextDark)
+
+            HStack(spacing: 4) {
+                ForEach(1...5, id: \.self) { star in
+                    Image(systemName: star <= viewModel.reviewRating ? "star.fill" : "star")
+                        .foregroundColor(star <= viewModel.reviewRating ? Color(hex: "#FBBF24") : Color.hermosoTextMuted.opacity(0.4))
+                        .font(.system(size: 24))
+                        .onTapGesture {
+                            viewModel.reviewRating = star
+                            viewModel.reviewSubmitted = false
+                        }
+                }
+            }
+
+            TextField("Share your experience (optional)", text: $viewModel.reviewComment, axis: .vertical)
+                .lineLimit(3...6)
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.hermosoFieldBorder, lineWidth: 1.4)
+                )
+
+            if let reviewError = viewModel.reviewError {
+                Text(reviewError).font(.footnote).foregroundColor(Color.hermosoError)
+            }
+            if viewModel.reviewSubmitted {
+                Text("Thanks! Your review has been submitted.").font(.footnote).foregroundColor(Color.hermosoOtpSuccess)
+            }
+
+            Button {
+                Task { await viewModel.submitReview() }
+            } label: {
+                if viewModel.isSubmittingReview {
+                    ProgressView().tint(.white).frame(maxWidth: .infinity)
+                } else {
+                    Text("Submit Review").font(.system(size: 14, weight: .bold)).foregroundColor(.white).frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.vertical, 13)
+            .background(Color.hermosoPurple)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .disabled(viewModel.isSubmittingReview)
+        }
+        .padding(16)
+        .padding(.bottom, 100)
     }
 
     private var bookingBar: some View {

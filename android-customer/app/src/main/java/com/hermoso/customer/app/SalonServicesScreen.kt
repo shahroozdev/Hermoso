@@ -1,5 +1,8 @@
 package com.hermoso.customer.app
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,15 +31,24 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.hermoso.customer.ui.theme.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
 fun SalonServicesScreen(navController: NavHostController, salonId: String) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf("") }
     var salon by remember { mutableStateOf<SalonDetailDto?>(null) }
     var services by remember { mutableStateOf(listOf<ServiceDto>()) }
     var selectedServiceId by remember { mutableStateOf("") }
+
+    var reviewRating by remember { mutableStateOf(0) }
+    var reviewComment by remember { mutableStateOf("") }
+    var reviewSubmitting by remember { mutableStateOf(false) }
+    var reviewError by remember { mutableStateOf("") }
+    var reviewSubmitted by remember { mutableStateOf(false) }
 
     LaunchedEffect(salonId) {
         loading = true
@@ -146,8 +160,30 @@ fun SalonServicesScreen(navController: NavHostController, salonId: String) {
                                 .fillMaxWidth()
                                 .padding(start = 24.dp, end = 24.dp, top = 8.dp)
                         ) {
-                            // 2. Location Row
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            // 2. Location Row — no Google Maps API key is configured in this
+                            // project, so instead of an embedded map, tapping opens the
+                            // address in whatever maps app is installed on the device.
+                            val addressText = salon?.address ?: "${salon?.location?.city ?: "Lahore"}, Pakistan"
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable {
+                                    val query = Uri.encode("${salon?.name.orEmpty()} $addressText".trim())
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("geo:0,0?q=$query")
+                                    )
+                                    try {
+                                        context.startActivity(intent)
+                                    } catch (_: ActivityNotFoundException) {
+                                        context.startActivity(
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse("https://www.google.com/maps/search/?api=1&query=$query")
+                                            )
+                                        )
+                                    }
+                                }
+                            ) {
                                 Icon(
                                     Icons.Default.LocationOn,
                                     contentDescription = null,
@@ -156,9 +192,10 @@ fun SalonServicesScreen(navController: NavHostController, salonId: String) {
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    text = salon?.address ?: "${salon?.location?.city ?: "Lahore"}, Pakistan",
+                                    text = addressText,
                                     color = Color.White.copy(alpha = 0.9f),
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textDecoration = TextDecoration.Underline
                                 )
                             }
 
@@ -281,6 +318,92 @@ fun SalonServicesScreen(navController: NavHostController, salonId: String) {
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+                    Text(
+                        "Write a Review",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    Row {
+                        (1..5).forEach { star ->
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Rate $star star${if (star > 1) "s" else ""}",
+                                tint = if (star <= reviewRating) Color(0xFFFBBF24) else TextMuted.copy(alpha = 0.3f),
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clickable {
+                                        reviewRating = star
+                                        reviewSubmitted = false
+                                    }
+                            )
+                            Spacer(Modifier.width(4.dp))
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = reviewComment,
+                        onValueChange = { reviewComment = it },
+                        label = { Text("Share your experience (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    if (reviewError.isNotBlank()) {
+                        Text(reviewError, color = Color(0xFFB00020), modifier = Modifier.padding(bottom = 8.dp))
+                    }
+                    if (reviewSubmitted) {
+                        Text(
+                            "Thanks! Your review has been submitted.",
+                            color = Color(0xFF0F9D58),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            if (reviewRating == 0) {
+                                reviewError = "Please select a star rating"
+                                return@Button
+                            }
+                            reviewError = ""
+                            reviewSubmitting = true
+                            scope.launch {
+                                try {
+                                    AuthApiClient.api.createReview(
+                                        CreateReviewRequest(salonId = salonId, rating = reviewRating, comment = reviewComment)
+                                    )
+                                    reviewSubmitted = true
+                                    reviewRating = 0
+                                    reviewComment = ""
+                                } catch (t: Throwable) {
+                                    reviewError = t.message ?: "Failed to submit review"
+                                } finally {
+                                    reviewSubmitting = false
+                                }
+                            }
+                        },
+                        enabled = !reviewSubmitting,
+                        colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                    ) {
+                        if (reviewSubmitting) {
+                            CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("Submit Review", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

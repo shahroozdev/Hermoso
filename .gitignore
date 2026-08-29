@@ -3,6 +3,7 @@ node_modules/
 **/node_modules/
 client/node_modules/
 client/dist/
+client/release/
 server/node_modules/
 .claude
 .env

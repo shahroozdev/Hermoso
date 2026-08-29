@@ -15,10 +15,14 @@ final class ScanViewModel: ObservableObject {
     @Published var isAnalyzing = false
     @Published var scanData: ScanAnalyzeData?
     @Published var errorMessage: String?
+    @Published var aiAvailable: Bool?
+    @Published var canScan = true
+    @Published var nextScanAt: Date?
 
     let camera = CameraService()
     private let analyzer = FaceLivenessAnalyzer()
     private let api: AuthApiProtocol
+    private static let isoFormatter = ISO8601DateFormatter()
 
     init(api: AuthApiProtocol = AuthApi()) {
         self.api = api
@@ -29,6 +33,19 @@ final class ScanViewModel: ObservableObject {
 
     func start() {
         camera.requestAuthorizationAndConfigure()
+        Task { await refreshStatus() }
+    }
+
+    @MainActor
+    func refreshStatus() async {
+        do {
+            let response = try await api.getScanStatus()
+            aiAvailable = response.data?.aiAvailable
+            canScan = response.data?.canScan ?? true
+            nextScanAt = response.data?.nextScanAt.flatMap { Self.isoFormatter.date(from: $0) }
+        } catch {
+            aiAvailable = nil
+        }
     }
 
     func stop() {
@@ -98,7 +115,7 @@ final class ScanViewModel: ObservableObject {
 
     @MainActor
     func captureAndUpload() async {
-        guard currentStep == .completed, !isAnalyzing else { return }
+        guard currentStep == .completed, !isAnalyzing, canScan else { return }
         isAnalyzing = true
         errorMessage = nil
         defer { isAnalyzing = false }
@@ -107,17 +124,24 @@ final class ScanViewModel: ObservableObject {
             errorMessage = "Couldn't capture a photo. Please try again."
             return
         }
-        capturedImageData = imageData
 
         do {
-            let response = try await api.analyzeScan(imageData: imageData)
+            let signature = try await api.getScanUploadSignature()
+            guard let signatureData = signature.data else {
+                errorMessage = "Couldn't prepare upload. Please try again."
+                return
+            }
+            let imageUrl = try await CloudinaryUploader.upload(imageData: imageData, signature: signatureData)
+            let response = try await api.analyzeScan(imageUrl: imageUrl)
             guard let data = response.data else {
                 errorMessage = response.message ?? "Scan analysis failed"
                 return
             }
+            capturedImageData = imageData
             scanData = data
         } catch {
             errorMessage = error.localizedDescription
+            await refreshStatus()
         }
     }
 

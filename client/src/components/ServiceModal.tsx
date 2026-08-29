@@ -43,7 +43,7 @@ const AI_SCAN_CATEGORIES = [
   { value: 'general-facial', label: 'General Facial Treatment' }
 ];
 
-const ServiceModal = () => {
+const ServiceModal = ({ salonId }: { salonId?: string } = {}) => {
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -72,7 +72,8 @@ const ServiceModal = () => {
         duration: Number(data.duration),
         price: Number(data.price),
         description: data.description || '',
-        aiScanLink: data.aiScanLink || ''
+        aiScanLink: data.aiScanLink || '',
+        ...(salonId ? { salonId } : {})
       });
       setFormSuccess('Service created successfully');
       setSelectedCategoryId(data.categoryId);

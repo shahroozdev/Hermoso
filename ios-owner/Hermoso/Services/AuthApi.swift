@@ -21,7 +21,9 @@ protocol AuthApiProtocol {
     func createBooking(_ request: CreateBookingRequest) async throws -> ApiResponse<EmptyCodable>
     func getBookings(page: Int, limit: Int, date: String?, status: String?) async throws -> ListResponse<BookingItemDto>
 
-    func analyzeScan(imageData: Data) async throws -> ApiResponse<ScanAnalyzeData>
+    func getScanUploadSignature() async throws -> ApiResponse<ScanUploadSignatureData>
+    func getScanStatus() async throws -> ApiResponse<ScanStatusData>
+    func analyzeScan(imageUrl: String) async throws -> ApiResponse<ScanAnalyzeData>
     func getLatestScan() async throws -> ApiResponse<ScanAnalyzeData>
     func getScanMatches() async throws -> ApiResponse<ScanMatchesData>
     func getScanImprovements() async throws -> ApiResponse<ScanImprovementsData>
@@ -118,10 +120,19 @@ final class AuthApi: AuthApiProtocol {
         return try await network.request("bookings", query: query)
     }
 
-    /// Field name is literally "image", JPEG quality/mirroring is handled by the
-    /// caller before this point — see ios/context/SCREENS.md, screen 4.
-    func analyzeScan(imageData: Data) async throws -> ApiResponse<ScanAnalyzeData> {
-        try await network.upload("scans/analyze", fieldName: "image", fileName: "scan.jpg", mimeType: "image/jpeg", data: imageData)
+    func getScanUploadSignature() async throws -> ApiResponse<ScanUploadSignatureData> {
+        try await network.request("scans/upload-signature")
+    }
+
+    func getScanStatus() async throws -> ApiResponse<ScanStatusData> {
+        try await network.request("scans/status")
+    }
+
+    /// The photo itself goes straight from the device to Cloudinary (see
+    /// CloudinaryUploader) — this only hands the backend the resulting URL,
+    /// keeping the multi-megabyte binary out of our own API's request body.
+    func analyzeScan(imageUrl: String) async throws -> ApiResponse<ScanAnalyzeData> {
+        try await network.request("scans/analyze", method: "POST", body: AnalyzeScanRequest(imageUrl: imageUrl))
     }
 
     func getLatestScan() async throws -> ApiResponse<ScanAnalyzeData> {

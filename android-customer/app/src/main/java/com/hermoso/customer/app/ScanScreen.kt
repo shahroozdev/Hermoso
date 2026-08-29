@@ -14,7 +14,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
+import androidx.compose.foundation.background 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
@@ -49,7 +49,11 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import retrofit2.HttpException
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -86,7 +90,9 @@ fun ScanScreen(navController: NavHostController) {
     var loading by remember { mutableStateOf(false) }
     var scanResult by remember { mutableStateOf<ScanAnalyzeData?>(null) }
     var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    
+    var scanStatus by remember { mutableStateOf<ScanStatusData?>(null) }
+    var scanError by remember { mutableStateOf<String?>(null) }
+
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val imageCapture = remember { ImageCapture.Builder().build() }
 
@@ -102,10 +108,23 @@ fun ScanScreen(navController: NavHostController) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        scanStatus = try {
+            AuthApiClient.api.getScanStatus().data
+        } catch (e: Exception) {
+            Log.e("Scan", "Failed to load scan status", e)
+            null
+        }
+    }
+
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0614))) {
         item {
             Column(Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)) {
-                Text("AI Skin Scan", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("AI Skin Scan", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(10.dp))
+                    AiAvailabilityBadge(scanStatus?.aiAvailable)
+                }
                 Text("Professional facial analysis & liveness check", color = Color.White.copy(alpha = 0.5f))
             }
         }
@@ -156,21 +175,35 @@ fun ScanScreen(navController: NavHostController) {
             Column(Modifier.padding(horizontal = 16.dp)) {
                 if (capturedBitmap == null) {
                     ValidationMessageView(validationState)
-                    
+
+                    if (scanStatus?.canScan == false) {
+                        Spacer(Modifier.height(12.dp))
+                        ScanLimitNotice(scanStatus?.nextScanAt)
+                    }
+
+                    if (scanError != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(scanError!!, color = Color(0xFFEF4444), fontSize = 13.sp)
+                    }
+
                     Spacer(Modifier.height(24.dp))
-                    
+
+                    val canScan = scanStatus?.canScan != false
+                    val enabled = validationState.currentStep == LivenessStep.COMPLETED && !loading && canScan
                     Button(
                         onClick = {
-                            if (validationState.currentStep == LivenessStep.COMPLETED && !loading) {
+                            if (enabled) {
                                 loading = true
-                                captureAndUpload(imageCapture, cameraExecutor, scope) { bitmap, result ->
-                                    capturedBitmap = bitmap
+                                scanError = null
+                                captureAndUpload(imageCapture, cameraExecutor, scope) { bitmap, result, error ->
+                                    capturedBitmap = if (result != null) bitmap else null
                                     scanResult = result
+                                    scanError = error
                                     loading = false
                                 }
                             }
                         },
-                        enabled = validationState.currentStep == LivenessStep.COMPLETED && !loading,
+                        enabled = enabled,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Purple,
@@ -188,6 +221,7 @@ fun ScanScreen(navController: NavHostController) {
                     ResultContentWrapper(scanResult!!, onReset = {
                         capturedBitmap = null
                         scanResult = null
+                        scanError = null
                         validationState = FaceValidationState()
                     }, navController)
                 }
@@ -195,6 +229,53 @@ fun ScanScreen(navController: NavHostController) {
         }
         
         item { Spacer(Modifier.height(32.dp)) }
+    }
+}
+
+@Composable
+fun AiAvailabilityBadge(available: Boolean?) {
+    val (color, label) = when (available) {
+        true -> Color(0xFF10B981) to "AI Online"
+        false -> Color(0xFFEF4444) to "AI Offline"
+        null -> Color.White.copy(alpha = 0.3f) to "Checking..."
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(color))
+        Spacer(Modifier.width(6.dp))
+        Text(label, color = color, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+fun ScanLimitNotice(nextScanAt: String?) {
+    val message = remember(nextScanAt) { formatNextScanMessage(nextScanAt) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF59E0B).copy(alpha = 0.12f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            message,
+            modifier = Modifier.padding(12.dp),
+            color = Color(0xFFFBBF24),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+fun formatNextScanMessage(nextScanAt: String?): String {
+    if (nextScanAt.isNullOrBlank()) return "You've used today's scan. Please come back tomorrow."
+    return try {
+        val next = java.time.Instant.parse(nextScanAt)
+        val hours = java.time.Duration.between(java.time.Instant.now(), next).toHours().coerceAtLeast(0)
+        if (hours <= 0) {
+            "You've used today's scan. You can scan again shortly."
+        } else {
+            "You've used today's scan. Next scan available in ~${hours}h."
+        }
+    } catch (e: Exception) {
+        "You've used today's scan. Please come back tomorrow."
     }
 }
 
@@ -427,25 +508,27 @@ fun captureAndUpload(
     imageCapture: ImageCapture,
     executor: ExecutorService,
     scope: CoroutineScope,
-    onResult: (Bitmap, ScanAnalyzeData?) -> Unit
+    onResult: (Bitmap, ScanAnalyzeData?, String?) -> Unit
 ) {
     imageCapture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
         override fun onCaptureSuccess(image: ImageProxy) {
             val bitmap = imageProxyToBitmap(image)
             image.close()
-            
+
             if (bitmap != null) {
                 scope.launch {
                     try {
-                        val part = bitmapToJpegPart(bitmap)
-                        val response = AuthApiClient.api.analyzeScan(part)
+                        val signature = AuthApiClient.api.getScanUploadSignature().data
+                            ?: error("Could not prepare upload")
+                        val imageUrl = uploadImageToCloudinary(bitmapToJpegBytes(bitmap), signature)
+                        val response = AuthApiClient.api.analyzeScan(AnalyzeScanRequest(imageUrl))
                         withContext(Dispatchers.Main) {
-                            onResult(bitmap, response.data)
+                            onResult(bitmap, response.data, null)
                         }
                     } catch (e: Exception) {
                         Log.e("Scan", "Upload failed", e)
                         withContext(Dispatchers.Main) {
-                            onResult(bitmap, null)
+                            onResult(bitmap, null, parseScanErrorMessage(e))
                         }
                     }
                 }
@@ -456,6 +539,50 @@ fun captureAndUpload(
             Log.e("Camera", "Capture failed", exception)
         }
     })
+}
+
+private val cloudinaryClient by lazy { OkHttpClient() }
+
+suspend fun uploadImageToCloudinary(jpegBytes: ByteArray, signature: ScanUploadSignatureData): String =
+    withContext(Dispatchers.IO) {
+        val cloudName = signature.cloudName ?: error("Missing Cloudinary cloud name")
+        val body = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", "scan.jpg", jpegBytes.toRequestBody("image/jpeg".toMediaType()))
+            .addFormDataPart("api_key", signature.apiKey.orEmpty())
+            .addFormDataPart("timestamp", signature.timestamp?.toString().orEmpty())
+            .addFormDataPart("signature", signature.signature.orEmpty())
+            .addFormDataPart("folder", signature.folder.orEmpty())
+            .build()
+
+        val request = Request.Builder()
+            .url("https://api.cloudinary.com/v1_1/$cloudName/image/upload")
+            .post(body)
+            .build()
+
+        cloudinaryClient.newCall(request).execute().use { response ->
+            val bodyString = response.body?.string().orEmpty()
+            if (!response.isSuccessful) {
+                Log.e("Scan", "Cloudinary upload failed: ${response.code} $bodyString")
+                error("Couldn't upload photo. Please try again.")
+            }
+            JSONObject(bodyString).getString("secure_url")
+        }
+    }
+
+fun parseScanErrorMessage(e: Exception): String {
+    if (e is HttpException) {
+        val raw = e.response()?.errorBody()?.string()
+        val parsed = raw?.let {
+            try {
+                JSONObject(it).optString("message").ifBlank { null }
+            } catch (_: Exception) {
+                null
+            }
+        }
+        return parsed ?: "Scan failed. Please try again."
+    }
+    return e.message ?: "Scan failed. Please try again."
 }
 
 fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
@@ -477,12 +604,10 @@ fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
     return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }
 
-fun bitmapToJpegPart(bitmap: Bitmap): MultipartBody.Part {
+fun bitmapToJpegBytes(bitmap: Bitmap): ByteArray {
     val output = ByteArrayOutputStream()
     bitmap.compress(Bitmap.CompressFormat.JPEG, 80, output)
-    val bytes = output.toByteArray()
-    val body = bytes.toRequestBody("image/jpeg".toMediaType())
-    return MultipartBody.Part.createFormData("image", "scan.jpg", body)
+    return output.toByteArray()
 }
 
 @androidx.annotation.OptIn(ExperimentalLayoutApi::class)

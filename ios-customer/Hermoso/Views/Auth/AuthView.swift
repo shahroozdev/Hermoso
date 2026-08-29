@@ -48,10 +48,10 @@ struct AuthView: View {
                     otpFields
                 } else {
                     if viewModel.mode == .register {
-                        labeledField("Name", text: $viewModel.name)
-                        labeledField("Phone", text: $viewModel.phone, keyboard: .phonePad)
+                        labeledField("Name *", text: $viewModel.name)
+                        labeledField("Phone *", text: $viewModel.phone, keyboard: .phonePad)
                     }
-                    labeledField("Email", text: $viewModel.email, keyboard: .emailAddress)
+                    labeledField("Email *", text: $viewModel.email, keyboard: .emailAddress)
                     passwordField
                 }
 
@@ -134,7 +134,7 @@ struct AuthView: View {
 
     private var passwordField: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("Password")
+            Text("Password *")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(Color.hermosoTextMuted)
             HStack {

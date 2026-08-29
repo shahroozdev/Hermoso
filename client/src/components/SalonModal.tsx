@@ -7,6 +7,7 @@ import Form from "./form/Form";
 import GenericModal from "./GenericModal";
 import FormInput from "./form/FormInput";
 import CreateOwnerModal from "./createOwner";
+import OwnerCredentialsModal from "./OwnerCredentialsModal";
 
 const DAYS = [
   "monday",
@@ -126,7 +127,10 @@ const SalonModal = ({
       setOwnersError("");
       try {
         const result = await ownerService.list();
-        setOwners(result.data || []);
+        const activeOwners = (result.data || []).filter(
+          (owner: OwnerRecord) => owner.status !== "suspended" && owner.status !== "inactive",
+        );
+        setOwners(activeOwners);
       } catch (err) {
         setOwnersError(err.response?.data?.message || "Failed to load owners");
       } finally {
@@ -215,13 +219,6 @@ const SalonModal = ({
           <>
             {serverError ? (
               <div className="ha-error-banner">{serverError}</div>
-            ) : null}
-
-            {ownerCredentials?.generated ? (
-              <div className="ha-form-hint" style={{ marginBottom: 12 }}>
-                Owner created with generated login: {ownerCredentials.email} /{" "}
-                {ownerCredentials.password}
-              </div>
             ) : null}
 
             <OwnerPicker
@@ -344,9 +341,17 @@ const SalonModal = ({
             setOwners((current) =>
               [...current, owner].sort((a, b) => a.name.localeCompare(b.name)),
             );
-            setOwnerCredentials(credentials || null);
+            setOwnerCredentials(credentials?.generated ? credentials : null);
             setOwnerIdOverride(owner._id);
           }}
+        />
+      ) : null}
+
+      {ownerCredentials?.generated ? (
+        <OwnerCredentialsModal
+          email={ownerCredentials.email}
+          password={ownerCredentials.password}
+          onClose={() => setOwnerCredentials(null)}
         />
       ) : null}
     </>
@@ -368,6 +373,7 @@ const OwnerPicker = ({
     formState: { errors },
   } = useFormContext();
   const selectedOwnerId = watch("ownerId");
+  const [ownerSearch, setOwnerSearch] = useState("");
   const ownerOptions = useMemo(() => {
     if (!currentOwner?._id) return owners;
     const exists = owners.some((owner) => String(owner._id) === String(currentOwner._id));
@@ -381,6 +387,15 @@ const OwnerPicker = ({
       },
     ];
   }, [owners, currentOwner]);
+  const filteredOwnerOptions = useMemo(() => {
+    const term = ownerSearch.trim().toLowerCase();
+    if (!term) return ownerOptions;
+    return ownerOptions.filter((owner) =>
+      owner.name?.toLowerCase().includes(term) ||
+      owner.email?.toLowerCase().includes(term) ||
+      owner.location?.city?.toLowerCase().includes(term),
+    );
+  }, [ownerOptions, ownerSearch]);
 
   useEffect(() => {
     if (ownerIdOverride) {
@@ -393,6 +408,14 @@ const OwnerPicker = ({
       <label htmlFor="ownerId">
         Owner <span className="ha-req-mark">*</span>
       </label>
+      <input
+        type="text"
+        className="ha-input"
+        style={{ marginBottom: 8 }}
+        placeholder="Search owners by name, email, or city..."
+        value={ownerSearch}
+        onChange={(e) => setOwnerSearch(e.target.value)}
+      />
       <div style={{ display: "flex", gap: 10, alignItems: "stretch" }}>
         <select
           id="ownerId"
@@ -404,7 +427,7 @@ const OwnerPicker = ({
           <option value="">
             {loading ? "Loading owners..." : "Select salon owner"}
           </option>
-          {ownerOptions.map((owner) => (
+          {filteredOwnerOptions.map((owner) => (
             <option key={owner._id} value={owner._id}>
               {owner.name}
               {owner.location?.city ? ` - ${owner.location.city}` : ""}

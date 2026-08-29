@@ -19,6 +19,7 @@ import userRoutes from './routes/user.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import scanRoutes from './routes/scan.routes.js';
 import posRoutes from './routes/pos.routes.js';
+import settingsRoutes from './routes/settings.routes.js';
 import { swaggerSpec } from './config/swagger.js';
 import { ApiError } from './utils/ApiError.js';
 import helmet from 'helmet';
@@ -134,21 +135,36 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/scans', scanLimiter, scanRoutes);
 app.use('/api/pos', posRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => next(new ApiError(404, 'Route not found')));
 
-app.use((err: ApiError, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error | ApiError, _req: Request, res: Response, _next: NextFunction) => {
   void _next;
-  const response: Record<string, unknown> = {
-    success: false,
-    message: err.message || 'Internal server error'
-  };
+  const isApiError = err instanceof ApiError;
 
-  if (err.errors && err.errors.length > 0) {
+  // ApiError is thrown deliberately with a client-safe message. Anything else
+  // (a DB driver error, an SMTP rejection, etc.) is an internal failure whose
+  // raw message must never reach the client — log it and return a generic one.
+  if (!isApiError) {
+    // eslint-disable-next-line no-console
+    console.error('Unhandled error:', err);
+  }
+
+  const statusCode = isApiError ? err.statusCode : 500;
+  const message = isApiError ? err.message : 'Something went wrong. Please try again.';
+
+  const response: Record<string, unknown> = { success: false, message };
+
+  if (isApiError && err.errors && err.errors.length > 0) {
     response.errors = err.errors;
   }
 
-  res.status(err.statusCode || 500).json(response);
+  if (isApiError && err.code) {
+    response.code = err.code;
+  }
+
+  res.status(statusCode).json(response);
 });
 
 export default app;

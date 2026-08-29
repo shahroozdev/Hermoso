@@ -3,7 +3,6 @@ package com.hermoso.customer.app
 import android.content.Context
 import com.hermoso.customer.BuildConfig
 import okhttp3.Authenticator
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -13,10 +12,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
-import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -179,6 +176,24 @@ data class ScanMetricDto(
     val key: String?,
     val score: Int?,
     val label: String?
+)
+
+data class ScanUploadSignatureData(
+    val timestamp: Long?,
+    val signature: String?,
+    val apiKey: String?,
+    val cloudName: String?,
+    val folder: String?
+)
+
+data class ScanStatusData(
+    val aiAvailable: Boolean?,
+    val canScan: Boolean?,
+    val nextScanAt: String?
+)
+
+data class AnalyzeScanRequest(
+    val imageUrl: String
 )
 
 // CR-08: Skin Tone & Tanning Analysis
@@ -401,6 +416,11 @@ data class SalonDetailDto(
     val workingHours: WorkingHoursDto?,
     val services: List<ServiceDto>?
 )
+data class CreateReviewRequest(
+    val salonId: String,
+    val rating: Int,
+    val comment: String
+)
 data class LocationDto(
     val city: String?,
     val country: String?
@@ -461,6 +481,10 @@ interface AuthApi {
     suspend fun getSalonById(
         @Path("id") id: String
     ): ApiResponse<SalonDetailDto>
+
+    @POST("reviews")
+    suspend fun createReview(@Body body: CreateReviewRequest): ApiResponse<Any>
+
     @GET("bookings/options")
     suspend fun getBookingOptions(
         @Query("salonId") salonId: String,
@@ -478,9 +502,14 @@ interface AuthApi {
     @POST("bookings")
     suspend fun createBooking(@Body body: CreateBookingRequest): ApiResponse<Any>
 
-    @Multipart
+    @GET("scans/upload-signature")
+    suspend fun getScanUploadSignature(): ApiResponse<ScanUploadSignatureData>
+
+    @GET("scans/status")
+    suspend fun getScanStatus(): ApiResponse<ScanStatusData>
+
     @POST("scans/analyze")
-    suspend fun analyzeScan(@Part image: MultipartBody.Part): ApiResponse<ScanAnalyzeData>
+    suspend fun analyzeScan(@Body body: AnalyzeScanRequest): ApiResponse<ScanAnalyzeData>
 
     @GET("scans/latest")
     suspend fun getLatestScan(): ApiResponse<ScanAnalyzeData>

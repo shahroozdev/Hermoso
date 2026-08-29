@@ -58,6 +58,7 @@ const LoginPage = () => {
             placeholder="Enter your email"
             required
             noStar
+            autoComplete="username"
           />
           <FormInput
             name="password"
@@ -66,6 +67,7 @@ const LoginPage = () => {
             placeholder="Enter your password"
             required
             noStar
+            autoComplete="current-password"
           />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}

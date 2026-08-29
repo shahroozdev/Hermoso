@@ -7,6 +7,9 @@ struct ApiResponse<T: Codable>: Codable {
     let success: Bool
     let message: String?
     let data: T?
+    /// Machine-readable failure code (see server ErrorCodes), present on some error
+    /// responses so clients can react to a specific case — e.g. ACCOUNT_NOT_VERIFIED.
+    let code: String?
 }
 
 struct ListMetaDto: Codable {

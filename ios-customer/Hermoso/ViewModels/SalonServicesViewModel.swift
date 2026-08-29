@@ -7,6 +7,12 @@ final class SalonServicesViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    @Published var reviewRating = 0
+    @Published var reviewComment = ""
+    @Published var isSubmittingReview = false
+    @Published var reviewError: String?
+    @Published var reviewSubmitted = false
+
     let salonId: String
     private let api: AuthApiProtocol
 
@@ -35,5 +41,23 @@ final class SalonServicesViewModel: ObservableObject {
 
     var selectedService: ServiceDto? {
         salon?.services?.first(where: { $0.id == selectedServiceId })
+    }
+
+    func submitReview() async {
+        guard reviewRating > 0 else {
+            reviewError = "Please select a star rating"
+            return
+        }
+        reviewError = nil
+        isSubmittingReview = true
+        defer { isSubmittingReview = false }
+        do {
+            _ = try await api.createReview(CreateReviewRequest(salonId: salonId, rating: reviewRating, comment: reviewComment))
+            reviewSubmitted = true
+            reviewRating = 0
+            reviewComment = ""
+        } catch {
+            reviewError = error.localizedDescription
+        }
     }
 }

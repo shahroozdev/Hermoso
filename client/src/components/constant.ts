@@ -35,7 +35,6 @@ export const navGroups: NavGroup[] = [
         label: "Salons & Clinics",
         to: "/admin/salons",
         icon: "Shop.svg",
-        badge: "3",
         badgeType: "amber",
       },
       {
@@ -55,7 +54,6 @@ export const navGroups: NavGroup[] = [
         label: "All Bookings",
         to: "/admin/bookings",
         icon: "Calendar.svg",
-        badge: "12",
         badgeType: "green",
       },
       {
@@ -63,7 +61,6 @@ export const navGroups: NavGroup[] = [
         label: "Reviews",
         to: "/admin/reviews",
         icon: "Star.svg",
-        badge: "2",
         badgeType: "rose",
       },
     ],
@@ -82,7 +79,6 @@ export const navGroups: NavGroup[] = [
         label: "Payouts",
         to: "/admin/payouts",
         icon: "Bank.svg",
-        badge: "4",
         badgeType: "amber",
       },
     ],

@@ -83,16 +83,29 @@ final class AuthViewModel: ObservableObject {
     }
 
     private func performLogin() async throws {
-        let response = try await api.login(LoginRequest(email: email, password: password))
-        guard response.success == true, let accessToken = response.accessToken, let refreshToken = response.refreshToken else {
-            errorMessage = response.message ?? "Login failed"
-            return
+        do {
+            let response = try await api.login(LoginRequest(email: email, password: password))
+            guard response.success == true, let accessToken = response.accessToken, let refreshToken = response.refreshToken else {
+                errorMessage = response.message ?? "Login failed"
+                return
+            }
+            if let role = response.user?.role, role != UserRole.salonOwner.rawValue {
+                errorMessage = "This is a customer account — download Hermoso App to sign in."
+                return
+            }
+            session.saveSession(accessToken: accessToken, refreshToken: refreshToken, name: response.user?.name, role: response.user?.role)
+        } catch let error as NetworkError {
+            // Account exists but was never verified (e.g. signed up, then closed the
+            // app before entering the OTP). Route straight into OTP entry instead of
+            // showing a raw "not verified" error on the login form.
+            if case .server(_, _, let code) = error, code == "ACCOUNT_NOT_VERIFIED" {
+                mode = .otp
+                password = ""
+                successMessage = "Please verify your account. Enter the code sent to your email, or tap Resend OTP."
+            } else {
+                throw error
+            }
         }
-        if let role = response.user?.role, role != UserRole.salonOwner.rawValue {
-            errorMessage = "This is a customer account — download Hermoso App to sign in."
-            return
-        }
-        session.saveSession(accessToken: accessToken, refreshToken: refreshToken, name: response.user?.name, role: response.user?.role)
     }
 
     private func performRegister() async throws {

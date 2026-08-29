@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/shared/LoginPage';
 import RegisterPage from './pages/shared/RegisterPage';
@@ -35,11 +35,19 @@ import ScanResultsPage from './pages/shared/ScanResultsPage';
 import ProgressReportPage from './pages/shared/ProgressReportPage';
 import SalonMatchPage from './pages/shared/SalonMatchPage';
 import PublicLayout from './layouts/PublicLayout';
+import LegalLayout from './layouts/LegalLayout';
 import { customerNavGroups, navGroups, ownerNavGroups } from './components/constant';
 import ProtectedLayout from './layouts/AdminLayout';
+import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
+import TermsAndConditionsPage from './pages/legal/TermsAndConditionsPage';
+import RefundPolicyPage from './pages/legal/RefundPolicyPage';
+import OwnershipStatementPage from './pages/legal/OwnershipStatementPage';
+
+const isElectron = typeof window !== 'undefined' && Boolean((window as unknown as Record<string, unknown>)?.desktop);
+const Router = isElectron ? HashRouter : BrowserRouter;
 
 const App = () => (
-  <BrowserRouter>
+  <Router>
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/login" element={<LoginPage />} />
@@ -95,10 +103,17 @@ const App = () => (
         </Route>
       </Route>
 
+      <Route element={<LegalLayout />}>
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+        <Route path="/refund-policy" element={<RefundPolicyPage />} />
+        <Route path="/ownership-statement" element={<OwnershipStatementPage />} />
+      </Route>
+
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  </BrowserRouter>
+  </Router>
 );
 
 export default App;

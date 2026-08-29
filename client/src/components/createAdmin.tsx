@@ -16,37 +16,41 @@ const schema = z.object({
     .optional(),
 });
 
-const defaultValues = {
-  name: "",
-  email: "",
-  phone: "",
-};
-
 interface CreateAdminModalProps {
+  admin?: AdminRecord;
   onClose: () => void;
   onCreated: (admin: AdminRecord, meta?: { email?: string; password?: string; generated?: boolean }) => void;
 }
 
-const CreateAdminModal = ({ onClose, onCreated }: CreateAdminModalProps) => {
+const CreateAdminModal = ({ admin, onClose, onCreated }: CreateAdminModalProps) => {
+  const isEdit = Boolean(admin);
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const defaultValues = {
+    name: admin?.name || "",
+    email: admin?.email || "",
+    phone: admin?.phone || "",
+  };
 
   const handleSubmit = async (data) => {
     setServerError("");
     setIsSubmitting(true);
 
     try {
-      const result = await adminService.create({
-        name: data.name,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
-      });
+      const result = isEdit
+        ? await adminService.update(admin!._id, { name: data.name, phone: data.phone || undefined })
+        : await adminService.create({
+            name: data.name,
+            email: data.email || undefined,
+            phone: data.phone || undefined,
+          });
 
       onCreated(result.data, result.credentials);
       onClose();
       return result;
     } catch (err) {
-      setServerError(err.response?.data?.message || "Failed to create admin");
+      setServerError(err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} admin`);
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -56,9 +60,9 @@ const CreateAdminModal = ({ onClose, onCreated }: CreateAdminModalProps) => {
   return (
     <Form schema={schema} defaultValues={defaultValues} onSubmit={handleSubmit}>
       <GenericModal
-        title="+ Invite Admin"
+        title={isEdit ? "Edit Admin" : "+ Invite Admin"}
         onClose={onClose}
-        footer={<FormButtons onCancel={onClose} isSubmitting={isSubmitting} />}
+        footer={<FormButtons onCancel={onClose} isSubmitting={isSubmitting} isEdit={isEdit} />}
       >
         <>
           {serverError ? <div className="ha-error-banner">{serverError}</div> : null}
@@ -70,12 +74,19 @@ const CreateAdminModal = ({ onClose, onCreated }: CreateAdminModalProps) => {
             required
           />
 
-          <FormInput
-            name="email"
-            type="email"
-            label="Email"
-            placeholder="Optional. Leave blank to auto-generate."
-          />
+          {isEdit ? (
+            <div className="ha-form-group">
+              <label>Email</label>
+              <p className="ha-form-hint">{admin?.email} (email cannot be changed)</p>
+            </div>
+          ) : (
+            <FormInput
+              name="email"
+              type="email"
+              label="Email"
+              placeholder="Optional. Leave blank to auto-generate."
+            />
+          )}
 
           <FormInput
             name="phone"
@@ -89,13 +100,13 @@ const CreateAdminModal = ({ onClose, onCreated }: CreateAdminModalProps) => {
   );
 };
 
-const FormButtons = ({ onCancel, isSubmitting }) => (
+const FormButtons = ({ onCancel, isSubmitting, isEdit }: { onCancel: () => void; isSubmitting: boolean; isEdit: boolean }) => (
   <>
     <button type="button" className="ha-btn-secondary" onClick={onCancel}>
       Cancel
     </button>
     <button type="submit" className="ha-btn-primary" disabled={isSubmitting}>
-      {isSubmitting ? "Inviting..." : "Invite Admin"}
+      {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Invite Admin"}
     </button>
   </>
 );

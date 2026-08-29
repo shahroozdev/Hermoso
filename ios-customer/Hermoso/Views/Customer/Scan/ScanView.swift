@@ -30,9 +30,12 @@ struct ScanView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("AI Skin Scan")
-                .font(.title2.bold())
-                .foregroundColor(.white)
+            HStack(spacing: 8) {
+                Text("AI Skin Scan")
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+                aiAvailabilityBadge
+            }
             Text("Professional facial analysis & liveness check")
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.5))
@@ -41,6 +44,42 @@ struct ScanView: View {
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .padding(.bottom, 10)
+    }
+
+    private var aiAvailabilityBadge: some View {
+        let (color, label): (Color, String) = {
+            switch viewModel.aiAvailable {
+            case .some(true): return (Color(hex: "#10B981"), "AI Online")
+            case .some(false): return (Color(hex: "#EF4444"), "AI Offline")
+            case .none: return (.white.opacity(0.3), "Checking...")
+            }
+        }()
+        return HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 8, height: 8)
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(color)
+        }
+    }
+
+    private var scanLimitNotice: some View {
+        let message: String = {
+            guard let nextScanAt = viewModel.nextScanAt else {
+                return "You've used today's scan. Please come back tomorrow."
+            }
+            let hours = max(0, Int(nextScanAt.timeIntervalSinceNow / 3600))
+            return hours <= 0
+                ? "You've used today's scan. You can scan again shortly."
+                : "You've used today's scan. Next scan available in ~\(hours)h."
+        }()
+        return Text(message)
+            .font(.footnote.weight(.medium))
+            .foregroundColor(Color(hex: "#FBBF24"))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Color(hex: "#F59E0B").opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 16)
     }
 
     private var cameraContent: some View {
@@ -62,6 +101,10 @@ struct ScanView: View {
 
                 if viewModel.capturedImageData == nil {
                     livenessBadges
+                }
+
+                if !viewModel.canScan {
+                    scanLimitNotice
                 }
 
                 if let error = viewModel.errorMessage {
@@ -140,7 +183,7 @@ struct ScanView: View {
     }
 
     private var analyzeButton: some View {
-        let enabled = viewModel.currentStep == .completed && !viewModel.isAnalyzing
+        let enabled = viewModel.currentStep == .completed && !viewModel.isAnalyzing && viewModel.canScan
         return Button {
             Task { await viewModel.captureAndUpload() }
         } label: {
