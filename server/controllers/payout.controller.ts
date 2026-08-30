@@ -1,27 +1,15 @@
 import { Response, NextFunction } from 'express';
 import { Payout } from '../models/Payout.js';
-import { Payment } from '../models/Payment.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import * as deductionService from '../services/deduction.service.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
 export const requestPayout = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user?.salonId) return next(new ApiError(400, 'Salon owner account is required'));
 
-  const paid = await Payment.aggregate([
-    { $match: { salonId: req.user.salonId, status: 'paid' } },
-    { $group: { _id: null, net: { $sum: '$salonAmount' } } }
-  ]);
-
-  const completedPayouts = await Payout.aggregate([
-    { $match: { salonId: req.user.salonId, status: 'completed' } },
-    { $group: { _id: null, paidOut: { $sum: '$amount' } } }
-  ]);
-
-  const totalNet = paid[0]?.net || 0;
-  const paidOut = completedPayouts[0]?.paidOut || 0;
-  const available = Number((totalNet - paidOut).toFixed(2));
+  const available = await deductionService.calculateAvailableBalance(String(req.user.salonId));
 
   const amount = Number(req.body.amount);
   if (amount <= 0 || amount > available) {

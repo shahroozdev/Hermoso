@@ -58,6 +58,7 @@ import retrofit2.HttpException
 object Dest {
     const val Splash = "splash"
     const val Auth = "auth"
+    const val CreateSalon = "create-salon"
 
     const val OwnerDashboard = "owner-dashboard"
     const val OwnerCalendar = "owner-calendar"
@@ -191,10 +192,26 @@ fun HermosoApp() {
                 })
             }
             composable(Dest.Auth) {
-                AuthScreen(onLoginSuccess = {
-                    isLoggedIn = true
+                AuthScreen(
+                    onLoginSuccess = {
+                        isLoggedIn = true
+                        navController.navigate(Dest.OwnerDashboard) {
+                            popUpTo(Dest.Auth) { inclusive = true }
+                        }
+                    },
+                    onNeedSalonSetup = {
+                        isLoggedIn = true
+                        navController.navigate(Dest.CreateSalon) {
+                            popUpTo(Dest.Auth) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(Dest.CreateSalon) {
+                CreateSalonScreen(onSalonCreated = {
                     navController.navigate(Dest.OwnerDashboard) {
-                        popUpTo(Dest.Auth) { inclusive = true }
+                        popUpTo(Dest.CreateSalon) { inclusive = true }
                     }
                 })
             }

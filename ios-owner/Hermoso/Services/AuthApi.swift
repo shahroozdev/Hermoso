@@ -36,6 +36,7 @@ protocol AuthApiProtocol {
     func getCustomers(page: Int, limit: Int) async throws -> ListResponse<UserProfileDto>
     func getOwnerDashboard() async throws -> ApiResponse<OwnerDashboardDataDto>
     func getServices(page: Int, limit: Int) async throws -> ListResponse<ServiceDto>
+    func createSalon(name: String, phone: String, address: String, description: String?, city: String?, country: String?, workingHours: [String: DayScheduleDto]?, imageData: Data?) async throws -> ApiResponse<SalonCreatedDto>
 }
 
 final class AuthApi: AuthApiProtocol {
@@ -175,5 +176,57 @@ final class AuthApi: AuthApiProtocol {
 
     func getServices(page: Int = 1, limit: Int = 20) async throws -> ListResponse<ServiceDto> {
         try await network.request("services", query: ["page": "\(page)", "limit": "\(limit)"])
+    }
+
+    func createSalon(name: String, phone: String, address: String, description: String? = nil, city: String? = nil, country: String? = nil, workingHours: [String: DayScheduleDto]? = nil, imageData: Data? = nil) async throws -> ApiResponse<SalonCreatedDto> {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var request = URLRequest(url: Config.apiBaseURL.appendingPathComponent("salons"))
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if let token = SessionManager.shared.accessToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        var body = Data()
+
+        func addField(_ name: String, _ value: String) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+            body.append("\(value)\r\n".data(using: .utf8)!)
+        }
+
+        addField("name", name)
+        addField("phone", phone)
+        addField("address", address)
+        if let description { addField("description", description) }
+        if let city, let country {
+            let location = "{\"city\":\"\(city)\",\"country\":\"\(country)\"}"
+            addField("location", location)
+        }
+        if let workingHours, let data = try? JSONEncoder().encode(workingHours), let json = String(data: data, encoding: .utf8) {
+            addField("workingHours", json)
+        }
+
+        if let imageData {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"imageUrl\"; filename=\"salon.jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(imageData)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let decoded = try? JSONDecoder().decode(ApiResponse<EmptyCodable>.self, from: data)
+            throw NetworkError.server(status: (response as? HTTPURLResponse)?.statusCode ?? 0, message: decoded?.message, code: decoded?.code)
+        }
+        do {
+            return try JSONDecoder().decode(ApiResponse<SalonCreatedDto>.self, from: data)
+        } catch {
+            throw NetworkError.decoding(error)
+        }
     }
 }

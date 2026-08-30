@@ -20,6 +20,9 @@ import categoryRoutes from './routes/category.routes.js';
 import scanRoutes from './routes/scan.routes.js';
 import posRoutes from './routes/pos.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import webhookRoutes from './routes/webhook.routes.js';
+import refundRoutes from './routes/refund.routes.js';
 import { swaggerSpec } from './config/swagger.js';
 import { ApiError } from './utils/ApiError.js';
 import helmet from 'helmet';
@@ -53,6 +56,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
@@ -136,6 +142,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/scans', scanLimiter, scanRoutes);
 app.use('/api/pos', posRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/refunds', refundRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => next(new ApiError(404, 'Route not found')));
 

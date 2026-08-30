@@ -22,8 +22,8 @@ const VerifyOtpPage = () => {
     setMessage('');
     try {
       await authService.verifyOtp(form);
-      setMessage('OTP verified successfully. You can login now.');
-      setTimeout(() => navigate('/login'), 1200);
+      setMessage('OTP verified successfully. Setting up your salon...');
+      setTimeout(() => navigate(`/create-salon?email=${encodeURIComponent(form.email)}`), 1200);
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'OTP verification failed');
     }

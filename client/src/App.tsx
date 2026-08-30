@@ -3,6 +3,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/shared/LoginPage';
 import RegisterPage from './pages/shared/RegisterPage';
 import VerifyOtpPage from './pages/shared/VerifyOtpPage';
+import CreateSalonPage from './pages/shared/CreateSalonPage';
 import NotFoundPage from './pages/shared/NotFoundPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminSalonsPage from './pages/admin/AdminSalonsPage';
@@ -34,6 +35,9 @@ import ScanPage from './pages/shared/ScanPage';
 import ScanResultsPage from './pages/shared/ScanResultsPage';
 import ProgressReportPage from './pages/shared/ProgressReportPage';
 import SalonMatchPage from './pages/shared/SalonMatchPage';
+import PaymentSuccessPage from './pages/shared/PaymentSuccessPage';
+import PaymentFailedPage from './pages/shared/PaymentFailedPage';
+import RefundRequestPage from './pages/shared/RefundRequestPage';
 import PublicLayout from './layouts/PublicLayout';
 import LegalLayout from './layouts/LegalLayout';
 import { customerNavGroups, navGroups, ownerNavGroups } from './components/constant';
@@ -53,6 +57,7 @@ const App = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/create-salon" element={<CreateSalonPage />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
@@ -100,6 +105,9 @@ const App = () => (
           <Route path="scan-results" element={<ScanResultsPage />} />
           <Route path="progress" element={<ProgressReportPage />} />
           <Route path="matched-salons" element={<SalonMatchPage />} />
+          <Route path="payment/success" element={<PaymentSuccessPage />} />
+          <Route path="payment/failed" element={<PaymentFailedPage />} />
+          <Route path="refund-request" element={<RefundRequestPage />} />
         </Route>
       </Route>
 

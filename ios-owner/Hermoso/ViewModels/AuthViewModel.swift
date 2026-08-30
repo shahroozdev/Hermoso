@@ -1,8 +1,7 @@
 import Foundation
 
 // Hermoso Business (salon owner) — sign-up always registers as "salon_owner".
-// After login the role guard rejects any non-owner account and shows a
-// message directing the user to download Hermoso App instead.
+// After OTP verify the app auto-logs in and navigates to salon creation.
 @MainActor
 final class AuthViewModel: ObservableObject {
     enum Mode {
@@ -19,6 +18,9 @@ final class AuthViewModel: ObservableObject {
     @Published var isSubmitting = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
+
+    /// Set by the view to navigate to salon creation after auto-login.
+    var onNeedSalonSetup: (() -> Void)?
 
     private let api: AuthApiProtocol
     private let session: SessionManager
@@ -95,9 +97,6 @@ final class AuthViewModel: ObservableObject {
             }
             session.saveSession(accessToken: accessToken, refreshToken: refreshToken, name: response.user?.name, role: response.user?.role)
         } catch let error as NetworkError {
-            // Account exists but was never verified (e.g. signed up, then closed the
-            // app before entering the OTP). Route straight into OTP entry instead of
-            // showing a raw "not verified" error on the login form.
             if case .server(_, _, let code) = error, code == "ACCOUNT_NOT_VERIFIED" {
                 mode = .otp
                 password = ""
@@ -123,9 +122,28 @@ final class AuthViewModel: ObservableObject {
             errorMessage = response.message ?? "OTP verification failed"
             return
         }
-        mode = .login
-        otp = ""
-        successMessage = "OTP verified. Please login."
+        // Auto-login after OTP verification
+        do {
+            let loginResponse = try await api.login(LoginRequest(email: email, password: password))
+            guard loginResponse.success == true, let accessToken = loginResponse.accessToken, let refreshToken = loginResponse.refreshToken else {
+                // Fallback to login screen
+                mode = .login
+                otp = ""
+                successMessage = "OTP verified. Please login."
+                return
+            }
+            if let role = loginResponse.user?.role, role != UserRole.salonOwner.rawValue {
+                errorMessage = "This is a customer account — download Hermoso App to sign in."
+                return
+            }
+            session.saveSession(accessToken: accessToken, refreshToken: refreshToken, name: loginResponse.user?.name, role: loginResponse.user?.role)
+            onNeedSalonSetup?()
+        } catch {
+            // Fallback to login screen
+            mode = .login
+            otp = ""
+            successMessage = "OTP verified. Please login."
+        }
     }
 
     func resendOtp() async {

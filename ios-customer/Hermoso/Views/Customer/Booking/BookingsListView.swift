@@ -3,6 +3,8 @@ import SwiftUI
 /// Matches ios/context/SCREENS.md screen 8 / BookingListScreen.kt.
 struct BookingsListView: View {
     @StateObject private var viewModel = BookingsListViewModel()
+    @State private var showRefundSheet = false
+    @State private var selectedBookingForRefund: BookingItemDto?
 
     var body: some View {
         ScrollView {
@@ -14,6 +16,15 @@ struct BookingsListView: View {
         .background(Color.hermosoCream)
         .refreshable { await viewModel.load() }
         .task { await viewModel.load() }
+        .sheet(isPresented: $showRefundSheet) {
+            RefundSheetView(
+                bookingId: selectedBookingForRefund?._id ?? "",
+                onDismiss: {
+                    showRefundSheet = false
+                    selectedBookingForRefund = nil
+                }
+            )
+        }
     }
 
     private var header: some View {
@@ -71,6 +82,14 @@ struct BookingsListView: View {
             HStack {
                 StatusBadgeView(status: booking.status)
                 Spacer()
+                if booking.status == "confirmed" {
+                    Button("Refund") {
+                        selectedBookingForRefund = booking
+                        showRefundSheet = true
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.red)
+                }
                 Text("PKR \(Int(booking.price ?? 0))")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(Color.hermosoPurple)

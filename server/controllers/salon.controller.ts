@@ -42,6 +42,16 @@ export const createSalon = asyncHandler(
       throw new ApiError(400, "Owner is required");
     }
 
+    const owner = await User.findById(finalOwnerId);
+    if (!owner) {
+      throw new ApiError(404, "Owner not found");
+    }
+
+    const existingSalon = await Salon.exists({ ownerId: finalOwnerId });
+    if (existingSalon) {
+      throw new ApiError(400, "This owner already has a salon");
+    }
+
     let imageUrl: string | undefined;
     if (req.file) {
       imageUrl = await uploadToCloudinary(req.file.buffer);
@@ -53,15 +63,7 @@ export const createSalon = asyncHandler(
 
     const salon = await Salon.create(salonData);
 
-    const owner = await User.findById(finalOwnerId);
-    if (!owner) {
-      await salon.deleteOne();
-      throw new ApiError(404, "Owner not found");
-    }
-
-    if (!owner.salonId) {
-      owner.salonId = salon._id;
-    }
+    owner.salonId = salon._id;
     owner.role = Roles.SALON_OWNER;
     await owner.save();
 
@@ -269,6 +271,34 @@ export const updateSalon = asyncHandler(
 
     if (req.file) {
       fields.imageUrl = await uploadToCloudinary(req.file.buffer);
+    }
+
+    const newOwnerId = fields.ownerId as string | undefined;
+    const isOwnerChanging = !!newOwnerId && String(newOwnerId) !== String(salon.ownerId);
+
+    if (isOwnerChanging) {
+      const newOwner = await User.findById(newOwnerId);
+      if (!newOwner) {
+        throw new ApiError(404, "Owner not found");
+      }
+
+      const ownerHasOtherSalon = await Salon.exists({
+        ownerId: newOwnerId,
+        _id: { $ne: salon._id },
+      });
+      if (ownerHasOtherSalon) {
+        throw new ApiError(400, "This owner already has a salon");
+      }
+
+      const previousOwner = await User.findById(salon.ownerId);
+      if (previousOwner && String(previousOwner.salonId) === String(salon._id)) {
+        previousOwner.salonId = null;
+        await previousOwner.save();
+      }
+
+      newOwner.salonId = salon._id;
+      newOwner.role = Roles.SALON_OWNER;
+      await newOwner.save();
     }
 
     Object.assign(salon, fields);

@@ -7,4 +7,6 @@ enum HomeDestination: Hashable {
     case salonsList
     case salonDetail(salonId: String)
     case booking(salonId: String, serviceId: String?)
+    case paymentSuccess(tracker: String)
+    case paymentFailed(tracker: String)
 }

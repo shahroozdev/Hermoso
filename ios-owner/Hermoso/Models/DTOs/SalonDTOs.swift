@@ -62,3 +62,9 @@ struct CategoryDto: Codable, Identifiable {
 
     var id: String { _id ?? UUID().uuidString }
 }
+
+struct SalonCreatedDto: Codable {
+    let _id: String?
+    let name: String?
+    let status: String?
+}

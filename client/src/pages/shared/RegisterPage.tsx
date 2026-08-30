@@ -15,7 +15,7 @@ const schema = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
-  role: z.enum(['customer', 'salon_owner']),
+  role: z.literal('salon_owner'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
@@ -27,7 +27,7 @@ const defaultValues = {
   phone: "",
   password: "",
   confirmPassword: "",
-  role: "customer",
+  role: "salon_owner" as const,
 };
 
 const RegisterPage = () => {
@@ -40,6 +40,8 @@ const RegisterPage = () => {
     setError("");
     try {
       const result = await authService.register(form);
+      sessionStorage.setItem('pendingSalonEmail', form.email);
+      sessionStorage.setItem('pendingSalonPassword', form.password);
       navigate(`/verify-otp?email=${encodeURIComponent(result?.data?.email || form.email)}`);
     } catch (err) {
       const apiErrors = err.response?.data?.errors;
@@ -60,7 +62,7 @@ const RegisterPage = () => {
         onSubmit={onSubmit}
         className="w-full max-w-md shell-panel rounded-2xl p-6"
       >
-        <h2 className="text-xl font-semibold">Create account</h2>
+        <h2 className="text-xl font-semibold">Register as Salon Owner</h2>
         <div className="mt-4 grid gap-3">
           <FormInput
             name="name"
@@ -103,16 +105,6 @@ const RegisterPage = () => {
             placeholder="Confirm your password"
             required
             autoComplete="new-password"
-          />
-          <FormInput
-            name="role"
-            type="select"
-            label="Role"
-            options={[
-              { value: "customer", label: "Customer" },
-              { value: "salon_owner", label: "Salon Owner" },
-            ]}
-            required
           />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}

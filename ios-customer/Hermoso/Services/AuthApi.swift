@@ -37,6 +37,11 @@ protocol AuthApiProtocol {
     func getCustomers(page: Int, limit: Int) async throws -> ListResponse<UserProfileDto>
     func getOwnerDashboard() async throws -> ApiResponse<OwnerDashboardDataDto>
     func getServices(page: Int, limit: Int) async throws -> ListResponse<ServiceDto>
+
+    func createCheckout(bookingId: String) async throws -> ApiResponse<CheckoutData>
+    func getPaymentStatus(tracker: String) async throws -> ApiResponse<PaymentStatusData>
+    func requestRefund(bookingId: String, reason: String) async throws -> ApiResponse<RefundData>
+    func getRefunds(page: Int, limit: Int) async throws -> ListResponse<RefundDto>
 }
 
 final class AuthApi: AuthApiProtocol {
@@ -180,5 +185,21 @@ final class AuthApi: AuthApiProtocol {
 
     func getServices(page: Int = 1, limit: Int = 20) async throws -> ListResponse<ServiceDto> {
         try await network.request("services", query: ["page": "\(page)", "limit": "\(limit)"])
+    }
+
+    func createCheckout(bookingId: String) async throws -> ApiResponse<CheckoutData> {
+        try await network.request("payments/checkout", method: "POST", body: CheckoutRequest(bookingId: bookingId))
+    }
+
+    func getPaymentStatus(tracker: String) async throws -> ApiResponse<PaymentStatusData> {
+        try await network.request("payments/\(tracker)/status")
+    }
+
+    func requestRefund(bookingId: String, reason: String) async throws -> ApiResponse<RefundData> {
+        try await network.request("refunds/request", method: "POST", body: RefundRequest(bookingId: bookingId, reason: reason))
+    }
+
+    func getRefunds(page: Int = 1, limit: Int = 20) async throws -> ListResponse<RefundDto> {
+        try await network.request("refunds", query: ["page": "\(page)", "limit": "\(limit)"])
     }
 }

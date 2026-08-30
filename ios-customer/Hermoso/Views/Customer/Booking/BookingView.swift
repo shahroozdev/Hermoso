@@ -45,6 +45,34 @@ struct BookingView: View {
         }
         .background(Color.hermosoCream)
         .task { await viewModel.start() }
+        .sheet(isPresented: $viewModel.showCheckout) {
+            if let checkoutUrl = viewModel.checkoutUrl {
+                PaymentWebView(
+                    checkoutUrl: checkoutUrl,
+                    onSuccess: { tracker in
+                        viewModel.showCheckout = false
+                        viewModel.checkoutTracker = tracker
+                    },
+                    onFailed: { tracker in
+                        viewModel.showCheckout = false
+                        viewModel.checkoutTracker = tracker
+                    }
+                )
+            }
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { viewModel.checkoutTracker != nil && !viewModel.showCheckout },
+            set: { if !$0 { viewModel.checkoutTracker = nil } }
+        )) {
+            if let tracker = viewModel.checkoutTracker {
+                PaymentSuccessView(
+                    tracker: tracker,
+                    onViewBookings: {
+                        viewModel.checkoutTracker = nil
+                    }
+                )
+            }
+        }
     }
 
     private var header: some View {

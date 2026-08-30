@@ -419,6 +419,21 @@ data class DayScheduleDto(
     val close: String?,
     val off: Boolean?
 )
+data class CreateSalonRequest(
+    val name: String,
+    val phone: String,
+    val address: String,
+    val description: String?,
+    val location: Map<String, String>?,
+    val workingHours: Map<String, DayScheduleDto>?
+)
+
+data class SalonCreatedDto(
+    val _id: String?,
+    val name: String?,
+    val status: String?
+)
+
 interface AuthApi {
     @POST("auth/register")
     suspend fun register(@Body body: RegisterRequest): ApiResponse<RegisterData>
@@ -523,6 +538,18 @@ interface AuthApi {
 
     @GET("analytics/owner/dashboard")
     suspend fun getOwnerDashboard(): ApiResponse<OwnerDashboardDataDto>
+
+    @Multipart
+    @POST("salons")
+    suspend fun createSalon(
+        @Part("name") name: okhttp3.RequestBody,
+        @Part("phone") phone: okhttp3.RequestBody,
+        @Part("address") address: okhttp3.RequestBody,
+        @Part("description") description: okhttp3.RequestBody?,
+        @Part("location") location: okhttp3.RequestBody?,
+        @Part("workingHours") workingHours: okhttp3.RequestBody?,
+        @Part image: MultipartBody.Part?
+    ): ApiResponse<SalonCreatedDto>
 
     @GET("services")
     suspend fun getServices(

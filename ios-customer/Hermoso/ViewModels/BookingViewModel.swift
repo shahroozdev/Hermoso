@@ -24,6 +24,9 @@ final class BookingViewModel: ObservableObject {
     @Published var isSubmitting = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
+    @Published var checkoutUrl: String?
+    @Published var checkoutTracker: String?
+    @Published var showCheckout = false
 
     let isSalonLocked: Bool
     private var pendingPreselectedServiceId: String?
@@ -140,6 +143,19 @@ final class BookingViewModel: ObservableObject {
             guard response.success else {
                 errorMessage = response.message ?? "Booking failed"
                 return
+            }
+            if let bookingId = (response.data as? [String: Any])?["booking"] as? [String: Any], let id = bookingId["_id"] as? String {
+                do {
+                    let checkoutResponse = try await api.createCheckout(bookingId: id)
+                    if let checkoutUrl = checkoutResponse.data?.checkoutUrl {
+                        self.checkoutUrl = checkoutUrl
+                        self.checkoutTracker = checkoutResponse.data?.tracker
+                        self.showCheckout = true
+                        return
+                    }
+                } catch {
+                    // Checkout failed, proceed without payment
+                }
             }
             successMessage = "Booking confirmed! You can view it in your appointments."
             selectedTime = nil

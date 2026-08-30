@@ -356,6 +356,45 @@ data class CreateBookingRequest(
     val bookingTime: String
 )
 
+data class CheckoutRequest(
+    val bookingId: String
+)
+
+data class CheckoutData(
+    val checkoutUrl: String?,
+    val tracker: String?,
+    val alreadyPaid: Boolean? = false,
+    val message: String? = null
+)
+
+data class PaymentStatusData(
+    val status: String?,
+    val paidAt: String?,
+    val amount: Double?,
+    val tracker: String?,
+    val booking: BookingItemDto?
+)
+
+data class RefundRequest(
+    val bookingId: String,
+    val reason: String
+)
+
+data class RefundData(
+    val refundId: String?,
+    val status: String?,
+    val amount: Double?,
+    val message: String?
+)
+
+data class RefundDto(
+    val _id: String?,
+    val amount: Double?,
+    val status: String?,
+    val reason: String?,
+    val createdAt: String?
+)
+
 data class NotificationDto(
     val _id: String?,
     val title: String?,
@@ -558,6 +597,21 @@ interface AuthApi {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): ListResponse<ServiceDto>
+
+    @POST("payments/checkout")
+    suspend fun createCheckout(@Body body: CheckoutRequest): ApiResponse<CheckoutData>
+
+    @GET("payments/{tracker}/status")
+    suspend fun getPaymentStatus(@Path("tracker") tracker: String): ApiResponse<PaymentStatusData>
+
+    @POST("refunds/request")
+    suspend fun requestRefund(@Body body: RefundRequest): ApiResponse<RefundData>
+
+    @GET("refunds")
+    suspend fun getRefunds(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): ListResponse<RefundDto>
 }
 
 object SessionManager {

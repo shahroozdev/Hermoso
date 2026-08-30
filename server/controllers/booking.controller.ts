@@ -4,11 +4,12 @@ import { Payment } from '../models/Payment.js';
 import { Salon } from '../models/Salon.js';
 import { Service } from '../models/Service.js';
 import { User } from '../models/User.js';
-import { Roles, BookingStatus, type BookingStatusType } from '../utils/constants.js';
+import { Roles, BookingStatus, PaymentStatus, type BookingStatusType } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { createNotification } from '../services/notification.service.js';
 import { sendEmail } from '../services/email.service.js';
+import * as refundService from '../services/refund.service.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
 const calculateCommission = (amount: number, commissionRate: number) => {
@@ -192,7 +193,8 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
     amount: service.price,
     platformCommission,
     salonAmount,
-    status: 'pending'
+    status: PaymentStatus.PENDING,
+    idempotencyKey: `${booking._id}-${Date.now()}`
   });
 
   await createNotification({
@@ -438,7 +440,28 @@ export const updateBookingStatus = asyncHandler(async (req: AuthRequest, res: Re
   await booking.save();
 
   if (status === BookingStatus.COMPLETED) {
-    await Payment.findOneAndUpdate({ bookingId: booking._id }, { status: 'paid' });
+    await Payment.findOneAndUpdate({ bookingId: booking._id }, { status: PaymentStatus.PAID, paidAt: new Date() });
+  }
+
+  if (status === BookingStatus.CANCELLED) {
+    const payment = await Payment.findOne({ bookingId: booking._id });
+    if (payment && payment.status === PaymentStatus.PAID) {
+      const appointmentTime = new Date(booking.bookingDate);
+      const [hours, minutes] = booking.bookingTime.split(':').map(Number);
+      appointmentTime.setUTCHours(hours, minutes, 0, 0);
+
+      const now = new Date();
+      const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
+      const isSalonInitiated = req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF;
+
+      if (isSalonInitiated || timeUntilAppointment >= 24 * 60 * 60 * 1000) {
+        await refundService.createAutoRefund({
+          bookingId: String(booking._id),
+          reason: isSalonInitiated ? 'Salon initiated cancellation' : 'Customer cancellation within policy',
+          initiatedByType: isSalonInitiated ? 'salon_owner' : 'system'
+        });
+      }
+    }
   }
 
   const customer = await User.findById(booking.customerId).select('name email');

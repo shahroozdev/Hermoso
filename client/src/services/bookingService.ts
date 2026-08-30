@@ -28,6 +28,11 @@ interface BookingOptionsParams {
   serviceId?: string;
 }
 
+interface RefundRequestPayload {
+  bookingId: string;
+  reason: string;
+}
+
 export const bookingService = {
   list: async (params: BookingParams = {}) => {
     const { data } = await api.get('/bookings', { params });
@@ -51,6 +56,18 @@ export const bookingService = {
   },
   getStats: async () => {
     const { data } = await api.get('/bookings/analytics/stats');
+    return data;
+  },
+  createCheckout: async (bookingId: string) => {
+    const { data } = await api.post('/payments/checkout', { bookingId });
+    return data;
+  },
+  getPaymentStatus: async (tracker: string) => {
+    const { data } = await api.get(`/payments/${tracker}/status`);
+    return data;
+  },
+  requestRefund: async (payload: RefundRequestPayload) => {
+    const { data } = await api.post('/refunds/request', payload);
     return data;
   }
 };

@@ -438,7 +438,7 @@ fun BookingScreen(
     LaunchedEffect(submitting) {
         if (isAiBooking || !submitting) return@LaunchedEffect
         try {
-            withContext(Dispatchers.IO) {
+            val response = withContext(Dispatchers.IO) {
                 AuthApiClient.api.createBooking(
                     CreateBookingRequest(
                         salonId = selectedSalonId,
@@ -448,6 +448,21 @@ fun BookingScreen(
                         bookingTime = selectedBookingTime
                     )
                 )
+            }
+            val bookingId = (response.data as? Map<*, *>)?.get("booking") as? Map<*, *>)?.get("_id") as? String
+            if (bookingId != null) {
+                try {
+                    val checkoutResponse = withContext(Dispatchers.IO) {
+                        AuthApiClient.api.createCheckout(CheckoutRequest(bookingId))
+                    }
+                    val checkoutUrl = checkoutResponse.data?.checkoutUrl
+                    if (checkoutUrl != null) {
+                        navController.navigate("payment-webview/${java.net.URLEncoder.encode(checkoutUrl, "UTF-8")}")
+                        return@LaunchedEffect
+                    }
+                } catch (_: Throwable) {
+                    // Checkout failed, proceed without payment
+                }
             }
             success = "Booking confirmed! You can view it in your appointments."
             selectedBookingTime = ""
@@ -511,7 +526,7 @@ private fun ServiceBookingCard(
     LaunchedEffect(submitting) {
         if (!submitting) return@LaunchedEffect
         try {
-            withContext(Dispatchers.IO) {
+            val response = withContext(Dispatchers.IO) {
                 AuthApiClient.api.createBooking(
                     CreateBookingRequest(
                         salonId = salonId,
@@ -521,6 +536,26 @@ private fun ServiceBookingCard(
                         bookingTime = selectedBookingTime
                     )
                 )
+            }
+            val bookingId = (response.data as? Map<*, *>)?.get("booking") as? Map<*, *>)?.get("_id") as? String
+            if (bookingId != null) {
+                try {
+                    val checkoutResponse = withContext(Dispatchers.IO) {
+                        AuthApiClient.api.createCheckout(CheckoutRequest(bookingId))
+                    }
+                    val checkoutUrl = checkoutResponse.data?.checkoutUrl
+                    if (checkoutUrl != null) {
+                        message = "Redirecting to payment..."
+                        onStateChange(state.copy(
+                            submitting = false,
+                            message = "Redirecting to payment...",
+                            bookingTime = ""
+                        ))
+                        return@LaunchedEffect
+                    }
+                } catch (_: Throwable) {
+                    // Checkout failed, proceed without payment
+                }
             }
             message = "${state.serviceName} booked successfully!"
             selectedBookingTime = ""

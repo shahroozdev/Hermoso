@@ -62,3 +62,34 @@ export const EventCategory = Object.freeze({
 } as const);
 
 export type EventCategoryType = typeof EventCategory[keyof typeof EventCategory];
+
+export const PaymentStatus = Object.freeze({
+  PENDING: 'pending',
+  PAID: 'paid',
+  FAILED: 'failed',
+  REFUNDED: 'refunded',
+  PARTIALLY_REFUNDED: 'partially_refunded',
+  DISPUTED: 'disputed'
+} as const);
+
+export type PaymentStatusType = typeof PaymentStatus[keyof typeof PaymentStatus];
+
+export const RefundStatus = Object.freeze({
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed'
+} as const);
+
+export type RefundStatusType = typeof RefundStatus[keyof typeof RefundStatus];
+
+export const FraudFlag = Object.freeze({
+  NONE: 'none',
+  DUPLICATE_TRANSACTION: 'duplicate_transaction',
+  RAPID_BOOKING: 'rapid_booking',
+  SUSPICIOUS_AMOUNT: 'suspicious_amount',
+  VELOCITY_EXCEEDED: 'velocity_exceeded',
+  MANUAL_REVIEW: 'manual_review'
+} as const);
+
+export type FraudFlagType = typeof FraudFlag[keyof typeof FraudFlag];

@@ -3,6 +3,7 @@ import { bookingService } from "../../services/bookingService";
 import BookingPage from "./BookingPage";
 import { formatTimeAMPM } from "@/utils/format";
 import { Booking } from "@/types";
+import { Link } from "react-router-dom";
 
 const BookingHistoryPage = () => {
   return (
@@ -32,6 +33,14 @@ const BookingHistoryPage = () => {
             <div className="ha-actions">
               {item?.status !== "cancelled" && (
                 <button className="ha-act-btn">Cancel</button>
+              )}
+              {item?.status === "confirmed" && (
+                <Link
+                  to={`/customer/refund-request?bookingId=${item._id}`}
+                  className="ha-act-btn ml-2 text-red-600"
+                >
+                  Refund
+                </Link>
               )}
             </div>,
           ])

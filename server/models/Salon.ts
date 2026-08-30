@@ -46,7 +46,7 @@ export interface ISalon extends Document {
 const salonSchema = new Schema<ISalon>(
   {
     name: { type: String, required: true, trim: true, index: true },
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     description: { type: String, default: '' },
     address: { type: String, required: true },
     phone: { type: String, required: true },

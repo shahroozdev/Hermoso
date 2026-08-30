@@ -369,17 +369,20 @@ const OwnerPicker = ({
   const {
     register,
     setValue,
-    watch,
     formState: { errors },
   } = useFormContext();
-  const selectedOwnerId = watch("ownerId");
   const [ownerSearch, setOwnerSearch] = useState("");
   const ownerOptions = useMemo(() => {
-    if (!currentOwner?._id) return owners;
-    const exists = owners.some((owner) => String(owner._id) === String(currentOwner._id));
-    if (exists) return owners;
+    const eligibleOwners = owners.filter(
+      (owner) =>
+        !owner.salonsCount ||
+        String(owner._id) === String(currentOwner?._id),
+    );
+    if (!currentOwner?._id) return eligibleOwners;
+    const exists = eligibleOwners.some((owner) => String(owner._id) === String(currentOwner._id));
+    if (exists) return eligibleOwners;
     return [
-      ...owners,
+      ...eligibleOwners,
       {
         _id: String(currentOwner._id),
         name: currentOwner.name || "Current Owner",
@@ -431,9 +434,6 @@ const OwnerPicker = ({
             <option key={owner._id} value={owner._id}>
               {owner.name}
               {owner.location?.city ? ` - ${owner.location.city}` : ""}
-              {typeof owner.salonsCount === "number"
-                ? ` (${owner.salonsCount} salon${owner.salonsCount === 1 ? "" : "s"})`
-                : ""}
             </option>
           ))}
         </select>
@@ -448,11 +448,6 @@ const OwnerPicker = ({
           +
         </button>
       </div>
-      {selectedOwnerId ? (
-        <div className="ha-form-hint" style={{ marginTop: 6 }}>
-          Selected owner can be linked with multiple salons.
-        </div>
-      ) : null}
       {error ? <span className="ha-field-error">{error}</span> : null}
       {errors.ownerId ? (
         <span className="ha-field-error">

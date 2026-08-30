@@ -23,15 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hermoso.business.ui.theme.*
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import retrofit2.HttpException
 
 // Hermoso Business (salon owner) — sign-up always registers as "salon_owner".
-// After login the role guard rejects any non-owner account and shows a
-// message directing the user to download Hermoso App instead.
+// After OTP verify the app auto-logs in and navigates to salon creation.
 
 @Composable
-fun AuthScreen(onLoginSuccess: () -> Unit) {
+fun AuthScreen(onLoginSuccess: () -> Unit, onNeedSalonSetup: () -> Unit = {}) {
     var isLogin by rememberSaveable { mutableStateOf(true) }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -44,24 +41,6 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
     var message by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
-    // errorBody() is a one-shot stream, so message + structured code must be read
-    // from a single .string() call rather than two separate parse functions.
-    data class ApiErrorInfo(val message: String, val code: String?)
-
-    fun parseApiError(throwable: Throwable): ApiErrorInfo {
-        if (throwable !is HttpException) {
-            return ApiErrorInfo(throwable.message ?: "Something went wrong", null)
-        }
-        val raw = throwable.response()?.errorBody()?.string()
-            ?: return ApiErrorInfo(throwable.message ?: "Request failed", null)
-        return try {
-            val json = JSONObject(raw)
-            ApiErrorInfo(json.optString("message").ifBlank { raw }, json.optString("code").ifBlank { null })
-        } catch (e: Exception) {
-            ApiErrorInfo(raw, null)
-        }
-    }
 
     fun handleSubmit() {
         error = ""
@@ -117,10 +96,28 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                 if (otpMode) {
                     val result = AuthApiClient.api.verifyOtp(VerifyOtpRequest(email = email, otp = otp))
                     if (result.success) {
-                        message = result.message ?: "OTP verified. Please login."
-                        otpMode = false
-                        isLogin = true
-                        otp = ""
+                        // Auto-login after OTP verification
+                        val loginResult = AuthApiClient.api.login(LoginRequest(email = email, password = password))
+                        if (loginResult.success && !loginResult.accessToken.isNullOrBlank() && !loginResult.refreshToken.isNullOrBlank()) {
+                            val role = loginResult.user?.role
+                            if (role != null && role != "salon_owner") {
+                                error = "This is a customer account — download Hermoso App to sign in."
+                                return@launch
+                            }
+                            SessionManager.saveSession(
+                                access = loginResult.accessToken,
+                                refresh = loginResult.refreshToken,
+                                name = loginResult.user?.name,
+                                role = loginResult.user?.role
+                            )
+                            onNeedSalonSetup()
+                        } else {
+                            // Fallback: go to login
+                            message = "OTP verified. Please login."
+                            otpMode = false
+                            isLogin = true
+                            otp = ""
+                        }
                     } else {
                         error = result.message ?: "OTP verification failed"
                     }

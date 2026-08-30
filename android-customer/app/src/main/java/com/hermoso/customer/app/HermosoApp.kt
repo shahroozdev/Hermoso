@@ -84,6 +84,9 @@ object Dest {
 
     const val Profile = "profile"
     const val Notifications = "notifications"
+    const val PaymentWebView = "payment-webview/{checkoutUrl}"
+    const val PaymentSuccess = "payment-success/{tracker}"
+    const val PaymentFailed = "payment-failed/{tracker}"
 
     fun SalonsWithCity(city: String?) = if (city != null) "salons?city=$city" else "salons"
 }
@@ -432,6 +435,51 @@ fun HermosoApp() {
                 SalonServicesScreen(
                     navController = navController,
                     salonId = backStackEntry.arguments?.getString("salonId").orEmpty()
+                )
+            }
+            composable(
+                route = Dest.PaymentWebView,
+                arguments = listOf(navArgument("checkoutUrl") { type = NavType.StringType })
+            ) { backStackEntry ->
+                PaymentWebViewScreen(
+                    checkoutUrl = backStackEntry.arguments?.getString("checkoutUrl").orEmpty(),
+                    onSuccess = { tracker ->
+                        navController.navigate("payment-success/$tracker") {
+                            popUpTo(Dest.PaymentWebView) { inclusive = true }
+                        }
+                    },
+                    onFailed = { tracker ->
+                        navController.navigate("payment-failed/$tracker") {
+                            popUpTo(Dest.PaymentWebView) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(
+                route = Dest.PaymentSuccess,
+                arguments = listOf(navArgument("tracker") { type = NavType.StringType })
+            ) { backStackEntry ->
+                PaymentSuccessScreen(
+                    tracker = backStackEntry.arguments?.getString("tracker").orEmpty(),
+                    onViewBookings = {
+                        navController.navigate(Dest.BookingsList) {
+                            popUpTo(Dest.Home) { inclusive = false }
+                        }
+                    }
+                )
+            }
+            composable(
+                route = Dest.PaymentFailed,
+                arguments = listOf(navArgument("tracker") { type = NavType.StringType })
+            ) { backStackEntry ->
+                PaymentFailedScreen(
+                    tracker = backStackEntry.arguments?.getString("tracker").orEmpty(),
+                    onRetry = { navController.navigateUp() },
+                    onViewBookings = {
+                        navController.navigate(Dest.BookingsList) {
+                            popUpTo(Dest.Home) { inclusive = false }
+                        }
+                    }
                 )
             }
         }

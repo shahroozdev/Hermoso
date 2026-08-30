@@ -2,11 +2,13 @@ import SwiftUI
 
 /// Login / Register / OTP-verify for Hermoso Business (salon owner). Sign-up
 /// always registers as "salon_owner" — no role selector. Mirrors
-/// AuthScreen.kt's validation order and the "register does not auto-login" /
-/// "OTP verify does not auto-login" behaviors.
+/// AuthScreen.kt's validation order. After OTP verify, auto-logs in and
+/// calls onNeedSalonSetup to navigate to salon creation.
 struct AuthView: View {
     @StateObject private var viewModel = AuthViewModel()
     @State private var isPasswordVisible = false
+
+    var onNeedSalonSetup: (() -> Void)?
 
     var body: some View {
         ZStack {
@@ -21,6 +23,9 @@ struct AuthView: View {
                 header
                 card
             }
+        }
+        .onAppear {
+            viewModel.onNeedSalonSetup = onNeedSalonSetup
         }
     }
 

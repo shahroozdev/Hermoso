@@ -82,13 +82,23 @@ const BookingCard = ({
   const submit = async () => {
     setState({ ...state, submitting: true, message: '', error: '' });
     try {
-      await bookingService.create({
+      const result = await bookingService.create({
         salonId: selectedSalon,
         serviceId: state.serviceId,
         staffId: state.staffId,
         bookingDate: state.bookingDate,
         bookingTime: state.bookingTime,
       });
+
+      const bookingId = result?.data?.booking?._id;
+      if (bookingId) {
+        const checkoutResult = await bookingService.createCheckout(bookingId);
+        if (checkoutResult?.data?.checkoutUrl) {
+          window.location.href = checkoutResult.data.checkoutUrl;
+          return;
+        }
+      }
+
       setState({
         ...state,
         submitting: false,
@@ -204,7 +214,7 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons, fromAiScan, preS
         matchedServices.map((svc: { _id: string; name: string }) => createCardState(svc._id, svc.name))
       );
     }
-  }, [matchedServices]);
+  }, [matchedServices, cardStates.length]);
 
   const updateCard = useCallback((index: number, newState: ServiceCardState) => {
     setCardStates((prev) => {
@@ -252,7 +262,15 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons, fromAiScan, preS
     setMessage('');
     setError('');
     try {
-      await bookingService.create({ salonId: selectedSalon, ...payload });
+      const result = await bookingService.create({ salonId: selectedSalon, ...payload });
+      const bookingId = result?.data?.booking?._id;
+      if (bookingId) {
+        const checkoutResult = await bookingService.createCheckout(bookingId);
+        if (checkoutResult?.data?.checkoutUrl) {
+          window.location.href = checkoutResult.data.checkoutUrl;
+          return;
+        }
+      }
       setMessage('Booking created successfully.');
       setPayload({ serviceId: '', staffId: '', bookingDate: '', bookingTime: '' });
     } catch (err) {
