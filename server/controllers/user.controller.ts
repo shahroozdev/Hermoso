@@ -301,6 +301,32 @@ export const listAdmins = asyncHandler(async (req: AuthRequest, res: Response) =
   res.json({ success: true, data: admins.map(serializeUser) });
 });
 
+export const regenerateAdminPassword = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  requireSuperAdmin(req);
+
+  const target = await User.findById(req.params.id);
+  if (!target) return next(new ApiError(404, 'User not found'));
+
+  const targetIsAdmin = target.role === Roles.ADMIN || target.role === Roles.SUPER_ADMIN;
+  if (!targetIsAdmin) {
+    return next(new ApiError(400, 'This endpoint only resets admin account passwords'));
+  }
+
+  const finalPassword = `Admin@${Math.random().toString(36).slice(-8)}A1`;
+  target.password = finalPassword;
+  await target.save();
+
+  res.json({
+    success: true,
+    message: 'Password regenerated successfully',
+    credentials: {
+      email: target.email,
+      password: finalPassword,
+      generated: true
+    }
+  });
+});
+
 export const createAdmin = asyncHandler(async (req: AuthRequest, res: Response) => {
   requireSuperAdmin(req);
 

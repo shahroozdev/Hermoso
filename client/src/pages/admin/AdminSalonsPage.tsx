@@ -2,6 +2,7 @@
 import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
 import { useApi } from "../../hooks/useApi";
+import { useInvalidate } from "../../hooks/useInvalidate";
 import { salonService } from "../../services/salonService";
 import { useUIStore } from "../../store/uiStore";
 import { useToastStore } from "../../store/toastStore";
@@ -11,6 +12,7 @@ import ActionsMenu from "@/components/ActionsMenu";
 import { salonsStats } from "@/components/constant";
 import TABLE from "@/components/table";
 import { SalonItem } from "../shared/SalonListPage";
+import SearchableSelect from "@/components/form/SearchableSelect";
 
 const statusClass = (status) => {
   if (status === "approved") return "ha-pill ha-pill-active";
@@ -20,23 +22,24 @@ const statusClass = (status) => {
 
 const AdminSalonsPage = () => {
   const [cityFilter, setCityFilter] = useState("all");
-  const [reloadKey, setReloadKey] = useState(0);
+  const [search, setSearch] = useState("");
   const [errorAction, setErrorAction] = useState("");
   const { salonModalOpen, setSalonModal } = useUIStore();
   const { showToast } = useToastStore();
   const [editDefaultValues, setEditDefaultValues] = useState(null);
   const [viewSalon, setViewSalon] = useState(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const invalidate = useInvalidate();
 
   const { data, loading, error } = useApi(
     () =>
       salonService.getCities(),
-    [cityFilter, reloadKey],
+    [cityFilter],
   );
   const { data:stats} = useApi(
     () =>
       salonService.getStatusStats(),
-    [reloadKey],
+    [],
   );
   const kpis = useMemo(() => {
     const active = stats?.data?.approved||0
@@ -60,7 +63,7 @@ const AdminSalonsPage = () => {
     setPendingActionId(id);
     try {
       await salonService.updateStatus(id, { status });
-      setReloadKey((v) => v + 1);
+      invalidate();
       showToast(
         status === "approved" ? "Salon approved." : status === "suspended" ? "Salon suspended." : "Salon status updated."
       );
@@ -72,7 +75,7 @@ const AdminSalonsPage = () => {
   };
 
   const handleCreated = () => {
-    setReloadKey((v) => v + 1);
+    invalidate();
     showToast(editDefaultValues ? "Salon updated successfully." : "Salon created successfully.");
   };
 
@@ -96,20 +99,27 @@ const AdminSalonsPage = () => {
       <div className="ha-card">
         <div className="ha-card-title">
           All Salons & Clinics
-          <span>
-            <select
-              className="ha-select"
-              style={{ minWidth: 140, padding: "6px 10px" }}
+          <span style={{ minWidth: 180, display: "inline-block" }}>
+            <SearchableSelect
               value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-            >
-              {cities.map((city: string) => (
-                <option key={city} value={city}>
-                  {city === "all" ? "All Cities" : city}
-                </option>
-              ))}
-            </select>
+              onChange={setCityFilter}
+              options={cities.map((city: string) => ({
+                value: city,
+                label: city === "all" ? "All Cities" : city,
+              }))}
+            />
           </span>
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <input
+            type="text"
+            className="ha-input"
+            style={{ maxWidth: 320 }}
+            placeholder="Search salons by name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
         {errorAction ? (
@@ -120,8 +130,9 @@ const AdminSalonsPage = () => {
         <TABLE<SalonItem>
           noBorder
           showPagination
+          queryKey={["salons"]}
           service={salonService.list}
-          serviceParams={{ ...(cityFilter !== "all" ? { city: cityFilter } : {}) }}
+          serviceParams={{ search, ...(cityFilter !== "all" ? { city: cityFilter } : {}) }}
           columns={[
             { title: "Salon / Clinic", size: "250px" },
             { title: "Owner" , size: "150px" },
@@ -130,8 +141,8 @@ const AdminSalonsPage = () => {
             { title: "Bookings" },
             { title: "Revenue" },
             { title: "Commission" },
+            { title: "Approval" },
             { title: "Status" },
-            { title: "Active" },
             { title: "Actions" },
           ]}
           rows={(data) =>
@@ -163,14 +174,16 @@ const AdminSalonsPage = () => {
                 const isPending = pendingActionId === salon._id;
                 const items = [
                   { label: "View", onClick: () => setViewSalon(salon) },
-                  {
+                ];
+                if (salon.status !== "suspended") {
+                  items.push({
                     label: "Edit",
                     onClick: () => {
                       setEditDefaultValues(salon);
                       setSalonModal(true);
                     },
-                  },
-                ];
+                  });
+                }
                 if (salon.status === "pending") {
                   items.push(
                     { label: isPending ? "Approving..." : "Approve", onClick: () => patchStatus(salon._id, "approved") },

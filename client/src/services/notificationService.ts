@@ -24,5 +24,17 @@ export const notificationService = {
   announce: async (params: AnnounceParams) => {
     const { data } = await api.post('/notifications/announcement', params);
     return data;
+  },
+  create: async (params: AnnounceParams) => {
+    const { data } = await api.post('/notifications', params);
+    return data;
+  },
+  update: async (id: string, params: Partial<AnnounceParams>) => {
+    const { data } = await api.patch(`/notifications/${id}`, params);
+    return data;
+  },
+  send: async (id: string) => {
+    const { data } = await api.post(`/notifications/${id}/send`);
+    return data;
   }
 };

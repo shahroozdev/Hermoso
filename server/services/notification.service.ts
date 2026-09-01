@@ -73,3 +73,18 @@ export const broadcastByRole = async ({ title, message, type = 'announcement', t
 
   return Notification.insertMany(docs);
 };
+
+export const deliverAnnouncement = async (notification: INotification) => {
+  const recipients = await broadcastByRole({
+    title: notification.title,
+    message: notification.message,
+    type: notification.type,
+    targetRole: notification.targetRole,
+    salonId: notification.salonId ? String(notification.salonId) : null
+  });
+
+  notification.status = 'sent';
+  await notification.save();
+
+  return recipients;
+};

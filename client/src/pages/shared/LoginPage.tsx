@@ -6,14 +6,18 @@ import FormInput from '../../components/form/FormInput';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
 
+const REMEMBERED_EMAIL_KEY = 'hermoso_remembered_email';
+
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  rememberMe: z.boolean().optional()
 });
 
 const defaultValues = {
-  email: '',
-  password: ''
+  email: localStorage.getItem(REMEMBERED_EMAIL_KEY) || '',
+  password: '',
+  rememberMe: Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY))
 };
 
 const LoginPage = () => {
@@ -28,8 +32,12 @@ const LoginPage = () => {
     setIsLoading(true);
     setError('');
     try {
-      const result = await authService.login(form);
+      const { rememberMe, ...payload } = form;
+      const result = await authService.login(payload);
       setAuth({ user: result.user });
+
+      if (rememberMe) localStorage.setItem(REMEMBERED_EMAIL_KEY, payload.email);
+      else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
 
       if (normalizedRole(result.user.role) === 'super_admin') navigate('/admin');
       else if (normalizedRole(result.user.role) === 'salon_owner') navigate('/owner');
@@ -69,6 +77,7 @@ const LoginPage = () => {
             noStar
             autoComplete="current-password"
           />
+          <FormInput name="rememberMe" type="checkbox" label="Remember Me" />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         <button type="submit" className="mt-4 w-full rounded bg-primary p-2 text-white" disabled={isLoading}>

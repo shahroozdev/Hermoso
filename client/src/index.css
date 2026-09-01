@@ -189,6 +189,8 @@ textarea::placeholder {
 }
 .ha-table-scroll {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 520px;
   scrollbar-width: thin;
   scrollbar-color: #888 transparent;
 }

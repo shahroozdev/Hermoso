@@ -23,6 +23,8 @@ interface FormInputProps {
   noStar?: boolean;
   className?: string;
   autoComplete?: string;
+  maxLength?: number;
+  inputMode?: "text" | "numeric" | "tel" | "email" | "decimal" | "search" | "url" | "none";
 }
 
 const FormInput = ({
@@ -36,6 +38,8 @@ const FormInput = ({
   noStar,
   className = "",
   autoComplete,
+  maxLength,
+  inputMode,
 }: FormInputProps) => {
   const {
     register,
@@ -52,6 +56,8 @@ const FormInput = ({
     className: `ha-input ${className}`.trim(),
     placeholder,
     autoComplete,
+    maxLength,
+    inputMode,
     ...register(name),
   };
   const renderInput = () => {

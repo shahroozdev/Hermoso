@@ -52,7 +52,7 @@ const VerifyOtpPage = () => {
         <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to your email and phone.</p>
         <div className="mt-4 grid gap-3">
           <FormInput name="email" type="email" label="Email" required />
-          <FormInput name="otp" type="text" label="OTP" placeholder="6-digit code" required />
+          <FormInput name="otp" type="text" label="OTP" placeholder="6-digit code" required maxLength={6} inputMode="numeric" />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         {message ? <p className="mt-2 text-sm text-emerald-600">{message}</p> : null}
@@ -60,9 +60,12 @@ const VerifyOtpPage = () => {
         <button type="button" className="mt-2 w-full rounded border p-2" onClick={resend} disabled={!emailParam}>
           Resend OTP
         </button>
-        <p className="mt-4 text-sm text-slate-500">
-          Back to <Link to="/login" className="text-primary">Login</Link>
-        </p>
+        <Link
+          to="/login"
+          className="mt-2 block w-full rounded border p-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Back to Login
+        </Link>
       </Form>
     </div>
   );

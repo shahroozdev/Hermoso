@@ -8,6 +8,7 @@ export interface INotification extends Document {
   salonId: mongoose.Types.ObjectId | null;
   userId: mongoose.Types.ObjectId | null;
   isRead: boolean;
+  status: 'draft' | 'sent';
   meta: Record<string, unknown>;
 }
 
@@ -25,6 +26,7 @@ const notificationSchema = new Schema<INotification>(
     salonId: { type: Schema.Types.ObjectId, ref: 'Salon', default: null, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     isRead: { type: Boolean, default: false, index: true },
+    status: { type: String, enum: ['draft', 'sent'], default: 'sent', index: true },
     meta: { type: Schema.Types.Mixed, default: {} }
   },
   { timestamps: { createdAt: true, updatedAt: true } }

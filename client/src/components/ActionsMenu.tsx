@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export interface ActionMenuItem {
   label: string;
@@ -6,22 +7,55 @@ export interface ActionMenuItem {
   danger?: boolean;
 }
 
+const MENU_HEIGHT_ESTIMATE = 44;
+
 const ActionsMenu = ({ items }: { items: ActionMenuItem[] }) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number; left: number; openUpward: boolean } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
+
+    const updatePosition = () => {
+      const btn = btnRef.current;
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const estimatedMenuHeight = items.length * MENU_HEIGHT_ESTIMATE;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUpward = spaceBelow < estimatedMenuHeight && rect.top > estimatedMenuHeight;
+
+      setPosition({
+        top: openUpward ? rect.top : rect.bottom,
+        left: rect.right,
+        openUpward,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+
     const onPointerDown = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [open]);
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, [open, items.length]);
 
   return (
-    <div className="relative inline-block" ref={ref}>
+    <>
       <button
+        ref={btnRef}
         type="button"
         className="ha-act-btn"
         aria-label="More actions"
@@ -30,26 +64,34 @@ const ActionsMenu = ({ items }: { items: ActionMenuItem[] }) => {
       >
         ⋮
       </button>
-      {open && (
-        <div
-          className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl"
-        >
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              className={`block w-full px-4 py-2 text-left text-sm hover:bg-[var(--surface-soft)] ${item.danger ? "text-rose-500" : "text-[var(--text)]"}`}
-              onClick={() => {
-                setOpen(false);
-                item.onClick();
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      {open && position &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-50 w-44 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl"
+            style={{
+              top: position.openUpward ? undefined : position.top + 4,
+              bottom: position.openUpward ? window.innerHeight - position.top + 4 : undefined,
+              left: position.left - 176,
+            }}
+          >
+            {items.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className={`block w-full px-4 py-2 text-left text-sm hover:bg-[var(--surface-soft)] ${item.danger ? "text-rose-500" : "text-[var(--text)]"}`}
+                onClick={() => {
+                  setOpen(false);
+                  item.onClick();
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+    </>
   );
 };
 

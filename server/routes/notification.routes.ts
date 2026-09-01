@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { createAnnouncement, getNotifications, markNotificationRead } from '../controllers/notification.controller.js';
+import {
+  createAnnouncement,
+  createNotificationRecord,
+  getNotifications,
+  markNotificationRead,
+  sendNotificationRecord,
+  updateNotificationRecord
+} from '../controllers/notification.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -94,6 +101,9 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/announcement', authorize(Roles.SUPER_ADMIN), createAnnouncement);
+router.post('/', authorize(Roles.SUPER_ADMIN), createNotificationRecord);
+router.patch('/:id', authorize(Roles.SUPER_ADMIN), updateNotificationRecord);
+router.post('/:id/send', authorize(Roles.SUPER_ADMIN), sendNotificationRecord);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getNotifications);
 router.patch('/:id/read', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), markNotificationRead);
 

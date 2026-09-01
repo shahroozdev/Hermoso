@@ -12,6 +12,7 @@ interface RegisterPayload {
   phone: string;
   password: string;
   role?: string;
+  location?: { city?: string; country?: string };
 }
 interface VerifyOtpPayload {
   email: string;

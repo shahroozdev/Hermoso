@@ -35,17 +35,17 @@ const AdminDashboardPage = () => {
       <div className="ha-kpi-row">
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Active Salons</div>
-          <div className="ha-kpi-val">{data?.data?.totals?.salons}</div>
+          <div className="ha-kpi-val">{(data?.data?.totals?.salons ?? 0).toLocaleString()}</div>
           <div className="ha-kpi-change up">Live on platform</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Total Customers</div>
-          <div className="ha-kpi-val">{data?.data?.totals?.customers?.toLocaleString()}</div>
+          <div className="ha-kpi-val">{(data?.data?.totals?.customers ?? 0).toLocaleString()}</div>
           <div className="ha-kpi-change up">Registered users</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Bookings This Month</div>
-          <div className="ha-kpi-val">{data?.data?.totals?.bookings?.toLocaleString()}</div>
+          <div className="ha-kpi-val">{(data?.data?.totals?.bookings ?? 0).toLocaleString()}</div>
           <div className="ha-kpi-change up">Tenant bookings</div>
         </div>
         <div className="ha-kpi-card">
@@ -75,7 +75,7 @@ const AdminDashboardPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ width: 90, height: 90, borderRadius: '50%', background: `conic-gradient(${donut || '#d4a843 0 100%'})`, position: 'relative', flexShrink: 0 }}>
               <div style={{ position: 'absolute', inset: 14, borderRadius: '50%', background: 'var(--navy-card)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800, color: '#f0c96a' }}>
-                {data?.totals?.bookings?.toLocaleString()}
+                {(data?.data?.totals?.bookings ?? 0).toLocaleString()}
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>

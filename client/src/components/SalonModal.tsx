@@ -8,6 +8,7 @@ import GenericModal from "./GenericModal";
 import FormInput from "./form/FormInput";
 import CreateOwnerModal from "./createOwner";
 import OwnerCredentialsModal from "./OwnerCredentialsModal";
+import SearchableSelect from "./form/SearchableSelect";
 
 const DAYS = [
   "monday",
@@ -367,11 +368,11 @@ const OwnerPicker = ({
   onCreateClick,
 }) => {
   const {
-    register,
+    watch,
     setValue,
     formState: { errors },
   } = useFormContext();
-  const [ownerSearch, setOwnerSearch] = useState("");
+  const ownerId = watch("ownerId");
   const ownerOptions = useMemo(() => {
     const eligibleOwners = owners.filter(
       (owner) =>
@@ -390,15 +391,14 @@ const OwnerPicker = ({
       },
     ];
   }, [owners, currentOwner]);
-  const filteredOwnerOptions = useMemo(() => {
-    const term = ownerSearch.trim().toLowerCase();
-    if (!term) return ownerOptions;
-    return ownerOptions.filter((owner) =>
-      owner.name?.toLowerCase().includes(term) ||
-      owner.email?.toLowerCase().includes(term) ||
-      owner.location?.city?.toLowerCase().includes(term),
-    );
-  }, [ownerOptions, ownerSearch]);
+  const ownerSelectOptions = useMemo(
+    () =>
+      ownerOptions.map((owner) => ({
+        value: String(owner._id),
+        label: `${owner.name}${owner.location?.city ? ` - ${owner.location.city}` : ""}`,
+      })),
+    [ownerOptions],
+  );
 
   useEffect(() => {
     if (ownerIdOverride) {
@@ -411,32 +411,17 @@ const OwnerPicker = ({
       <label htmlFor="ownerId">
         Owner <span className="ha-req-mark">*</span>
       </label>
-      <input
-        type="text"
-        className="ha-input"
-        style={{ marginBottom: 8 }}
-        placeholder="Search owners by name, email, or city..."
-        value={ownerSearch}
-        onChange={(e) => setOwnerSearch(e.target.value)}
-      />
       <div style={{ display: "flex", gap: 10, alignItems: "stretch" }}>
-        <select
-          id="ownerId"
-          className="ha-input"
-          style={{ flex: 1 }}
-          disabled={loading}
-          {...register("ownerId")}
-        >
-          <option value="">
-            {loading ? "Loading owners..." : "Select salon owner"}
-          </option>
-          {filteredOwnerOptions.map((owner) => (
-            <option key={owner._id} value={owner._id}>
-              {owner.name}
-              {owner.location?.city ? ` - ${owner.location.city}` : ""}
-            </option>
-          ))}
-        </select>
+        <div style={{ flex: 1 }}>
+          <SearchableSelect
+            value={ownerId || ""}
+            onChange={(v) => setValue("ownerId", v, { shouldValidate: true })}
+            options={ownerSelectOptions}
+            placeholder="Search and select salon owner..."
+            loading={loading}
+            disabled={loading}
+          />
+        </div>
         <button
           type="button"
           className="ha-btn-primary"

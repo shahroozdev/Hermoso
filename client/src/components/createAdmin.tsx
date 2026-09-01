@@ -26,6 +26,22 @@ const CreateAdminModal = ({ admin, onClose, onCreated }: CreateAdminModalProps) 
   const isEdit = Boolean(admin);
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const handleRegeneratePassword = async () => {
+    if (!admin) return;
+    setServerError("");
+    setIsRegenerating(true);
+    try {
+      const result = await adminService.regeneratePassword(admin._id);
+      onCreated(admin, result.credentials);
+      onClose();
+    } catch (err) {
+      setServerError(err.response?.data?.message || "Failed to regenerate password");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   const defaultValues = {
     name: admin?.name || "",
@@ -75,10 +91,27 @@ const CreateAdminModal = ({ admin, onClose, onCreated }: CreateAdminModalProps) 
           />
 
           {isEdit ? (
-            <div className="ha-form-group">
-              <label>Email</label>
-              <p className="ha-form-hint">{admin?.email} (email cannot be changed)</p>
-            </div>
+            <>
+              <div className="ha-form-group">
+                <label>Email</label>
+                <p className="ha-form-hint">{admin?.email} (email cannot be changed)</p>
+              </div>
+              <div className="ha-form-group">
+                <label>Password</label>
+                <p className="ha-form-hint">
+                  Passwords cannot be viewed. Regenerate to issue a new one.
+                </p>
+                <button
+                  type="button"
+                  className="ha-btn-secondary"
+                  onClick={handleRegeneratePassword}
+                  disabled={isRegenerating}
+                  style={{ marginTop: 6 }}
+                >
+                  {isRegenerating ? "Regenerating..." : "Regenerate Password"}
+                </button>
+              </div>
+            </>
           ) : (
             <FormInput
               name="email"

@@ -81,7 +81,9 @@ const AdminOwnersPage = () => {
             { title: "Actions" },
           ]}
           rows={(data) =>
-            data?.map((owner) => {
+            [...(data || [])]
+              .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+              .map((owner) => {
               const isSuspended = owner.status === "suspended" || owner.status === "inactive";
               return [
                 <div className="ha-salon-cell">

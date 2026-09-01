@@ -22,15 +22,6 @@ const categorySchema = z.object({
   name: z.string().min(2, 'Category name must be at least 2 characters')
 });
 
-const serviceDefaults = {
-  name: '',
-  categoryId: '',
-  duration: 30,
-  price: 0,
-  description: '',
-  aiScanLink: ''
-};
-
 // CR-24: AI Scan categories that services can be linked to
 const AI_SCAN_CATEGORIES = [
   { value: '', label: 'Not linked to AI scan' },
@@ -43,44 +34,81 @@ const AI_SCAN_CATEGORIES = [
   { value: 'general-facial', label: 'General Facial Treatment' }
 ];
 
-const ServiceModal = ({ salonId }: { salonId?: string } = {}) => {
-  const [open, setOpen] = useState(false);
+export interface ServiceRecord {
+  _id: string;
+  name?: string;
+  categoryId?: string | { _id?: string; name?: string };
+  duration?: number;
+  price?: number;
+  description?: string;
+  aiScanLink?: string;
+  salonId?: string;
+}
+
+const resolveCategoryId = (service?: ServiceRecord | null) => {
+  if (!service?.categoryId) return '';
+  if (typeof service.categoryId === 'object') return service.categoryId._id || '';
+  return service.categoryId;
+};
+
+export const ServiceFormModal = ({
+  salonId,
+  service,
+  onClose,
+  onSaved,
+}: {
+  salonId?: string;
+  service?: ServiceRecord | null;
+  onClose: () => void;
+  onSaved?: () => void;
+}) => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [categoryError, setCategoryError] = useState('');
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(resolveCategoryId(service));
   const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
   const invalidate = useInvalidate();
+  const isEditing = !!service;
 
   const categoriesReq = useApi(() => categoryService.list(), [categoryRefreshKey]);
-
   const categories: CategoryRecord[] = categoriesReq.data?.data || [];
 
   const serviceDefaultValues = {
-    ...serviceDefaults,
-    categoryId: selectedCategoryId || serviceDefaults.categoryId
+    name: service?.name || '',
+    categoryId: selectedCategoryId,
+    duration: service?.duration ?? 30,
+    price: service?.price ?? 0,
+    description: service?.description || '',
+    aiScanLink: service?.aiScanLink || ''
   };
 
-  const createService = async (data) => {
+  const saveService = async (data) => {
     setFormError('');
     setFormSuccess('');
     try {
-      const result = await serviceService.create({
+      const payload = {
         name: data.name,
         categoryId: data.categoryId,
         duration: Number(data.duration),
         price: Number(data.price),
         description: data.description || '',
-        aiScanLink: data.aiScanLink || '',
-        ...(salonId ? { salonId } : {})
-      });
-      setFormSuccess('Service created successfully');
-      setSelectedCategoryId(data.categoryId);
+        aiScanLink: data.aiScanLink || ''
+      };
+      const result = isEditing
+        ? await serviceService.update(service!._id, payload)
+        : await serviceService.create({ ...payload, ...(salonId ? { salonId } : {}) });
+      setFormSuccess(isEditing ? 'Service updated successfully' : 'Service created successfully');
       invalidate();
+      onSaved?.();
+      if (!isEditing) {
+        setSelectedCategoryId(data.categoryId);
+      } else {
+        onClose();
+      }
       return { success: true, data: result.data };
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to create service');
+      setFormError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} service`);
       throw err;
     }
   };
@@ -101,6 +129,121 @@ const ServiceModal = ({ salonId }: { salonId?: string } = {}) => {
 
   return (
     <>
+      <Form
+        key={selectedCategoryId || 0}
+        schema={serviceSchema}
+        defaultValues={serviceDefaultValues}
+        onSubmit={saveService}
+        className="grid gap-5"
+      >
+        <GenericModal
+          title={isEditing ? 'Edit Service' : '+ Add Service'}
+          onClose={onClose}
+          footer={
+            <div>
+              <button
+                type="submit"
+                className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900"
+              >
+                Save
+              </button>
+            </div>
+          }
+        >
+          <div className="grid gap-3 md:grid-cols-2">
+            <FormInput
+              name="name"
+              label="Service Name"
+              placeholder="e.g. Hair Cut"
+              required
+            />
+            <CategoryPicker
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onCreateClick={() => setCategoryModalOpen(true)}
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <FormInput
+              name="duration"
+              type="number"
+              label="Duration (minutes)"
+              required
+            />
+            <FormInput
+              name="price"
+              type="number"
+              label="Price"
+              required
+            />
+            <FormInput
+              name="description"
+              label="Description"
+              placeholder="Optional description"
+            />
+          </div>
+
+          {/* CR-24: AI Scan Link */}
+          <AiScanLinkPicker />
+
+          {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
+          {formSuccess ? <p className="text-sm text-emerald-600">{formSuccess}</p> : null}
+        </GenericModal>
+      </Form>
+
+      {categoryModalOpen && (
+        <Form
+          schema={categorySchema}
+          defaultValues={{ name: '' }}
+          onSubmit={createCategory}
+        >
+          <GenericModal
+            title="+ Create Category"
+            onClose={() => {
+              setCategoryError('');
+              setCategoryModalOpen(false);
+            }}
+            footer={
+              <>
+                <button
+                  type="button"
+                  className="ha-btn-secondary"
+                  onClick={() => {
+                    setCategoryError('');
+                    setCategoryModalOpen(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl border bg-[var(--accent-2)] border-[var(--border)] px-5 py-3 text-sm font-semibold text-slate-900"
+                >
+                  Save
+                </button>
+              </>
+            }
+          >
+            {categoryError ? <div className="ha-error-banner">{categoryError}</div> : null}
+            <FormInput
+              name="name"
+              label="Category Name"
+              placeholder="e.g. Hair"
+              required
+            />
+          </GenericModal>
+        </Form>
+      )}
+    </>
+  );
+};
+
+const ServiceModal = ({ salonId }: { salonId?: string } = {}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
       <button
         type="button"
         className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-2 text-sm font-semibold text-slate-900"
@@ -109,112 +252,7 @@ const ServiceModal = ({ salonId }: { salonId?: string } = {}) => {
         + Add Service
       </button>
       {open && (
-        <Form
-          key={selectedCategoryId || 0}
-          schema={serviceSchema}
-          defaultValues={serviceDefaultValues}
-          onSubmit={createService}
-          className="grid gap-5"
-        >
-          <GenericModal
-            title="+ Add Service"
-            onClose={() => setOpen(false)}
-            footer={
-              <div>
-                <button
-                  type="submit"
-                  className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900"
-                >
-                  Add Service
-                </button>
-              </div>
-            }
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              <FormInput
-                name="name"
-                label="Service Name"
-                placeholder="e.g. Hair Cut"
-                required
-              />
-              <CategoryPicker
-                categories={categories}
-                selectedCategoryId={selectedCategoryId}
-                onCreateClick={() => setCategoryModalOpen(true)}
-              />
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              <FormInput
-                name="duration"
-                type="number"
-                label="Duration (minutes)"
-                required
-              />
-              <FormInput
-                name="price"
-                type="number"
-                label="Price"
-                required
-              />
-              <FormInput
-                name="description"
-                label="Description"
-                placeholder="Optional description"
-              />
-            </div>
-
-            {/* CR-24: AI Scan Link */}
-            <AiScanLinkPicker />
-
-            {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
-            {formSuccess ? <p className="text-sm text-emerald-600">{formSuccess}</p> : null}
-
-            {categoryModalOpen && (
-              <Form
-                schema={categorySchema}
-                defaultValues={{ name: '' }}
-                onSubmit={createCategory}
-              >
-                <GenericModal
-                  title="+ Create Category"
-                  onClose={() => {
-                    setCategoryError('');
-                    setCategoryModalOpen(false);
-                  }}
-                  footer={
-                    <>
-                      <button
-                        type="button"
-                        className="ha-btn-secondary"
-                        onClick={() => {
-                          setCategoryError('');
-                          setCategoryModalOpen(false);
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="rounded-xl border bg-[var(--accent-2)] border-[var(--border)] px-5 py-3 text-sm font-semibold text-slate-900"
-                      >
-                        Save
-                      </button>
-                    </>
-                  }
-                >
-                  {categoryError ? <div className="ha-error-banner">{categoryError}</div> : null}
-                  <FormInput
-                    name="name"
-                    label="Category Name"
-                    placeholder="e.g. Hair"
-                    required
-                  />
-                </GenericModal>
-              </Form>
-            )}
-          </GenericModal>
-        </Form>
+        <ServiceFormModal salonId={salonId} onClose={() => setOpen(false)} />
       )}
     </>
   );

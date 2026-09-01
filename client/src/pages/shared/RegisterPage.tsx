@@ -6,9 +6,11 @@ import FormInput from "../../components/form/FormInput";
 import { authService } from "../../services/authService";
 
 const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
   email: z.string().email('Enter a valid email address'),
   phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number format'),
+  country: z.string().min(1, 'Country is required'),
+  city: z.string().min(1, 'City is required'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
@@ -25,6 +27,8 @@ const defaultValues = {
   name: "",
   email: "",
   phone: "",
+  country: "",
+  city: "",
   password: "",
   confirmPassword: "",
   role: "salon_owner" as const,
@@ -39,7 +43,8 @@ const RegisterPage = () => {
     setIsLoading(true);
     setError("");
     try {
-      const result = await authService.register(form);
+      const { country, city, ...rest } = form;
+      const result = await authService.register({ ...rest, location: { country, city } });
       sessionStorage.setItem('pendingSalonEmail', form.email);
       sessionStorage.setItem('pendingSalonPassword', form.password);
       navigate(`/verify-otp?email=${encodeURIComponent(result?.data?.email || form.email)}`);
@@ -86,6 +91,22 @@ const RegisterPage = () => {
             placeholder="Enter your Whatsapp number"
             required
             autoComplete="tel"
+          />
+          <FormInput
+            name="country"
+            type="text"
+            label="Country"
+            placeholder="Enter your country"
+            required
+            autoComplete="country-name"
+          />
+          <FormInput
+            name="city"
+            type="text"
+            label="City"
+            placeholder="Enter your city"
+            required
+            autoComplete="address-level2"
           />
           <FormInput
             name="password"

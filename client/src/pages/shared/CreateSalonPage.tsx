@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "../../components/form/FormInput";
 import { salonService } from "../../services/salonService";
 import { authService } from "../../services/authService";
+import { useAuthStore } from "../../store/authStore";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -32,6 +33,7 @@ type FormValues = z.infer<typeof schema>;
 
 const CreateSalonPage = () => {
   const navigate = useNavigate();
+  const { setAuth } = useAuthStore();
   const [params] = useSearchParams();
   const emailParam = params.get("email") || "";
 
@@ -73,6 +75,17 @@ const CreateSalonPage = () => {
     setError("");
     setIsSubmitting(true);
     try {
+      // Log in first so the salon-creation request carries a valid token for this
+      // owner; otherwise it goes out unauthenticated (or with a stale token from a
+      // previous session) and the backend rejects it.
+      const password = sessionStorage.getItem("pendingSalonPassword");
+      if (!emailParam || !password) {
+        navigate("/login");
+        return;
+      }
+      const loginResult = await authService.login({ email: emailParam, password });
+      setAuth({ user: loginResult.user });
+
       await salonService.create({
         name: data.name,
         phone: data.phone,
@@ -83,16 +96,9 @@ const CreateSalonPage = () => {
         imageFile: imageFile || null,
       });
 
-      // Auto-login after salon creation
-      const password = sessionStorage.getItem("pendingSalonPassword");
-      if (emailParam && password) {
-        await authService.login({ email: emailParam, password });
-        sessionStorage.removeItem("pendingSalonEmail");
-        sessionStorage.removeItem("pendingSalonPassword");
-        navigate("/owner");
-      } else {
-        navigate("/login");
-      }
+      sessionStorage.removeItem("pendingSalonEmail");
+      sessionStorage.removeItem("pendingSalonPassword");
+      navigate("/owner");
     } catch (err) {
       const detail = err.response?.data?.message || "Failed to create salon";
       setError(detail);

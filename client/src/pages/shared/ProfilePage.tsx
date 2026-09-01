@@ -41,11 +41,11 @@ const emptyPasswordDefaults = {
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore();
   const [profileDefaults, setProfileDefaults] = useState({
-  name: user.name,
-  phone: user.phone || '',
-  city: user.location?.city || '',
-  country: user.location?.country || '',
-  bankAccount: user.bankAccount || '',
+  name: user?.name || '',
+  phone: user?.phone || '',
+  city: user?.location?.city || '',
+  country: user?.location?.country || '',
+  bankAccount: user?.bankAccount || '',
   southAsianSpecialist: user?.southAsianSpecialist || false
 });
   const [profileFormKey, setProfileFormKey] = useState(0);
@@ -162,7 +162,7 @@ const ProfilePage = () => {
               <input
                 id="profile-role"
                 className="ha-input capitalize opacity-45"
-                value={user?.role.replace('_', ' ') || ''}
+                value={user?.role?.replace('_', ' ') || ''}
                 readOnly
                 disabled
               />

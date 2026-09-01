@@ -216,9 +216,13 @@ const AdminSettingsPage = () => {
         <CreateAdminModal
           admin={editAdmin}
           onClose={() => setEditAdmin(null)}
-          onCreated={() => {
+          onCreated={(_admin, credentials) => {
             invalidate(['admins']);
-            showToast('Admin updated successfully.');
+            if (credentials?.generated) {
+              setNewAdminCredentials(credentials);
+            } else {
+              showToast('Admin updated successfully.');
+            }
           }}
         />
       )}

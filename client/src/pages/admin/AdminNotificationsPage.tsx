@@ -1,16 +1,13 @@
-﻿import { useState } from "react";
-import NotificationModal from "../../components/NotificationModal";
+import { useState } from "react";
+import NotificationModal, { NotificationFormModal, type NotificationRecord } from "../../components/NotificationModal";
 import NotificationDetailModal from "../../components/NotificationDetailModal";
+import ActionsMenu from "@/components/ActionsMenu";
 import TABLE from "@/components/table";
 import { useInvalidate } from "../../hooks/useInvalidate";
 import { notificationService } from "@/services/notificationService";
 import { formatDateInput, formatTimeAMPM } from "@/utils/format";
 
-interface NotificationItem {
-  _id: string;
-  title: string;
-  message: string;
-  targetRole: string;
+interface NotificationItem extends NotificationRecord {
   type: string;
   isRead: boolean;
   createdAt: string;
@@ -25,6 +22,8 @@ const roleLabel = (role: string): string => {
 
 const AdminNotificationsPage = () => {
   const [viewNotif, setViewNotif] = useState<NotificationItem | null>(null);
+  const [editNotif, setEditNotif] = useState<NotificationItem | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const invalidate = useInvalidate();
 
   const handleMarkRead = async (id: string) => {
@@ -43,12 +42,28 @@ const AdminNotificationsPage = () => {
         limit: 500,
       });
       const unread: NotificationItem[] = res?.data || [];
-      for (const n of unread) {
-        await notificationService.markRead(n._id);
-      }
+      if (!unread.length) return;
+      const results = await Promise.allSettled(
+        unread.map((n) => notificationService.markRead(n._id)),
+      );
       invalidate();
+      if (results.some((r) => r.status === "rejected")) {
+        alert("Some notifications could not be marked as read");
+      }
     } catch {
       alert("Failed to mark all as read");
+    }
+  };
+
+  const handleSendNow = async (id: string) => {
+    setSendingId(id);
+    try {
+      await notificationService.send(id);
+      invalidate(['notifications']);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to send notification");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -78,56 +93,64 @@ const AdminNotificationsPage = () => {
           { title: "Actions" },
         ]}
         rows={(data) =>
-          data?.map((item) => [
-            <span className="ha-salon-name" style={{ fontSize: 14 }}>
-              {item.title}
-            </span>,
-            <span
-              className="ha-salon-sub"
-              style={{
-                fontSize: 13,
-                maxWidth: 250,
-                display: "block",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {item.message || "-"}
-            </span>,
-            roleLabel(item.targetRole),
-            <span className="ha-pill ha-pill-booking">
-              {(item.type || "system").replace("_", " ")}
-            </span>,
-            <p>
-              {formatDateInput(item.createdAt)} <br />
-              <span className="text-gray-400">
-                {formatTimeAMPM(item.createdAt)}
-              </span>
-            </p>,
-            <span
-              className={
-                item.isRead
-                  ? "ha-pill ha-pill-active"
-                  : "ha-pill ha-pill-pending"
-              }
-            >
-              {item.isRead ? "Read" : "Unread"}
-            </span>,
-            <div className="ha-actions">
-              <button className="ha-act-btn" onClick={() => setViewNotif(item)}>
-                View
-              </button>
-              {!item.isRead && (
-                <button
-                  className="ha-act-btn min-w-max"
-                  onClick={() => handleMarkRead(item._id)}
-                >
-                  Mark Read
-                </button>
-              )}
-            </div>,
-          ])
+          data?.map((item) => {
+            const isDraft = item.status === "draft";
+            const isSending = sendingId === item._id;
+            return [
+              <span className="ha-salon-name" style={{ fontSize: 14 }}>
+                {item.title}
+              </span>,
+              <span
+                className="ha-salon-sub"
+                style={{
+                  fontSize: 13,
+                  maxWidth: 250,
+                  display: "block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {item.message || "-"}
+              </span>,
+              roleLabel(item.targetRole),
+              <span className="ha-pill ha-pill-booking">
+                {(item.type || "system").replace("_", " ")}
+              </span>,
+              <p>
+                {formatDateInput(item.createdAt)} <br />
+                <span className="text-gray-400">
+                  {formatTimeAMPM(item.createdAt)}
+                </span>
+              </p>,
+              <span
+                className={
+                  isDraft
+                    ? "ha-pill ha-pill-pending"
+                    : "ha-pill ha-pill-active"
+                }
+              >
+                {isDraft ? "Draft" : "Sent"}
+              </span>,
+              <ActionsMenu
+                items={[
+                  { label: "View", onClick: () => setViewNotif(item) },
+                  ...(isDraft
+                    ? [
+                        { label: "Edit", onClick: () => setEditNotif(item) },
+                        {
+                          label: isSending ? "Sending..." : "Send Now",
+                          onClick: () => handleSendNow(item._id),
+                        },
+                      ]
+                    : []),
+                  ...(!isDraft && !item.isRead
+                    ? [{ label: "Mark Read", onClick: () => handleMarkRead(item._id) }]
+                    : []),
+                ]}
+              />,
+            ];
+          })
         }
       />
 
@@ -135,6 +158,13 @@ const AdminNotificationsPage = () => {
         <NotificationDetailModal
           notification={viewNotif}
           onClose={() => setViewNotif(null)}
+        />
+      )}
+
+      {editNotif && (
+        <NotificationFormModal
+          notification={editNotif}
+          onClose={() => setEditNotif(null)}
         />
       )}
     </div>

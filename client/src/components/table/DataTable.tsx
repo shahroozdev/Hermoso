@@ -21,7 +21,7 @@ const DataTable = ({
 }: DataTableProps) => (
   <div className="ha-table-scroll">
     <table className="ha-salon-table min-w-full text-left text-sm">
-      <thead className="bg-[var(--surface-soft)] text-muted">
+      <thead className="sticky top-0 z-10 bg-[var(--surface-soft)] text-muted">
         <tr>
           {columns.map((col) => (
             <th
