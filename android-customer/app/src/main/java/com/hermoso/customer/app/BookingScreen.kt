@@ -449,7 +449,7 @@ fun BookingScreen(
                     )
                 )
             }
-            val bookingId = (response.data as? Map<*, *>)?.get("booking") as? Map<*, *>)?.get("_id") as? String
+            val bookingId = ((response.data as? Map<*, *>)?.get("booking") as? Map<*, *>)?.get("_id") as? String
             if (bookingId != null) {
                 try {
                     val checkoutResponse = withContext(Dispatchers.IO) {
@@ -537,7 +537,7 @@ private fun ServiceBookingCard(
                     )
                 )
             }
-            val bookingId = (response.data as? Map<*, *>)?.get("booking") as? Map<*, *>)?.get("_id") as? String
+            val bookingId = ((response.data as? Map<*, *>)?.get("booking") as? Map<*, *>)?.get("_id") as? String
             if (bookingId != null) {
                 try {
                     val checkoutResponse = withContext(Dispatchers.IO) {

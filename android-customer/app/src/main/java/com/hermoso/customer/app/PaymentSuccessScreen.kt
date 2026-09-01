@@ -38,7 +38,7 @@ fun PaymentSuccessScreen(
     tracker: String,
     onViewBookings: () -> Unit
 ) {
-    var countdown by remember { mutableIntStateOf(5) }
+    var countdown by remember { mutableStateOf(5) }
 
     LaunchedEffect(Unit) {
         while (countdown > 0) {
@@ -110,7 +110,3 @@ fun PaymentSuccessScreen(
     }
 }
 
-@Composable
-private fun mutableIntStateOf(initialValue: Int): androidx.compose.runtime.MutableState<Int> {
-    return remember { mutableStateOf(initialValue) }
-}
