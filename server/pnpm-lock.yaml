@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@sfpy/node-core':
+        specifier: ^0.3.5
+        version: 0.3.5
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -34,7 +37,7 @@ importers:
         version: 9.0.3
       mongoose:
         specifier: ^8.6.1
-        version: 8.23.0(supports-color@5.5.0)
+        version: 8.23.0
       morgan:
         specifier: ^1.10.0
         version: 1.10.1
@@ -275,6 +278,9 @@ packages:
 
   '@scarf/scarf@1.4.0':
     resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
+
+  '@sfpy/node-core@0.3.5':
+    resolution: {integrity: sha512-idA/srpwhbENyyEO+5J4rIVYqqv7E2SKb2fpv37YDf9mr6sAHMoYLzmeQdNjRqs4Sd8xz+wBflnScIQD4d7XIA==}
 
   '@types/bcryptjs@2.4.6':
     resolution: {integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==}
@@ -1195,6 +1201,10 @@ snapshots:
 
   '@scarf/scarf@1.4.0': {}
 
+  '@sfpy/node-core@0.3.5':
+    dependencies:
+      qs: 6.14.2
+
   '@types/bcryptjs@2.4.6': {}
 
   '@types/body-parser@1.19.6':
@@ -1734,13 +1744,13 @@ snapshots:
       bson: 6.10.4
       mongodb-connection-string-url: 3.0.2
 
-  mongoose@8.23.0(supports-color@5.5.0):
+  mongoose@8.23.0:
     dependencies:
       bson: 6.10.4
       kareem: 2.6.3
       mongodb: 6.20.0
       mpath: 0.9.0
-      mquery: 5.0.0(supports-color@5.5.0)
+      mquery: 5.0.0
       ms: 2.1.3
       sift: 17.1.3
     transitivePeerDependencies:
@@ -1765,7 +1775,7 @@ snapshots:
 
   mpath@0.9.0: {}
 
-  mquery@5.0.0(supports-color@5.5.0):
+  mquery@5.0.0:
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
     transitivePeerDependencies:
