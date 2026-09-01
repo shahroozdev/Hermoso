@@ -1,49 +1,60 @@
 import SwiftUI
-import SafariServices
+import WebKit
 
-struct PaymentWebView: UIViewControllerRepresentable {
+/// Uses WKWebView rather than SFSafariViewController because we need to
+/// inspect each navigation's URL to detect the payment gateway's redirect
+/// back to our success/failure routes — SFSafariViewController deliberately
+/// never exposes the URL it's displaying.
+struct PaymentWebView: UIViewRepresentable {
     let checkoutUrl: String
     let onSuccess: (String) -> Void
     let onFailed: (String) -> Void
 
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let controller = SFSafariViewController(url: URL(string: checkoutUrl) ?? URL(string: "https://example.com")!)
-        controller.delegate = context.coordinator
-        return controller
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.navigationDelegate = context.coordinator
+        if let url = URL(string: checkoutUrl) {
+            webView.load(URLRequest(url: url))
+        }
+        return webView
     }
 
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
-    class Coordinator: NSObject, SFSafariViewControllerDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate {
         let parent: PaymentWebView
 
         init(_ parent: PaymentWebView) {
             self.parent = parent
         }
 
-        func safariViewController(_ controller: SFSafariViewController, didCompleteInitialLoad didLoadSuccessfully: Bool) {
-            let url = controller.url.absoluteString
-            if url.contains("/external/complete") || url.contains("payment/success") {
-                if let components = URLComponents(url: controller.url, resolvingAgainstBaseURL: false),
-                   let trackerItem = components.queryItems?.first(where: { $0.name == "tracker" }),
-                   let tracker = trackerItem.value {
-                    parent.onSuccess(tracker)
-                }
-            } else if url.contains("/external/error") || url.contains("payment/failed") {
-                if let components = URLComponents(url: controller.url, resolvingAgainstBaseURL: false),
-                   let trackerItem = components.queryItems?.first(where: { $0.name == "tracker" }),
-                   let tracker = trackerItem.value {
-                    parent.onFailed(tracker)
-                }
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.allow)
+                return
             }
-        }
 
-        func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
-            controller.dismiss(animated: true)
+            let urlString = url.absoluteString
+            let tracker = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "tracker" })?.value
+
+            if urlString.contains("/external/complete") || urlString.contains("payment/success") {
+                if let tracker { parent.onSuccess(tracker) }
+                decisionHandler(.cancel)
+            } else if urlString.contains("/external/error") || urlString.contains("payment/failed") {
+                if let tracker { parent.onFailed(tracker) }
+                decisionHandler(.cancel)
+            } else {
+                decisionHandler(.allow)
+            }
         }
     }
 }
