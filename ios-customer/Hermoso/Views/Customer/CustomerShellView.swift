@@ -71,6 +71,25 @@ struct CustomerShellView: View {
                     )
                 case .booking(let salonId, let serviceId):
                     BookingView(preselectedSalonId: salonId, preselectedServiceId: serviceId)
+                case .paymentSuccess(let tracker):
+                    PaymentSuccessView(
+                        tracker: tracker,
+                        onViewBookings: {
+                            homePath = NavigationPath()
+                            selected = .customerBookings
+                        }
+                    )
+                case .paymentFailed(let tracker):
+                    PaymentFailedView(
+                        tracker: tracker,
+                        onRetry: {
+                            if !homePath.isEmpty { homePath.removeLast() }
+                        },
+                        onViewBookings: {
+                            homePath = NavigationPath()
+                            selected = .customerBookings
+                        }
+                    )
                 }
             }
         }
