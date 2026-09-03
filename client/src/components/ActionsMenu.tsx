@@ -72,7 +72,7 @@ const ActionsMenu = ({ items }: { items: ActionMenuItem[] }) => {
         createPortal(
           <div
             ref={menuRef}
-            className="fixed z-50 w-44 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl"
+            className="fixed z-[9999] w-44 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl"
             style={{
               top: position.openUpward ? undefined : position.top + 4,
               bottom: position.openUpward ? window.innerHeight - position.top + 4 : undefined,
