@@ -53,8 +53,8 @@ const OwnerPOSPage = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const posIdCounter = useRef(0);
 
-  const servicesReq = useApi(() => serviceService.list({ page: 1, limit: 200 }), []);
-  const eventsReq = useApi(() => eventService.list({ page: 1, limit: 200 }), []);
+  const servicesReq = useApi(() => serviceService.list({ page: 1, limit: 200 }), ["pos-services"]);
+  const eventsReq = useApi(() => eventService.list({ page: 1, limit: 200 }), ["pos-events"]);
   const customersReq = useApi(
     () => customerService.list({ page: 1, limit: 20, search: customerSearch || undefined }),
     [customerSearch]

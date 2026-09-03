@@ -4,7 +4,7 @@ import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';
 
 const AdminAnalyticsPage = () => {
-  const { data, loading, error } = useApi(() => dashboardService.admin(), []);
+  const { data, loading, error } = useApi(() => dashboardService.admin(), ["admin-dashboard"]);
 
   if (loading) return <AdminPageSkeleton variant="table" />;
   if (error) return <ErrorBlock text={error} />;

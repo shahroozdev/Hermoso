@@ -6,7 +6,7 @@ import { dashboardService } from '../../services/dashboardService';
 const donutColors = ['#d4a843', '#7c3aed', '#10b981', '#f43f5e', '#0ea5e9', '#f59e0b'];
 
 const AdminDashboardPage = () => {
-  const dashboard = useApi(() => dashboardService.admin(), []);
+  const dashboard = useApi(() => dashboardService.admin(), ["admin-dashboard"]);
   if (dashboard.loading) return <AdminPageSkeleton variant="table" />;
   if (dashboard.error) return <ErrorBlock text={dashboard.error} />;
 

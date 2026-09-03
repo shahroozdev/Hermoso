@@ -385,7 +385,7 @@ const BookingPage = () => {
 
   const preSelectedSalon = locationState?.salonId || searchParams.get('salonId') || '';
   const [selectedSalon, setSelectedSalon] = useState(preSelectedSalon);
-  const salons = useApi(() => salonService.list({ page: 1, limit: 50 }), []);
+  const salons = useApi(() => salonService.list({ page: 1, limit: 50 }), ["booking-salons"]);
 
   if (salons.error) return <ErrorBlock text={salons.error} />;
 

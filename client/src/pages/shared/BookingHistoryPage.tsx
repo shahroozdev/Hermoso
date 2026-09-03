@@ -12,6 +12,7 @@ const BookingHistoryPage = () => {
       <h2 className="text-xl font-semibold">Booking History</h2>
       <TABLE<Booking>
         showPagination
+        queryKey={["booking-history"]}
         service={bookingService.list}
         columns={[{ title: "Salon" }, { title: "Service" }, { title: "Date" }, { title: "Status" }, { title: "Amount" }, { title: "Action" }]}
         rows={(data) =>

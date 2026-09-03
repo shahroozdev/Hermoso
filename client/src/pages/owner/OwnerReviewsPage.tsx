@@ -14,6 +14,7 @@ const OwnerReviewsPage = () => {
       <h2 className="text-xl font-semibold">Reviews</h2>
       <TABLE<ReviewItem>
         title="Reviews List"
+        queryKey={["owner-reviews"]}
         showPagination
         service={reviewService.list}
         columns={[{ title: "Customer" }, { title: "Rating" }, { title: "Comment" }, { title: "Status" }]}

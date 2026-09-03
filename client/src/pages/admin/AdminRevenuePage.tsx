@@ -25,7 +25,7 @@ const AdminRevenuePage = () => {
   const [rates, setRates] = useState({ defaultRate: 10, vipRate: 8, eventRate: 12, promoRate: 0 });
   const [status, setStatus] = useState('');
 
-  const statsReq = useApi(() => salonService.getRevenueStats(), []);
+  const statsReq = useApi(() => salonService.getRevenueStats(), ["revenue-stats"]);
 
   const kpi = useMemo(() => ({
     totalGMV: statsReq.data?.data?.totalGMV ?? 0,
@@ -70,6 +70,7 @@ const AdminRevenuePage = () => {
       <div className="space-y-2">
         <TABLE<RevenueItem>
           showPagination
+          queryKey={["admin-revenue"]}
           title="Revenue by Salon This Month"
           service={salonService.revenue}
           columns={[

@@ -100,7 +100,7 @@ const StaffModal = () => {
 
   const servicesReq = useApi(
     () => serviceService.list({ page: 1, limit: 50 }),
-    [],
+    ["staff-modal-services"],
   );
   const createStaff = async (data) => {
     setFormError("");

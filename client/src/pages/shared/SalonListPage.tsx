@@ -61,6 +61,7 @@ const SalonListPage = () => {
       </div>
       <TABLE<SalonItem>
         title="All Salons & Clinics"
+        queryKey={["customer-salon-list"]}
         showPagination
         service={salonService.list}
         serviceParams={{ search, ...(cityFilter !== "all" ? { city: cityFilter, search } : { search }) }}

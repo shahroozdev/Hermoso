@@ -45,7 +45,7 @@ const EventModal = () => {
 
   const servicesReq = useApi(
     () => serviceService.list({ page: 1, limit: 100 }),
-    []
+    ["event-modal-services"]
   );
 
   const createEvent = async (data) => {

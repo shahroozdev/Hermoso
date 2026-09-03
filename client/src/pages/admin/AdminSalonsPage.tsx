@@ -52,9 +52,9 @@ const AdminSalonsPage = () => {
   const { data:stats} = useApi(
     () =>
       salonService.getStatusStats(),
-    [],
+    ["salon-status-stats"],
   );
-  const { data: ownersData } = useApi(() => ownerService.list(), []);
+  const { data: ownersData } = useApi(() => ownerService.list(), ["owner-filter-options"]);
   const ownerOptions = useMemo(
     () => [
       { value: "all", label: "All Owners" },

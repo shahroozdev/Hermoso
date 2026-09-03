@@ -14,6 +14,7 @@ const OwnerCustomersPage = () => {
       <h2 className="text-xl font-semibold">Customers</h2>
       <TABLE<CustomerItem>
         title="Customers List"
+        queryKey={["owner-customers"]}
         showPagination
         service={customerService.list}
         columns={[{ title: "Name" }, { title: "Email" }, { title: "Status" }, { title: "Joined" }]}

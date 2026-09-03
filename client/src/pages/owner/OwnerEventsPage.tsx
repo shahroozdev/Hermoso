@@ -22,6 +22,7 @@ const OwnerEventsPage = () => {
       </div>
       <TABLE<EventItem>
         title="Events List"
+        queryKey={["owner-events"]}
         showPagination
         service={eventService.list}
         columns={[

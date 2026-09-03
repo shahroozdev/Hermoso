@@ -21,7 +21,7 @@ interface CustomerOverview {
 const AdminCustomersPage = () => {
   const [viewingId, setViewingId] = useState<string | null>(null);
   const invalidate = useInvalidate();
-  const kpiReq = useApi(() => customerService.getOverview({ page: 1, limit: 1 }), []);
+  const kpiReq = useApi(() => customerService.getOverview({ page: 1, limit: 1 }), ["customer-overview"]);
 
   const kpi = useMemo(() => {
     const m = kpiReq.data?.meta;
@@ -59,6 +59,7 @@ const AdminCustomersPage = () => {
 
       <TABLE<CustomerOverview>
         title="Customer Accounts"
+        queryKey={["admin-customers"]}
         showPagination
         service={customerService.getOverview}
         columns={[

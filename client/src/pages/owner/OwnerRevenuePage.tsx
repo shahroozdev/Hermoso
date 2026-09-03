@@ -15,6 +15,7 @@ const OwnerRevenuePage = () => {
       <h2 className="text-xl font-semibold">Revenue</h2>
       <TABLE<PayoutItem>
         title="Payouts"
+        queryKey={["owner-payouts"]}
         showPagination
         service={payoutService.list}
         columns={[{ title: 'Amount' }, { title: 'Status' }, { title: 'Created' }, { title: 'Payout Date' }]}

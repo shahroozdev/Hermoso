@@ -20,7 +20,7 @@ const SalonDetailPage = () => {
   const { id } = useParams();
   const [categoryId, setCategoryId] = useState('');
   const salon = useApi(() => salonService.getById(id), [id]);
-  const categories = useApi(() => categoryService.list(), []);
+  const categories = useApi(() => categoryService.list(), ["categories"]);
 
   if (salon.loading || categories.loading) return <LoadingBlock text="Loading salon details..." />;
   if (salon.error) return <ErrorBlock text={salon.error} />;
@@ -58,6 +58,7 @@ const SalonDetailPage = () => {
         </div>
       </div>
       <TABLE<ServiceItem>
+        queryKey={["salon-detail-services", id]}
         service={serviceService.list}
         serviceParams={{ salonId: id, categoryId: categoryId || undefined }}
         columns={[{ title: 'Service' }, { title: 'Category' }, { title: 'Duration' }, { title: 'Price' }]}

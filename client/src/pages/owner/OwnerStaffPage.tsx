@@ -27,6 +27,7 @@ const OwnerStaffPage = () => {
       </div>
       <TABLE<StaffItem>
         title="Staff List"
+        queryKey={["owner-staff"]}
         showPagination
         service={staffService.list}
         columns={[

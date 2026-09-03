@@ -23,7 +23,7 @@ const stars = (rating: number) => {
 
 const AdminReviewsPage = () => {
   const invalidate = useInvalidate();
-  const statsReq = useApi(() => reviewService.getStats(), []);
+  const statsReq = useApi(() => reviewService.getStats(), ["review-stats"]);
 
   const stats = useMemo(() => ({
     averageRating: statsReq.data?.data?.averageRating ?? 0,
@@ -55,6 +55,7 @@ const AdminReviewsPage = () => {
 
       <TABLE<ReviewItem>
         title="Review Moderation Queue"
+        queryKey={["admin-reviews"]}
         showPagination
         service={reviewService.list}
         columns={[

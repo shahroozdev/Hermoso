@@ -27,7 +27,7 @@ const formatDate = (value?: string) => {
 };
 
 const OwnerNotificationsPage = () => {
-  const notificationsReq = useApi(() => notificationService.list({ page: 1, limit: 50 }), []);
+  const notificationsReq = useApi(() => notificationService.list({ page: 1, limit: 50 }), ["owner-notifications"]);
 
   if (notificationsReq.loading) return <LoadingBlock text="Loading notifications..." />;
   if (notificationsReq.error) return <ErrorBlock text={notificationsReq.error} />;

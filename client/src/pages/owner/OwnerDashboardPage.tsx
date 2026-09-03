@@ -7,7 +7,7 @@ import { dashboardService } from '../../services/dashboardService';
 import { formatCurrency } from '../../utils/format';
 
 const OwnerDashboardPage = () => {
-  const { data, loading, error } = useApi(() => dashboardService.owner(), []);
+  const { data, loading, error } = useApi(() => dashboardService.owner(), ["owner-dashboard"]);
 
   if (loading) return <LoadingBlock text="Loading owner dashboard..." />;
   if (error) return <ErrorBlock text={error} />;

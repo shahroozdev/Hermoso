@@ -25,7 +25,7 @@ const NotificationWidget = () => {
   const notificationsOpenDerived = notificationsOpen && openPathname === location.pathname;
   const { data, loading, error } = useApi(
     () => notificationService.list({ page: 1, limit: 5, unreadOnly: "true" }),
-    [],
+    ["notification-widget"],
   );
   const { user } = useAuthStore();
   const unread = data?.meta?.total || 0;

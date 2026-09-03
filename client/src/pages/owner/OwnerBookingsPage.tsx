@@ -21,6 +21,7 @@ const OwnerBookingsPage = () => {
       </div> */}
       <TABLE<Booking>
         title="Bookings List"
+        queryKey={["owner-bookings"]}
         showPagination
         service={bookingService.list}
         columns={[

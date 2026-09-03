@@ -41,7 +41,7 @@ const periodLabel = (dateLike?: string) => {
 const AdminPayoutsPage = () => {
   const [receiptPayout, setReceiptPayout] = useState<PayoutItem | null>(null);
   const invalidate = useInvalidate();
-  const statsReq = useApi(() => payoutService.getStats(), []);
+  const statsReq = useApi(() => payoutService.getStats(), ["payout-stats"]);
 
   const kpi = useMemo(() => {
     const d = statsReq.data?.data;
@@ -118,6 +118,7 @@ const AdminPayoutsPage = () => {
 
       <TABLE<PayoutItem>
         title="Payout Queue"
+        queryKey={["admin-payouts"]}
         showPagination
         service={payoutService.list}
         columns={[

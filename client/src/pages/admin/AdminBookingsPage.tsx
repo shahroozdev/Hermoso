@@ -27,7 +27,7 @@ const statusPillClass = (status: string) => {
 
 const AdminBookingsPage = () => {
   const invalidate = useInvalidate();
-  const statsReq = useApi(() => bookingService.getStats(), []);
+  const statsReq = useApi(() => bookingService.getStats(), ["booking-stats"]);
 
   const metrics = useMemo(() => ({
     completedToday: statsReq.data?.data?.completedToday ?? 0,
@@ -59,6 +59,7 @@ const AdminBookingsPage = () => {
 
       <TABLE<BookingItem>
         title="All Bookings"
+        queryKey={["admin-bookings"]}
         showPagination
         service={bookingService.list}
         columns={[
