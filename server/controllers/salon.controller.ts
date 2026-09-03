@@ -71,14 +71,40 @@ export const createSalon = asyncHandler(
   },
 );
 
+const numericRange = (min: unknown, max: unknown): Record<string, number> | undefined => {
+  const range: Record<string, number> = {};
+  if (min !== undefined && min !== "") range.$gte = Number(min);
+  if (max !== undefined && max !== "") range.$lte = Number(max);
+  return Object.keys(range).length ? range : undefined;
+};
+
 export const getSalons = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { page = 1, limit = 10, search = "", status, city } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      status,
+      city,
+      ownerId,
+      commissionMin,
+      commissionMax,
+      servicesMin,
+      servicesMax,
+      bookingsMin,
+      bookingsMax,
+      revenueMin,
+      revenueMax,
+    } = req.query;
     const query: Record<string, unknown> = {};
 
     if (status) query.status = status;
     if (city) query["location.city"] = new RegExp(city as string, "i");
     if (search) query.name = new RegExp(search as string, "i");
+    if (ownerId) query.ownerId = new mongoose.Types.ObjectId(ownerId as string);
+
+    const commissionRange = numericRange(commissionMin, commissionMax);
+    if (commissionRange) query.commissionRate = commissionRange;
 
     if (req.user?.role === Roles.SALON_OWNER) {
       query.ownerId = req.user._id;
@@ -89,11 +115,19 @@ export const getSalons = asyncHandler(
       query.verified = true;
     }
 
-    const salons = await Salon.aggregate([
+    // servicesCount/bookingsCount/revenue only exist after the lookups below, so
+    // filtering on them (and paginating correctly afterward) needs a second $match
+    // post-lookup, with a $facet to get the total alongside the paginated page.
+    const computedMatch: Record<string, unknown> = {};
+    const servicesRange = numericRange(servicesMin, servicesMax);
+    if (servicesRange) computedMatch.servicesCount = servicesRange;
+    const bookingsRange = numericRange(bookingsMin, bookingsMax);
+    if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
+    const revenueRange = numericRange(revenueMin, revenueMax);
+    if (revenueRange) computedMatch.revenue = revenueRange;
+
+    const pipeline: mongoose.PipelineStage[] = [
       { $match: query },
-      { $sort: { createdAt: -1 } },
-      { $skip: (Number(page) - 1) * Number(limit) },
-      { $limit: Number(limit) },
       {
         $lookup: {
           from: "users",
@@ -160,34 +194,54 @@ export const getSalons = asyncHandler(
           },
         },
       },
+    ];
+
+    if (Object.keys(computedMatch).length) {
+      pipeline.push({ $match: computedMatch });
+    }
+
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
       {
-        $project: {
-          name: 1,
-          status: 1,
-          verified: 1,
-          commissionRate: 1,
-          location: 1,
-          phone: 1,
-          address: 1,
-          description: 1,
-          workingHours: 1,
-          createdAt: 1,
-          servicesCount: 1,
-          bookingsCount: 1,
-          reviewsCount: 1,
-          avgRating: 1,
-          revenue: 1,
-          active: 1,
-          owner: {
-            _id: "$owner._id",
-            name: "$owner.name",
-            email: "$owner.email",
-          },
+        $facet: {
+          data: [
+            { $skip: (Number(page) - 1) * Number(limit) },
+            { $limit: Number(limit) },
+            {
+              $project: {
+                name: 1,
+                status: 1,
+                verified: 1,
+                commissionRate: 1,
+                location: 1,
+                phone: 1,
+                address: 1,
+                description: 1,
+                workingHours: 1,
+                createdAt: 1,
+                servicesCount: 1,
+                bookingsCount: 1,
+                reviewsCount: 1,
+                avgRating: 1,
+                revenue: 1,
+                active: 1,
+                owner: {
+                  _id: "$owner._id",
+                  name: "$owner.name",
+                  email: "$owner.email",
+                },
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
         },
       },
-    ]);
+    );
 
-    const total = await Salon.countDocuments(query);
+    const [result] = await Salon.aggregate(pipeline);
+    const salons = result?.data || [];
+    const total = result?.totalCount?.[0]?.count || 0;
+
     res.json({
       success: true,
       data: salons,

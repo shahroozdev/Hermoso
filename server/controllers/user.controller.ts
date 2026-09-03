@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -182,7 +183,7 @@ export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, search = '', status } = req.query;
+  const { page = 1, limit = 10, search = '', status, phone, location, hasSalon } = req.query;
   const match: Record<string, unknown> = { role: Roles.SALON_OWNER };
   if (search) {
     match.$or = [{ name: new RegExp(search as string, 'i') }, { email: new RegExp(search as string, 'i') }];
@@ -190,12 +191,25 @@ export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) =
   if (status) {
     match.status = status === 'suspended' ? { $in: ['suspended', 'inactive'] } : status;
   }
+  if (phone) {
+    match.phone = new RegExp(phone as string, 'i');
+  }
+  if (location) {
+    // Wrapped in $and (rather than reusing $or) so it composes with the $or
+    // that `search` may have already set above, instead of overwriting it.
+    const locationRegex = new RegExp(location as string, 'i');
+    match.$and = [{ $or: [{ 'location.city': locationRegex }, { 'location.country': locationRegex }] }];
+  }
 
-  const owners = await User.aggregate([
+  // salonsCount only exists after the lookup below, so filtering on it (and
+  // paginating correctly afterward) needs a second $match post-lookup, with a
+  // $facet to get the total alongside the paginated page.
+  const computedMatch: Record<string, unknown> = {};
+  if (hasSalon === 'yes') computedMatch.salonsCount = { $gt: 0 };
+  if (hasSalon === 'no') computedMatch.salonsCount = 0;
+
+  const pipeline: mongoose.PipelineStage[] = [
     { $match: match },
-    { $sort: { createdAt: -1 } },
-    { $skip: (Number(page) - 1) * Number(limit) },
-    { $limit: Number(limit) },
     {
       $lookup: {
         from: 'salons',
@@ -208,22 +222,42 @@ export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) =
       $addFields: {
         salonsCount: { $size: '$salons' }
       }
-    },
+    }
+  ];
+
+  if (Object.keys(computedMatch).length) {
+    pipeline.push({ $match: computedMatch });
+  }
+
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
     {
-      $project: {
-        name: 1,
-        email: 1,
-        phone: 1,
-        location: 1,
-        bankAccount: 1,
-        status: 1,
-        createdAt: 1,
-        salonsCount: 1
+      $facet: {
+        data: [
+          { $skip: (Number(page) - 1) * Number(limit) },
+          { $limit: Number(limit) },
+          {
+            $project: {
+              name: 1,
+              email: 1,
+              phone: 1,
+              location: 1,
+              bankAccount: 1,
+              status: 1,
+              createdAt: 1,
+              salonsCount: 1
+            }
+          }
+        ],
+        totalCount: [{ $count: 'count' }]
       }
     }
-  ]);
+  );
 
-  const total = await User.countDocuments(match);
+  const [result] = await User.aggregate(pipeline);
+  const owners = result?.data || [];
+  const total = result?.totalCount?.[0]?.count || 0;
+
   res.json({ success: true, data: owners, meta: { page: Number(page), limit: Number(limit), total } });
 });
 

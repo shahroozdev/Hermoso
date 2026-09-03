@@ -6,6 +6,15 @@ interface SalonParams {
   search?: string;
   status?: string;
   city?: string;
+  ownerId?: string;
+  commissionMin?: number | string;
+  commissionMax?: number | string;
+  servicesMin?: number | string;
+  servicesMax?: number | string;
+  bookingsMin?: number | string;
+  bookingsMax?: number | string;
+  revenueMin?: number | string;
+  revenueMax?: number | string;
 }
 
 export interface CreateSalonPayload {

@@ -30,6 +30,9 @@ interface ListOwnersParams {
   limit?: number;
   search?: string;
   status?: string;
+  phone?: string;
+  location?: string;
+  hasSalon?: 'yes' | 'no';
 }
 
 export const ownerService = {

@@ -22,6 +22,9 @@ const AdminOwnersPage = () => {
   const [errorAction, setErrorAction] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [phoneFilter, setPhoneFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [salonsFilter, setSalonsFilter] = useState("all");
   const [editOwner, setEditOwner] = useState<OwnerRecord | null>(null);
   const [newOwnerCredentials, setNewOwnerCredentials] = useState<{
     email?: string;
@@ -66,6 +69,33 @@ const AdminOwnersPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <input
+            type="text"
+            className="ha-input"
+            style={{ maxWidth: 180 }}
+            placeholder="Filter by phone..."
+            value={phoneFilter}
+            onChange={(e) => setPhoneFilter(e.target.value)}
+          />
+          <input
+            type="text"
+            className="ha-input"
+            style={{ maxWidth: 180 }}
+            placeholder="Filter by city/country..."
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          />
+          <span style={{ minWidth: 150, display: "inline-block" }}>
+            <SearchableSelect
+              value={salonsFilter}
+              onChange={setSalonsFilter}
+              options={[
+                { value: "all", label: "All Owners" },
+                { value: "yes", label: "Has Salon" },
+                { value: "no", label: "No Salon" },
+              ]}
+            />
+          </span>
           <span style={{ minWidth: 160, display: "inline-block" }}>
             <SearchableSelect
               value={statusFilter}
@@ -77,13 +107,16 @@ const AdminOwnersPage = () => {
               ]}
             />
           </span>
-          {(search || statusFilter !== "all") && (
+          {(search || statusFilter !== "all" || phoneFilter || locationFilter || salonsFilter !== "all") && (
             <button
               type="button"
               className="ha-btn-secondary"
               onClick={() => {
                 setSearch("");
                 setStatusFilter("all");
+                setPhoneFilter("");
+                setLocationFilter("");
+                setSalonsFilter("all");
               }}
             >
               Clear Filters
@@ -102,7 +135,13 @@ const AdminOwnersPage = () => {
           showPagination
           queryKey={["owners"]}
           service={ownerService.list}
-          serviceParams={{ search, ...(statusFilter !== "all" ? { status: statusFilter } : {}) }}
+          serviceParams={{
+            search,
+            ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+            ...(phoneFilter ? { phone: phoneFilter } : {}),
+            ...(locationFilter ? { location: locationFilter } : {}),
+            ...(salonsFilter !== "all" ? { hasSalon: salonsFilter } : {}),
+          }}
           columns={[
             { title: "Owner", size: "220px" },
             { title: "Phone" },

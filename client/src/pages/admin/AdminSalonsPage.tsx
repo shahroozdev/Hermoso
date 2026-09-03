@@ -14,6 +14,7 @@ import TABLE from "@/components/table";
 import { SalonItem } from "../shared/SalonListPage";
 import SearchableSelect from "@/components/form/SearchableSelect";
 import { exportPageTables } from "@/utils";
+import { ownerService } from "@/services/ownerService";
 
 const statusClass = (status) => {
   if (status === "approved") return "ha-pill ha-pill-active";
@@ -24,7 +25,17 @@ const statusClass = (status) => {
 const AdminSalonsPage = () => {
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [servicesMin, setServicesMin] = useState("");
+  const [servicesMax, setServicesMax] = useState("");
+  const [bookingsMin, setBookingsMin] = useState("");
+  const [bookingsMax, setBookingsMax] = useState("");
+  const [revenueMin, setRevenueMin] = useState("");
+  const [revenueMax, setRevenueMax] = useState("");
+  const [commissionMin, setCommissionMin] = useState("");
+  const [commissionMax, setCommissionMax] = useState("");
   const [errorAction, setErrorAction] = useState("");
   const { salonModalOpen, setSalonModal } = useUIStore();
   const { showToast } = useToastStore();
@@ -42,6 +53,14 @@ const AdminSalonsPage = () => {
     () =>
       salonService.getStatusStats(),
     [],
+  );
+  const { data: ownersData } = useApi(() => ownerService.list(), []);
+  const ownerOptions = useMemo(
+    () => [
+      { value: "all", label: "All Owners" },
+      ...((ownersData?.data || []).map((owner) => ({ value: owner._id, label: owner.name }))),
+    ],
+    [ownersData],
   );
   const kpis = useMemo(() => {
     const active = stats?.data?.approved||0
@@ -79,6 +98,30 @@ const AdminSalonsPage = () => {
   const handleCreated = () => {
     invalidate();
     showToast(editDefaultValues ? "Salon updated successfully." : "Salon created successfully.");
+  };
+
+  const hasActiveFilters = Boolean(
+    search ||
+      cityFilter !== "all" ||
+      statusFilter !== "all" ||
+      ownerFilter !== "all" ||
+      servicesMin || servicesMax || bookingsMin || bookingsMax ||
+      revenueMin || revenueMax || commissionMin || commissionMax,
+  );
+
+  const clearFilters = () => {
+    setSearch("");
+    setCityFilter("all");
+    setStatusFilter("all");
+    setOwnerFilter("all");
+    setServicesMin("");
+    setServicesMax("");
+    setBookingsMin("");
+    setBookingsMax("");
+    setRevenueMin("");
+    setRevenueMax("");
+    setCommissionMin("");
+    setCommissionMax("");
   };
 
   if (loading) return <AdminPageSkeleton variant="table" />;
@@ -130,7 +173,7 @@ const AdminSalonsPage = () => {
           </span>
         </div>
 
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="text"
             className="ha-input"
@@ -139,20 +182,33 @@ const AdminSalonsPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          {(search || cityFilter !== "all" || statusFilter !== "all") && (
-            <button
-              type="button"
-              className="ha-btn-secondary"
-              onClick={() => {
-                setSearch("");
-                setCityFilter("all");
-                setStatusFilter("all");
-              }}
-            >
+          <span style={{ minWidth: 160, display: "inline-block" }}>
+            <SearchableSelect value={ownerFilter} onChange={setOwnerFilter} options={ownerOptions} />
+          </span>
+          <button
+            type="button"
+            className="ha-btn-secondary"
+            onClick={() => setShowMoreFilters((v) => !v)}
+          >
+            {showMoreFilters ? "Hide Filters" : "More Filters"}
+          </button>
+          {hasActiveFilters && (
+            <button type="button" className="ha-btn-secondary" onClick={clearFilters}>
               Clear Filters
             </button>
           )}
         </div>
+
+        {showMoreFilters && (
+          <div className="ha-card" style={{ marginBottom: 12, background: "var(--surface-soft)" }}>
+            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+              <RangeFilter label="Services" min={servicesMin} max={servicesMax} onMin={setServicesMin} onMax={setServicesMax} />
+              <RangeFilter label="Bookings" min={bookingsMin} max={bookingsMax} onMin={setBookingsMin} onMax={setBookingsMax} />
+              <RangeFilter label="Revenue" min={revenueMin} max={revenueMax} onMin={setRevenueMin} onMax={setRevenueMax} />
+              <RangeFilter label="Commission %" min={commissionMin} max={commissionMax} onMin={setCommissionMin} onMax={setCommissionMax} />
+            </div>
+          </div>
+        )}
 
         {errorAction ? (
           <div style={{ marginBottom: 10 }}>
@@ -168,6 +224,15 @@ const AdminSalonsPage = () => {
             search,
             ...(cityFilter !== "all" ? { city: cityFilter } : {}),
             ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+            ...(ownerFilter !== "all" ? { ownerId: ownerFilter } : {}),
+            ...(servicesMin ? { servicesMin } : {}),
+            ...(servicesMax ? { servicesMax } : {}),
+            ...(bookingsMin ? { bookingsMin } : {}),
+            ...(bookingsMax ? { bookingsMax } : {}),
+            ...(revenueMin ? { revenueMin } : {}),
+            ...(revenueMax ? { revenueMax } : {}),
+            ...(commissionMin ? { commissionMin } : {}),
+            ...(commissionMax ? { commissionMax } : {}),
           }}
           columns={[
             { title: "Salon / Clinic", size: "250px" },
@@ -252,5 +317,39 @@ const AdminSalonsPage = () => {
     </>
   );
 };
+
+const RangeFilter = ({
+  label,
+  min,
+  max,
+  onMin,
+  onMax,
+}: {
+  label: string;
+  min: string;
+  max: string;
+  onMin: (v: string) => void;
+  onMax: (v: string) => void;
+}) => (
+  <div>
+    <label className="mb-1 block text-xs font-semibold uppercase text-muted">{label}</label>
+    <div style={{ display: "flex", gap: 6 }}>
+      <input
+        type="number"
+        className="ha-input"
+        placeholder="Min"
+        value={min}
+        onChange={(e) => onMin(e.target.value)}
+      />
+      <input
+        type="number"
+        className="ha-input"
+        placeholder="Max"
+        value={max}
+        onChange={(e) => onMax(e.target.value)}
+      />
+    </div>
+  </div>
+);
 
 export default AdminSalonsPage;
