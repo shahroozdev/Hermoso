@@ -33,6 +33,9 @@ export default tseslint.config(
       '**/build/**',
       'client/dist/**',
       '**/*.config.*',
+      // Scratch/debug scripts (e.g. server/__cloudinary_probe2.mjs) aren't part of
+      // the app and were never covered by the server Node-globals config below.
+      '**/__*',
     ],
   },
 );
