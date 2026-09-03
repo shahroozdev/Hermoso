@@ -11,6 +11,7 @@ interface NotificationItem extends NotificationRecord {
   type: string;
   isRead: boolean;
   createdAt: string;
+  recipientCount?: number;
 }
 
 const roleLabel = (role: string): string => {
@@ -90,6 +91,7 @@ const AdminNotificationsPage = () => {
           { title: "Type", size: "150px" },
           { title: "Sent", size: "120px" },
           { title: "Status" },
+          { title: "Recipients", size: "100px" },
           { title: "Actions" },
         ]}
         rows={(data) =>
@@ -130,8 +132,9 @@ const AdminNotificationsPage = () => {
                     : "ha-pill ha-pill-active"
                 }
               >
-                {isDraft ? "Draft" : "Sent"}
+                {isDraft ? "Unsent" : "Sent"}
               </span>,
+              isDraft ? "-" : (item.recipientCount ?? 0).toLocaleString(),
               <ActionsMenu
                 items={[
                   { label: "View", onClick: () => setViewNotif(item) },

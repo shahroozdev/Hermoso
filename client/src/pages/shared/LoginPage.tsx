@@ -43,6 +43,10 @@ const LoginPage = () => {
       else if (normalizedRole(result.user.role) === 'salon_owner') navigate('/owner');
       else navigate('/customer/salons');
     } catch (err) {
+      if (err.response?.data?.code === 'ACCOUNT_NOT_VERIFIED') {
+        navigate(`/verify-otp?email=${encodeURIComponent(form.email)}`);
+        return;
+      }
       setError(err.response?.data?.message || 'Login failed');
     } finally {
       setIsLoading(false);

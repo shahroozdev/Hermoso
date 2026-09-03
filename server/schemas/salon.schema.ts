@@ -4,7 +4,9 @@ import { SalonStatus } from '../utils/constants.js';
 const workingHoursSchema = z.object({
   open: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').optional(),
   close: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').optional(),
-  off: z.boolean().default(false)
+  off: z.boolean().default(false),
+  breakStart: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').optional(),
+  breakEnd: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').optional()
 });
 
 // Create salon schema

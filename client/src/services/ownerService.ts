@@ -29,6 +29,7 @@ interface ListOwnersParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
 }
 
 export const ownerService = {

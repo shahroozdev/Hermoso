@@ -11,13 +11,6 @@ export interface NotificationRecord {
   status?: 'draft' | 'sent';
 }
 
-const roleLabel = (role: string) => {
-  if (role === 'customer') return 'All Customers';
-  if (role === 'salon_owner') return 'All Salons';
-  if (role === 'staff') return 'All Staff';
-  return role;
-};
-
 export const NotificationFormModal = ({
   notification,
   onClose,
@@ -31,7 +24,7 @@ export const NotificationFormModal = ({
   const isEditing = !!notification;
   const [title, setTitle] = useState(notification?.title || '');
   const [message, setMessage] = useState(notification?.message || '');
-  const [targetRole, setTargetRole] = useState(notification?.targetRole || 'customer');
+  const targetRole = notification?.targetRole || 'customer';
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -64,7 +57,7 @@ export const NotificationFormModal = ({
       onClose={onClose}
       footer={
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button className="ha-act-btn" onClick={() => setStatus(`Preview: "${title || 'Untitled'}" to ${roleLabel(targetRole)}`)}>
+          <button className="ha-act-btn" onClick={() => setStatus(`Preview: "${title || 'Untitled'}"`)}>
             Preview
           </button>
           <button className="ha-topbar-btn primary" onClick={save} disabled={isSaving}>
@@ -93,21 +86,9 @@ export const NotificationFormModal = ({
             onChange={(e) => setMessage(e.target.value)}
           />
         </div>
-        <div>
-          <label className="mb-2 block text-xs font-semibold uppercase text-muted">Send To</label>
-          <select
-            className="ha-select w-full"
-            value={targetRole}
-            onChange={(e) => setTargetRole(e.target.value)}
-          >
-            <option value="customer">All Customers</option>
-            <option value="salon_owner">All Salons</option>
-            <option value="staff">All Staff</option>
-          </select>
-        </div>
         {!isEditing && (
           <p className="text-sm text-muted">
-            This saves the notification as a draft. Send it from the notifications list when you&apos;re ready.
+            This saves the notification as unsent. Send it from the notifications list when you&apos;re ready.
           </p>
         )}
         {status && (

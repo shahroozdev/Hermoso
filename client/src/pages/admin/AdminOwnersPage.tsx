@@ -8,6 +8,8 @@ import { useInvalidate } from "../../hooks/useInvalidate";
 import { ownerService, type OwnerRecord } from "@/services/ownerService";
 import { useUIStore } from "@/store/uiStore";
 import { useToastStore } from "@/store/toastStore";
+import SearchableSelect from "@/components/form/SearchableSelect";
+import { exportPageTables } from "@/utils";
 
 const statusClass = (status?: string) => {
   if (status === "suspended" || status === "inactive") return "ha-pill ha-pill-suspended";
@@ -19,6 +21,7 @@ const AdminOwnersPage = () => {
   const { showToast } = useToastStore();
   const [errorAction, setErrorAction] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [editOwner, setEditOwner] = useState<OwnerRecord | null>(null);
   const [newOwnerCredentials, setNewOwnerCredentials] = useState<{
     email?: string;
@@ -44,12 +47,17 @@ const AdminOwnersPage = () => {
       <div className="ha-card">
         <div className="ha-card-title">
           All Salon Owners
-          <button className="ha-topbar-btn primary" onClick={() => setOwnerModal(true)}>
-            + Add Owner
-          </button>
+          <span style={{ display: "inline-flex", gap: 8 }}>
+            <button className="ha-act-btn" onClick={() => exportPageTables("owners")}>
+              Export
+            </button>
+            <button className="ha-topbar-btn primary" onClick={() => setOwnerModal(true)}>
+              + Add Owner
+            </button>
+          </span>
         </div>
 
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="text"
             className="ha-input"
@@ -58,6 +66,29 @@ const AdminOwnersPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <span style={{ minWidth: 160, display: "inline-block" }}>
+            <SearchableSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "suspended", label: "Suspended" },
+              ]}
+            />
+          </span>
+          {(search || statusFilter !== "all") && (
+            <button
+              type="button"
+              className="ha-btn-secondary"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("all");
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
 
         {errorAction ? (
@@ -71,7 +102,7 @@ const AdminOwnersPage = () => {
           showPagination
           queryKey={["owners"]}
           service={ownerService.list}
-          serviceParams={{ search }}
+          serviceParams={{ search, ...(statusFilter !== "all" ? { status: statusFilter } : {}) }}
           columns={[
             { title: "Owner", size: "220px" },
             { title: "Phone" },

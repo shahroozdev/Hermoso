@@ -35,14 +35,15 @@ interface SalonViewModalProps {
 }
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="flex items-center justify-between border-b border-[var(--border-soft)] py-2 text-sm last:border-b-0">
-    <span className="text-muted">{label}</span>
-    <span className="font-medium">{value ?? "-"}</span>
+  <div className="flex items-start justify-between gap-3 border-b border-[var(--border-soft)] py-2 text-sm last:border-b-0">
+    <span className="shrink-0 text-muted">{label}</span>
+    <span className="min-w-0 break-all text-right font-medium">{value ?? "-"}</span>
   </div>
 );
 
 const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
+  const [serviceSearch, setServiceSearch] = useState("");
   const invalidate = useInvalidate();
   const isSuspended = salon.status === "suspended";
 
@@ -51,6 +52,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
       <GenericModal
         title={salon.name || "Salon Details"}
         onClose={onClose}
+        wide
         footer={
           <button type="button" className="ha-btn-primary" onClick={onClose}>
             Close
@@ -89,11 +91,19 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                 <ServiceModal salonId={salon._id} />
               )}
             </div>
+            <input
+              type="text"
+              className="ha-input"
+              style={{ marginBottom: 10, maxWidth: 280 }}
+              placeholder="Search services by name..."
+              value={serviceSearch}
+              onChange={(e) => setServiceSearch(e.target.value)}
+            />
             <TABLE<ServiceItem>
               noBorder
               queryKey={["salon-services", salon._id]}
               service={serviceService.list}
-              serviceParams={{ salonId: salon._id }}
+              serviceParams={{ salonId: salon._id, search: serviceSearch }}
               columns={[
                 { title: "Name" },
                 { title: "Category" },

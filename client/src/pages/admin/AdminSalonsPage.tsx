@@ -13,6 +13,7 @@ import { salonsStats } from "@/components/constant";
 import TABLE from "@/components/table";
 import { SalonItem } from "../shared/SalonListPage";
 import SearchableSelect from "@/components/form/SearchableSelect";
+import { exportPageTables } from "@/utils";
 
 const statusClass = (status) => {
   if (status === "approved") return "ha-pill ha-pill-active";
@@ -22,6 +23,7 @@ const statusClass = (status) => {
 
 const AdminSalonsPage = () => {
   const [cityFilter, setCityFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [errorAction, setErrorAction] = useState("");
   const { salonModalOpen, setSalonModal } = useUIStore();
@@ -99,19 +101,36 @@ const AdminSalonsPage = () => {
       <div className="ha-card">
         <div className="ha-card-title">
           All Salons & Clinics
-          <span style={{ minWidth: 180, display: "inline-block" }}>
-            <SearchableSelect
-              value={cityFilter}
-              onChange={setCityFilter}
-              options={cities.map((city: string) => ({
-                value: city,
-                label: city === "all" ? "All Cities" : city,
-              }))}
-            />
+          <span style={{ display: "inline-flex", gap: 8 }}>
+            <span style={{ minWidth: 160, display: "inline-block" }}>
+              <SearchableSelect
+                value={cityFilter}
+                onChange={setCityFilter}
+                options={cities.map((city: string) => ({
+                  value: city,
+                  label: city === "all" ? "All Cities" : city,
+                }))}
+              />
+            </span>
+            <span style={{ minWidth: 160, display: "inline-block" }}>
+              <SearchableSelect
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { value: "all", label: "All Approval Status" },
+                  { value: "pending", label: "Pending" },
+                  { value: "approved", label: "Approved" },
+                  { value: "suspended", label: "Suspended" },
+                ]}
+              />
+            </span>
+            <button className="ha-act-btn" onClick={() => exportPageTables("salons")}>
+              Export
+            </button>
           </span>
         </div>
 
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="text"
             className="ha-input"
@@ -120,6 +139,19 @@ const AdminSalonsPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {(search || cityFilter !== "all" || statusFilter !== "all") && (
+            <button
+              type="button"
+              className="ha-btn-secondary"
+              onClick={() => {
+                setSearch("");
+                setCityFilter("all");
+                setStatusFilter("all");
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
 
         {errorAction ? (
@@ -132,7 +164,11 @@ const AdminSalonsPage = () => {
           showPagination
           queryKey={["salons"]}
           service={salonService.list}
-          serviceParams={{ search, ...(cityFilter !== "all" ? { city: cityFilter } : {}) }}
+          serviceParams={{
+            search,
+            ...(cityFilter !== "all" ? { city: cityFilter } : {}),
+            ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+          }}
           columns={[
             { title: "Salon / Clinic", size: "250px" },
             { title: "Owner" , size: "150px" },

@@ -1077,6 +1077,10 @@ textarea::placeholder {
   height: auto;
 }
 
+.ha-modal.wide {
+  width: min(820px, 95vw);
+}
+
 .ha-modal.light {
   background: #ffffff !important;
   border-color: #d7e0ee !important;

@@ -15,7 +15,7 @@ export interface CreateSalonPayload {
   phone: string;
   ownerId?: string;
   location?: { city?: string; country?: string };
-  workingHours?: Record<string, { open: string; close: string; off: boolean }>;
+  workingHours?: Record<string, { open: string; close: string; off: boolean; breakStart?: string; breakEnd?: string }>;
   commissionRate?: number;
   imageFile?: File | null;
 }

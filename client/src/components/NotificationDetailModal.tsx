@@ -9,6 +9,8 @@ interface NotificationDetailModalProps {
     type: string;
     isRead: boolean;
     createdAt: string;
+    status?: 'draft' | 'sent';
+    recipientCount?: number;
   };
   onClose: () => void;
 }
@@ -62,9 +64,15 @@ const NotificationDetailModal = ({ notification, onClose }: NotificationDetailMo
           <div>
             <label className="text-xs font-semibold uppercase text-muted">Status</label>
             <p className="text-sm">
-              <span className={n.isRead ? 'ha-pill ha-pill-active' : 'ha-pill ha-pill-pending'}>
-                {n.isRead ? 'Read' : 'Unread'}
+              <span className={n.status === 'draft' ? 'ha-pill ha-pill-pending' : 'ha-pill ha-pill-active'}>
+                {n.status === 'draft' ? 'Unsent' : 'Sent'}
               </span>
+            </p>
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase text-muted">Recipients</label>
+            <p className="text-sm font-medium">
+              {n.status === 'draft' ? '-' : (n.recipientCount ?? 0).toLocaleString()}
             </p>
           </div>
           <div>

@@ -8,6 +8,8 @@ export interface ActionMenuItem {
 }
 
 const MENU_HEIGHT_ESTIMATE = 44;
+const MENU_WIDTH = 176;
+const VIEWPORT_MARGIN = 8;
 
 const ActionsMenu = ({ items }: { items: ActionMenuItem[] }) => {
   const [open, setOpen] = useState(false);
@@ -25,10 +27,12 @@ const ActionsMenu = ({ items }: { items: ActionMenuItem[] }) => {
       const estimatedMenuHeight = items.length * MENU_HEIGHT_ESTIMATE;
       const spaceBelow = window.innerHeight - rect.bottom;
       const openUpward = spaceBelow < estimatedMenuHeight && rect.top > estimatedMenuHeight;
+      const maxLeft = window.innerWidth - MENU_WIDTH - VIEWPORT_MARGIN;
+      const left = Math.min(Math.max(rect.right - MENU_WIDTH, VIEWPORT_MARGIN), Math.max(maxLeft, VIEWPORT_MARGIN));
 
       setPosition({
         top: openUpward ? rect.top : rect.bottom,
-        left: rect.right,
+        left,
         openUpward,
       });
     };
@@ -72,7 +76,7 @@ const ActionsMenu = ({ items }: { items: ActionMenuItem[] }) => {
             style={{
               top: position.openUpward ? undefined : position.top + 4,
               bottom: position.openUpward ? window.innerHeight - position.top + 4 : undefined,
-              left: position.left - 176,
+              left: position.left,
             }}
           >
             {items.map((item) => (

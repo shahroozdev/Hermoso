@@ -38,9 +38,15 @@ const Form = ({
     console.log(methods.getValues());
   };
 
+  // Deliberately mount-only: resetting whenever `defaultValues` changes reference
+  // (a new object literal on every parent render) wiped out whatever the user had
+  // typed on any unrelated re-render — e.g. a server error being set after a failed
+  // submit. Callers that need a real reset (switching a modal from create to edit,
+  // re-showing after a save) already remount this component via a `key` change.
   useEffect(() => {
     methods.reset(defaultValues || {});
-  }, [defaultValues, methods]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (data: Record<string, unknown>) => {
     try {

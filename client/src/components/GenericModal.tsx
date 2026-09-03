@@ -7,9 +7,10 @@ interface GenericModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   isSubmitting?: boolean;
+  wide?: boolean;
 }
 
-const GenericModal = ({ title, onClose, children, footer }: GenericModalProps) => {
+const GenericModal = ({ title, onClose, children, footer, wide }: GenericModalProps) => {
   const firstFocusRef = useRef<HTMLButtonElement>(null);
   const { theme } = useUIStore();
 
@@ -33,7 +34,7 @@ const GenericModal = ({ title, onClose, children, footer }: GenericModalProps) =
   return (
     <>
       <div className={`ha-modal-overlay h-screen ${theme === 'light' ? 'light' : ''}`} onClick={onClose} />
-      <div className={`ha-modal ${theme === 'light' ? 'light' : ''}`}>
+      <div className={`ha-modal ${wide ? 'wide' : ''} ${theme === 'light' ? 'light' : ''}`}>
         <div className="ha-modal-header">
           <h3>{title}</h3>
           <button

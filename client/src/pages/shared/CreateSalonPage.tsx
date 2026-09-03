@@ -10,7 +10,7 @@ import { useAuthStore } from "../../store/authStore";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-const defaultHours = { open: "09:00", close: "18:00", off: false };
+const defaultHours = { open: "09:00", close: "18:00", off: false, breakStart: "", breakEnd: "" };
 
 const schema = z.object({
   name: z.string().min(2, "Salon name must be at least 2 characters"),
@@ -25,6 +25,8 @@ const schema = z.object({
       open: z.string().regex(/^\d{2}:\d{2}$/),
       close: z.string().regex(/^\d{2}:\d{2}$/),
       off: z.boolean(),
+      breakStart: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format").optional().or(z.literal("")),
+      breakEnd: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format").optional().or(z.literal("")),
     }),
   ),
 });
@@ -207,10 +209,21 @@ const WorkingHoursControl = () => {
   const { watch, setValue } = useFormContext();
   const workingHours = watch("workingHours");
 
+  const toggleBreak = (day: string, hasBreak: boolean) => {
+    if (hasBreak) {
+      setValue(`workingHours.${day}.breakStart`, "");
+      setValue(`workingHours.${day}.breakEnd`, "");
+    } else {
+      setValue(`workingHours.${day}.breakStart`, "13:00");
+      setValue(`workingHours.${day}.breakEnd`, "14:00");
+    }
+  };
+
   return (
     <div className="ha-hours-grid">
       {DAYS.map((day) => {
         const h = workingHours?.[day] || defaultHours;
+        const hasBreak = Boolean(h.breakStart && h.breakEnd);
         return (
           <div key={day} className={`ha-hours-row ${h.off ? "off" : ""}`}>
             <label className="ha-day-label">
@@ -239,6 +252,41 @@ const WorkingHoursControl = () => {
                   onChange={(e) => setValue(`workingHours.${day}.close`, e.target.value)}
                 />
               </div>
+            )}
+            {!h.off && hasBreak && (
+              <div className="ha-hours-time">
+                <input
+                  type="time"
+                  className="ha-input ha-input-sm"
+                  value={h.breakStart}
+                  onChange={(e) => setValue(`workingHours.${day}.breakStart`, e.target.value)}
+                />
+                <span>break to</span>
+                <input
+                  type="time"
+                  className="ha-input ha-input-sm"
+                  value={h.breakEnd}
+                  onChange={(e) => setValue(`workingHours.${day}.breakEnd`, e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="ha-btn-secondary"
+                  style={{ padding: "4px 10px" }}
+                  onClick={() => toggleBreak(day, true)}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            {!h.off && !hasBreak && (
+              <button
+                type="button"
+                className="ha-btn-secondary"
+                style={{ padding: "4px 10px" }}
+                onClick={() => toggleBreak(day, false)}
+              >
+                + Add Break
+              </button>
             )}
             {h.off && <span className="ha-day-off">Closed</span>}
           </div>

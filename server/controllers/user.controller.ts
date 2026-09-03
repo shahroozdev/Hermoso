@@ -182,15 +182,18 @@ export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, search = '' } = req.query;
+  const { page = 1, limit = 10, search = '', status } = req.query;
   const match: Record<string, unknown> = { role: Roles.SALON_OWNER };
   if (search) {
     match.$or = [{ name: new RegExp(search as string, 'i') }, { email: new RegExp(search as string, 'i') }];
   }
+  if (status) {
+    match.status = status === 'suspended' ? { $in: ['suspended', 'inactive'] } : status;
+  }
 
   const owners = await User.aggregate([
     { $match: match },
-    { $sort: { name: 1 } },
+    { $sort: { createdAt: -1 } },
     { $skip: (Number(page) - 1) * Number(limit) },
     { $limit: Number(limit) },
     {

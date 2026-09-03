@@ -1,6 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { SalonStatus, type SalonStatusType } from '../utils/constants.js';
 
+export interface IDayHours {
+  open?: string;
+  close?: string;
+  off: boolean;
+  breakStart?: string;
+  breakEnd?: string;
+}
+
 export interface ISalon extends Document {
   name: string;
   ownerId: mongoose.Types.ObjectId;
@@ -10,23 +18,23 @@ export interface ISalon extends Document {
   imageUrl?: string;
   images: string[];
   workingHours: {
-    monday: { open?: string; close?: string; off: boolean };
-    tuesday: { open?: string; close?: string; off: boolean };
-    wednesday: { open?: string; close?: string; off: boolean };
-    thursday: { open?: string; close?: string; off: boolean };
-    friday: { open?: string; close?: string; off: boolean };
-    saturday: { open?: string; close?: string; off: boolean };
-    sunday: { open?: string; close?: string; off: boolean };
+    monday: IDayHours;
+    tuesday: IDayHours;
+    wednesday: IDayHours;
+    thursday: IDayHours;
+    friday: IDayHours;
+    saturday: IDayHours;
+    sunday: IDayHours;
   };
   // Alias for workingHours (for consistency with controller)
   openingHours?: {
-    monday?: { open?: string; close?: string; off: boolean };
-    tuesday?: { open?: string; close?: string; off: boolean };
-    wednesday?: { open?: string; close?: string; off: boolean };
-    thursday?: { open?: string; close?: string; off: boolean };
-    friday?: { open?: string; close?: string; off: boolean };
-    saturday?: { open?: string; close?: string; off: boolean };
-    sunday?: { open?: string; close?: string; off: boolean };
+    monday?: IDayHours;
+    tuesday?: IDayHours;
+    wednesday?: IDayHours;
+    thursday?: IDayHours;
+    friday?: IDayHours;
+    saturday?: IDayHours;
+    sunday?: IDayHours;
   };
   commissionRate: number;
   status: SalonStatusType;
@@ -53,13 +61,13 @@ const salonSchema = new Schema<ISalon>(
     imageUrl: { type: String, default: '' },
     images: [{ type: String }],
     workingHours: {
-      monday: { open: String, close: String, off: { type: Boolean, default: false } },
-      tuesday: { open: String, close: String, off: { type: Boolean, default: false } },
-      wednesday: { open: String, close: String, off: { type: Boolean, default: false } },
-      thursday: { open: String, close: String, off: { type: Boolean, default: false } },
-      friday: { open: String, close: String, off: { type: Boolean, default: false } },
-      saturday: { open: String, close: String, off: { type: Boolean, default: false } },
-      sunday: { open: String, close: String, off: { type: Boolean, default: false } }
+      monday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String },
+      tuesday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String },
+      wednesday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String },
+      thursday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String },
+      friday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String },
+      saturday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String },
+      sunday: { open: String, close: String, off: { type: Boolean, default: false }, breakStart: String, breakEnd: String }
     },
     commissionRate: { type: Number, default: 10, min: 0, max: 100 },
     status: { type: String, enum: Object.values(SalonStatus), default: SalonStatus.PENDING, index: true },

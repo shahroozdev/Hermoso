@@ -9,6 +9,13 @@ const SidebarUserMenu = () => {
 
   const { user, logout } = useAuthStore();
 
+  const profilePath = () => {
+    const role = user?.role === "admin" ? "super_admin" : user?.role;
+    if (role === "salon_owner") return "/owner/profile";
+    if (role === "super_admin") return "/admin/profile";
+    return "/customer/profile";
+  };
+
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node))
@@ -42,7 +49,7 @@ const SidebarUserMenu = () => {
 
       {userMenuOpen ? (
         <div className="ha-user-menu">
-          <button onClick={() => navigate("/admin/profile")}>Profile</button>
+          <button onClick={() => navigate(profilePath())}>Profile</button>
           <button onClick={handleLogout}>Logout</button>
         </div>
       ) : null}
