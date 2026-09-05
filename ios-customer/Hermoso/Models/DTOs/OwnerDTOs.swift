@@ -3,10 +3,10 @@ import Foundation
 struct OwnerDashboardTotalsDto: Codable {
     let dailyBookings: Int?
     let upcomingAppointments: Int?
-    let grossRevenue: Double?
-    let netRevenue: Double?
+    let grossRevenueInPaisa: Int?
+    let netRevenueInPaisa: Int?
     let aiScanBookings: Int?
-    let aiScanRevenue: Double?
+    let aiScanRevenueInPaisa: Int?
 }
 
 struct MonthBookingChartDto: Codable, Identifiable {

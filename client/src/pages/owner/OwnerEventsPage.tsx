@@ -1,13 +1,14 @@
 import { eventService } from '../../services/eventService';
 import EventModal from '@/components/EventModal';
 import TABLE from "@/components/table";
+import { formatMoney } from '@/utils/money';
 
 interface EventItem {
   name?: string;
   category?: string;
   services?: { serviceName?: string }[];
-  totalPrice?: number;
-  finalPrice?: number;
+  totalPriceInPaisa?: number;
+  finalPriceInPaisa?: number;
   discount?: number;
   totalDuration?: number;
 }
@@ -40,9 +41,9 @@ const OwnerEventsPage = () => {
             item.category ? item.category.replace(/_/g, ' ') : '-',
             (item.services || []).map((s) => s.serviceName).join(', ') || '-',
             item.totalDuration ? `${item.totalDuration} min` : '-',
-            item.totalPrice != null ? `$${item.totalPrice}` : '-',
+            item.totalPriceInPaisa != null ? formatMoney(item.totalPriceInPaisa) : '-',
             item.discount ? `${item.discount}%` : '-',
-            item.finalPrice != null ? `$${item.finalPrice}` : '-'
+            item.finalPriceInPaisa != null ? formatMoney(item.finalPriceInPaisa) : '-'
           ])
         }
       />

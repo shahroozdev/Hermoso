@@ -1,10 +1,11 @@
 import GenericModal from './GenericModal';
+import { formatMoney } from '../utils/money';
 
 interface PayoutDetailModalProps {
   payout: {
     _id: string;
     salonId?: { name?: string; _id?: string };
-    amount?: number;
+    amountInPaisa?: number;
     status?: string;
     payoutDate?: string;
     createdAt?: string;
@@ -37,7 +38,7 @@ const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
         <div className="rounded-lg border border-[var(--border)] p-4 text-center">
           <div className="text-xs font-semibold uppercase text-muted">Net Amount</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--gold-light)' }}>
-            PKR {Math.round(Number(p.amount || 0)).toLocaleString()}
+            {formatMoney(p.amountInPaisa)}
           </div>
         </div>
 

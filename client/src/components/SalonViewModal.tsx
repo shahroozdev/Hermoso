@@ -6,6 +6,7 @@ import ActionsMenu from "./ActionsMenu";
 import { serviceService } from "@/services/serviceService";
 import { useInvalidate } from "@/hooks/useInvalidate";
 import { useToastStore } from "@/store/toastStore";
+import { formatMoney } from "@/utils/money";
 
 const aiScanLabel = (value?: string) => AI_SCAN_CATEGORIES.find((c) => c.value === value)?.label || "-";
 
@@ -14,7 +15,7 @@ interface ServiceItem extends ServiceRecord {
   category?: string;
   categoryId?: { name?: string };
   duration?: number;
-  price?: number;
+  priceInPaisa?: number;
 }
 
 interface SalonViewModalProps {
@@ -28,7 +29,7 @@ interface SalonViewModalProps {
     description?: string;
     servicesCount?: number;
     bookingsCount?: number;
-    revenue?: number;
+    revenueInPaisa?: number;
     commissionRate?: number;
     status?: string;
     active?: boolean;
@@ -91,7 +92,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
           <Row label="Phone" value={salon.phone} />
           <Row label="Services" value={salon.servicesCount ?? 0} />
           <Row label="Bookings" value={salon.bookingsCount ?? 0} />
-          <Row label="Revenue" value={Math.round(salon.revenue || 0).toLocaleString()} />
+          <Row label="Revenue" value={formatMoney(salon.revenueInPaisa)} />
           <Row label="Commission Rate" value={`${salon.commissionRate ?? 10}%`} />
           <Row label="Approval" value={salon.status} />
           <Row label="Approved By" value={salon.approvedBy?.name || (salon.status === "approved" ? "-" : "Not yet approved")} />
@@ -135,7 +136,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                   item.name,
                   item.category || item.categoryId?.name || "-",
                   item.duration ? `${item.duration} min` : "-",
-                  item.price != null ? item.price.toLocaleString() : "-",
+                  item.priceInPaisa != null ? formatMoney(item.priceInPaisa) : "-",
                   item.description || "-",
                   aiScanLabel(item.aiScanLink),
                   <ActionsMenu

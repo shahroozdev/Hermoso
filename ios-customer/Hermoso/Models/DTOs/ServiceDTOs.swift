@@ -12,7 +12,7 @@ struct ServiceDto: Codable, Identifiable {
     let name: String?
     let description: String?
     let category: String?
-    let price: Double?
+    let priceInPaisa: Int?
     let duration: Int?
     let serviceId: ServiceIdDto?
 

@@ -7,6 +7,7 @@ import { createNotification } from '../services/notification.service.js';
 import { sendEmail } from '../services/email.service.js';
 import { User } from '../models/User.js';
 import * as refundService from '../services/refund.service.js';
+import { paisaToRupees } from '../utils/money.js';
 
 const WEBHOOK_SECRET = process.env.SAFEPAY_WEBHOOK_SECRET || '';
 
@@ -66,10 +67,11 @@ export const handleWebhook = async (req: Request, res: Response) => {
           if (customer) {
             const serviceName = (booking.serviceId as unknown as { name?: string })?.name || 'service';
             const salonName = (booking.salonId as unknown as { name?: string })?.name || 'salon';
+            const amountInRupees = paisaToRupees(payment.amountInPaisa);
 
             await createNotification({
               title: 'Payment Confirmed',
-              message: `Your payment of PKR ${payment.amount} for ${serviceName} at ${salonName} has been confirmed.`,
+              message: `Your payment of PKR ${amountInRupees} for ${serviceName} at ${salonName} has been confirmed.`,
               type: 'booking_update',
               targetRole: 'customer',
               userId: String(customer._id)
@@ -79,7 +81,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
               await sendEmail({
                 to: customer.email,
                 subject: 'Hermoso Payment Confirmed',
-                html: `<p>Hi ${customer.name},</p><p>Your payment of <strong>PKR ${payment.amount}</strong> for ${serviceName} at ${salonName} has been confirmed.</p><p>Your booking is now confirmed.</p>`
+                html: `<p>Hi ${customer.name},</p><p>Your payment of <strong>PKR ${amountInRupees}</strong> for ${serviceName} at ${salonName} has been confirmed.</p><p>Your booking is now confirmed.</p>`
               });
             }
           }

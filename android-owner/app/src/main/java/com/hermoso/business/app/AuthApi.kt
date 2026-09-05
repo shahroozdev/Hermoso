@@ -143,7 +143,7 @@ data class ServiceIdDto(
 data class ServiceDto(
     val _id: String?,
     val name: String?,
-    val price: Double?,
+    val priceInPaisa: Long?,
     val duration: Int?,
     val serviceId: ServiceIdDto?,
     val description:String?
@@ -326,7 +326,7 @@ data class BookingItemDto(
     val bookingDate: String?,
     val bookingTime: String?,
     val status: String?,
-    val price: Double?,
+    val priceInPaisa: Long?,
     val salonId: SalonDto?,
     val serviceId: ServiceDto?,
     val staffId: StaffDto?,
@@ -361,10 +361,10 @@ data class EventDto(
 data class OwnerDashboardTotalsDto(
     val dailyBookings: Int?,
     val upcomingAppointments: Int?,
-    val grossRevenue: Double?,
-    val netRevenue: Double?,
+    val grossRevenueInPaisa: Long?,
+    val netRevenueInPaisa: Long?,
     val aiScanBookings: Int?,
-    val aiScanRevenue: Double?
+    val aiScanRevenueInPaisa: Long?
 )
 
 data class MonthBookingChartDto(

@@ -5,7 +5,7 @@ import ErrorBlock from '../../components/ErrorBlock';
 import MiniBarChart from '../../components/MiniBarChart';
 import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';
-import { formatCurrency } from '../../utils/format';
+import { formatMoney } from '../../utils/money';
 
 const OwnerDashboardPage = () => {
   const { data, loading, error } = useApi(() => dashboardService.owner(), ["owner-dashboard"]);
@@ -30,7 +30,7 @@ const OwnerDashboardPage = () => {
 
   // CR-26: AI Scan referral bookings
   const aiScanBookings = data?.data?.totals?.aiScanBookings || 0;
-  const aiScanRevenue = data?.data?.totals?.aiScanRevenue || 0;
+  const aiScanRevenueInPaisa = data?.data?.totals?.aiScanRevenueInPaisa || 0;
 
   return (
     <div className="space-y-6">
@@ -38,12 +38,12 @@ const OwnerDashboardPage = () => {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Daily Bookings" value={data?.data?.totals?.dailyBookings} />
         <StatCard title="Upcoming Appointments" value={data?.data?.totals?.upcomingAppointments} />
-        <StatCard title="Gross Revenue" value={formatCurrency(data?.data?.totals?.grossRevenue)} />
-        <StatCard title="Net Revenue" value={formatCurrency(data?.data?.totals?.netRevenue)} />
+        <StatCard title="Gross Revenue" value={formatMoney(data?.data?.totals?.grossRevenueInPaisa)} />
+        <StatCard title="Net Revenue" value={formatMoney(data?.data?.totals?.netRevenueInPaisa)} />
       </div>
 
       {/* CR-26: AI Scan Referral Metrics */}
-      {(aiScanBookings > 0 || aiScanRevenue > 0) && (
+      {(aiScanBookings > 0 || aiScanRevenueInPaisa > 0) && (
         <div className="shell-panel rounded-2xl p-6 border border-emerald-500/30 bg-emerald-500/5">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-emerald-500/10">
@@ -62,7 +62,7 @@ const OwnerDashboardPage = () => {
               <p className="text-xs text-muted">Bookings from AI Match</p>
             </div>
             <div className="rounded-xl bg-white/50 p-4">
-              <p className="text-2xl font-bold text-emerald-700">{formatCurrency(aiScanRevenue)}</p>
+              <p className="text-2xl font-bold text-emerald-700">{formatMoney(aiScanRevenueInPaisa)}</p>
               <p className="text-xs text-muted">Revenue from AI Referrals</p>
             </div>
           </div>

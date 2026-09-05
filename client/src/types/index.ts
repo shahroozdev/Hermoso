@@ -7,7 +7,7 @@ export interface Booking {
   bookingDate: string; // ISO date string
   bookingTime: string; // e.g. "14:30"
   status: "pending" | "confirmed" | "completed" | "cancelled";
-  price: number;
+  priceInPaisa: number;
   notes: string;
   reminderSentAt: string | null;
   createdAt: string;
@@ -33,7 +33,7 @@ export interface Salon {
 export interface Service {
   _id: string;
   name: string;
-  price: number;
+  priceInPaisa: number;
   duration: number;
 }
 

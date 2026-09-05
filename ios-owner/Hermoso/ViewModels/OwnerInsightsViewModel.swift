@@ -29,8 +29,8 @@ final class OwnerInsightsViewModel: ObservableObject {
                 return
             }
             let upcoming = totals.upcomingAppointments ?? 0
-            let net = Int(totals.netRevenue ?? 0)
-            insightText = "AI suggests promoting your top service this week. You have \(upcoming) upcoming bookings and PKR \(net) net revenue trend."
+            let net = totals.netRevenueInPaisa.asPkr()
+            insightText = "AI suggests promoting your top service this week. You have \(upcoming) upcoming bookings and \(net) net revenue trend."
         } catch {
             errorMessage = "Unable to fetch AI insight right now."
         }

@@ -1,8 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IPayout extends Document {
   salonId: mongoose.Types.ObjectId;
-  amount: number;
+  amountInPaisa: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   payoutDate: Date | null;
 }
@@ -10,7 +11,7 @@ export interface IPayout extends Document {
 const payoutSchema = new Schema<IPayout>(
   {
     salonId: { type: Schema.Types.ObjectId, ref: 'Salon', required: true, index: true },
-    amount: { type: Number, required: true, min: 0 },
+    amountInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     status: { type: String, enum: ['pending', 'processing', 'completed', 'failed'], default: 'pending', index: true },
     payoutDate: { type: Date, default: null }
   },

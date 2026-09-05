@@ -109,7 +109,7 @@ struct BookingView: View {
 
     private var serviceSelect: some View {
         LabeledSelect(
-            options: viewModel.services.map { "\($0.name ?? "") (PKR \(Int($0.price ?? 0)))" },
+            options: viewModel.services.map { "\($0.name ?? "") (\($0.priceInPaisa.asPkr()))" },
             selectedIndex: viewModel.services.firstIndex(where: { $0.id == viewModel.selectedServiceId }),
             placeholder: "Choose a service",
             isDisabled: viewModel.services.isEmpty
@@ -181,7 +181,7 @@ struct BookingView: View {
             HStack {
                 Text("Total").font(.system(size: 14, weight: .heavy))
                 Spacer()
-                Text("PKR \(Int(viewModel.selectedServicePrice ?? 0))").font(.system(size: 14, weight: .heavy))
+                Text(viewModel.selectedServicePriceInPaisa.asPkr()).font(.system(size: 14, weight: .heavy))
             }
             .foregroundColor(Color.hermosoPurple)
         }

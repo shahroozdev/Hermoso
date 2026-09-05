@@ -44,7 +44,7 @@ struct OwnerServicesView: View {
                     .foregroundColor(Color.hermosoTextMuted)
             }
             Spacer()
-            Text("PKR \(Int(service.price ?? 0))")
+            Text(service.priceInPaisa.asPkr())
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(Color.hermosoPurpleLight)
         }

@@ -1,8 +1,3 @@
-export const formatCurrency = (amount: number | string | null | undefined): string => {
-  const value = Number(amount || 0);
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
-};
-
 export   const formatDate = (value?: string) => {
     if (!value) return 'Just now';
 

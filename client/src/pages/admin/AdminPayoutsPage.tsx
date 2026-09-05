@@ -6,18 +6,20 @@ import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
 import { useInvalidate } from '../../hooks/useInvalidate';
 import { payoutService } from '../../services/payoutService';
+import { formatMoney, paisaToRupees } from '../../utils/money';
 
 interface PayoutItem {
   _id: string;
   salonId?: { name?: string; _id?: string };
-  amount?: number;
+  amountInPaisa?: number;
   status?: string;
   payoutDate?: string;
   createdAt?: string;
 }
 
-const compactMoney = (value: number) => {
-  const n = Number(value || 0);
+// Value is expected in paisa; formats the rupee amount compactly (1.2M, 45K).
+const compactMoney = (valueInPaisa: number) => {
+  const n = paisaToRupees(valueInPaisa);
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
   return `${Math.round(n)}`;
@@ -47,10 +49,10 @@ const AdminPayoutsPage = () => {
     const d = statsReq.data?.data;
     return {
       pendingPayouts: d?.pendingPayouts ?? 0,
-      pendingTotal: d?.pendingTotal ?? 0,
+      pendingTotalInPaisa: d?.pendingTotalInPaisa ?? 0,
       paidPayouts: d?.paidPayouts ?? 0,
-      paidTotal: d?.paidTotal ?? 0,
-      avgPayout: d?.avgPayout ?? 0,
+      paidTotalInPaisa: d?.paidTotalInPaisa ?? 0,
+      avgPayoutInPaisa: d?.avgPayoutInPaisa ?? 0,
     };
   }, [statsReq.data]);
 
@@ -93,12 +95,12 @@ const AdminPayoutsPage = () => {
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Pending Payouts</div>
           <div className="ha-kpi-val white">{kpi.pendingPayouts}</div>
-          <div className="ha-kpi-change" style={{ color: 'var(--amber)' }}>PKR {compactMoney(kpi.pendingTotal)} total</div>
+          <div className="ha-kpi-change" style={{ color: 'var(--amber)' }}>PKR {compactMoney(kpi.pendingTotalInPaisa)} total</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Paid This Month</div>
           <div className="ha-kpi-val">{kpi.paidPayouts}</div>
-          <div className="ha-kpi-change up">PKR {compactMoney(kpi.paidTotal)} sent</div>
+          <div className="ha-kpi-change up">PKR {compactMoney(kpi.paidTotalInPaisa)} sent</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Next Payout Cycle</div>
@@ -107,7 +109,7 @@ const AdminPayoutsPage = () => {
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Avg Payout</div>
-          <div className="ha-kpi-val">{compactMoney(kpi.avgPayout)}</div>
+          <div className="ha-kpi-val">{compactMoney(kpi.avgPayoutInPaisa)}</div>
           <div className="ha-kpi-change up">PKR per salon</div>
         </div>
       </div>
@@ -134,7 +136,7 @@ const AdminPayoutsPage = () => {
             <span className="ha-salon-name" style={{ fontSize: 14 }}>{item.salonId?.name || 'Unknown Salon'}</span>,
             periodLabel(item.createdAt),
             <div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--gold-light)' }}>PKR {Math.round(Number(item.amount || 0)).toLocaleString()}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--gold-light)' }}>{formatMoney(item.amountInPaisa)}</div>
               <div className="ha-salon-sub">{item.status === 'completed' ? `Paid: ${item.payoutDate ? new Date(item.payoutDate).toLocaleDateString() : '-'}` : ''}</div>
             </div>,
             <span className="ha-salon-sub">{fakeAccount(item.salonId?.name || '')}</span>,

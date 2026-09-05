@@ -96,7 +96,7 @@ struct RecommendationsView: View {
                     Text("Recommended from your latest scan")
                         .font(.system(size: 11))
                         .foregroundColor(Color.hermosoTextMuted)
-                    Text("PKR \(Int(service.price ?? 0)) · \(service.duration ?? 0) min")
+                    Text("\(service.priceInPaisa.asPkr()) · \(service.duration ?? 0) min")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color.hermosoPurple)
                 }

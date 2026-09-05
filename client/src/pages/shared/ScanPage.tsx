@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { scanService, type ScanResult } from "../../services/scanService";
+import { formatMoney } from "../../utils/money";
 
 const SCAN_STEPS = [
   { key: "skinTone", label: "Skin Tone & Tanning" },
@@ -829,7 +830,7 @@ const ScanPage = () => {
                   >
                     <p className="font-semibold text-sm">{svc.name}</p>
                     <p className="mt-1 text-xs text-muted">
-                      PKR {svc.price} &middot; {svc.duration} min
+                      {formatMoney(svc.priceInPaisa)} &middot; {svc.duration} min
                     </p>
                   </div>
                 ))}

@@ -4,18 +4,20 @@ import ErrorBlock from '../../components/ErrorBlock';
 import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
 import { salonService } from '../../services/salonService';
+import { paisaToRupees } from '../../utils/money';
 
 interface RevenueItem {
   name: string;
   bookingsCount?: number;
-  grossRevenue?: number;
+  grossRevenueInPaisa?: number;
   commissionRate?: number;
-  platformRevenue?: number;
-  salonNetRevenue?: number;
+  platformRevenueInPaisa?: number;
+  salonNetRevenueInPaisa?: number;
 }
 
-const compactMoney = (value: number) => {
-  const n = Number(value || 0);
+// Value is expected in paisa; formats the rupee amount compactly (1.2M, 45K).
+const compactMoney = (valueInPaisa: number) => {
+  const n = paisaToRupees(valueInPaisa);
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
   return `${Math.round(n)}`;
@@ -28,11 +30,11 @@ const AdminRevenuePage = () => {
   const statsReq = useApi(() => salonService.getRevenueStats(), ["revenue-stats"]);
 
   const kpi = useMemo(() => ({
-    totalGMV: statsReq.data?.data?.totalGMV ?? 0,
-    platformCommission: statsReq.data?.data?.platformCommission ?? 0,
+    totalGMVInPaisa: statsReq.data?.data?.totalGMVInPaisa ?? 0,
+    platformCommissionInPaisa: statsReq.data?.data?.platformCommissionInPaisa ?? 0,
     pendingPayouts: statsReq.data?.data?.pendingPayouts ?? 0,
-    pendingPayoutAmount: statsReq.data?.data?.pendingPayoutAmount ?? 0,
-    avgBookingValue: statsReq.data?.data?.avgBookingValue ?? 0,
+    pendingPayoutAmountInPaisa: statsReq.data?.data?.pendingPayoutAmountInPaisa ?? 0,
+    avgBookingValueInPaisa: statsReq.data?.data?.avgBookingValueInPaisa ?? 0,
   }), [statsReq.data]);
 
   const saveRules = () => {
@@ -47,22 +49,22 @@ const AdminRevenuePage = () => {
       <div className="ha-kpi-row">
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Total GMV This Month</div>
-          <div className="ha-kpi-val">{compactMoney(kpi.totalGMV)}</div>
+          <div className="ha-kpi-val">{compactMoney(kpi.totalGMVInPaisa)}</div>
           <div className="ha-kpi-change up">PKR · live platform volume</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Platform Commission</div>
-          <div className="ha-kpi-val">{compactMoney(kpi.platformCommission)}</div>
+          <div className="ha-kpi-val">{compactMoney(kpi.platformCommissionInPaisa)}</div>
           <div className="ha-kpi-change up">PKR · across salons</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Payouts Pending</div>
           <div className="ha-kpi-val white">{kpi.pendingPayouts}</div>
-          <div className="ha-kpi-change" style={{ color: 'var(--amber)' }}>PKR {compactMoney(kpi.pendingPayoutAmount)} due</div>
+          <div className="ha-kpi-change" style={{ color: 'var(--amber)' }}>PKR {compactMoney(kpi.pendingPayoutAmountInPaisa)} due</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Avg Booking Value</div>
-          <div className="ha-kpi-val">{kpi.avgBookingValue.toLocaleString()}</div>
+          <div className="ha-kpi-val">{paisaToRupees(kpi.avgBookingValueInPaisa).toLocaleString()}</div>
           <div className="ha-kpi-change up">PKR per booking</div>
         </div>
       </div>
@@ -84,9 +86,9 @@ const AdminRevenuePage = () => {
             data?.map((item) => [
               <span className="ha-salon-name" style={{ fontSize: 14 }}>{item.name}</span>,
               item.bookingsCount ?? 0,
-              <span className="ha-money">{compactMoney(Number(item.grossRevenue ?? 0))}</span>,
+              <span className="ha-money">{compactMoney(Number(item.grossRevenueInPaisa ?? 0))}</span>,
               `${Number(item.commissionRate ?? 0)}%`,
-              <span style={{ color: 'var(--green)', fontWeight: 700 }}>{compactMoney(Number(item.platformRevenue ?? 0))}</span>,
+              <span style={{ color: 'var(--green)', fontWeight: 700 }}>{compactMoney(Number(item.platformRevenueInPaisa ?? 0))}</span>,
             ])
           }
         />

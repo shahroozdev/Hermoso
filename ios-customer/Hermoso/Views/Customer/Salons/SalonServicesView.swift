@@ -119,7 +119,7 @@ struct SalonServicesView: View {
                     Text("\(service.duration ?? 0) min").font(.system(size: 11)).foregroundColor(Color.hermosoTextMuted)
                 }
                 Spacer()
-                Text("PKR \(Int(service.price ?? 0))").font(.system(size: 13, weight: .bold)).foregroundColor(Color.hermosoPurple)
+                Text(service.priceInPaisa.asPkr()).font(.system(size: 13, weight: .bold)).foregroundColor(Color.hermosoPurple)
             }
             .padding(14)
             .background(isSelected ? Color.hermosoPurple.opacity(0.1) : Color.white)

@@ -13,7 +13,7 @@ const REDIRECT_BASE = process.env.SAFEPAY_REDIRECT_BASE || 'http://localhost:517
 export const createCheckout = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { bookingId } = req.body;
 
-  const booking = await Booking.findById(bookingId).populate('serviceId', 'name price');
+  const booking = await Booking.findById(bookingId).populate('serviceId', 'name priceInPaisa');
   if (!booking) return next(new ApiError(404, 'Booking not found'));
 
   if (String(booking.customerId) !== String(req.user?._id)) {
@@ -49,12 +49,12 @@ export const createCheckout = asyncHandler(async (req: AuthRequest, res: Respons
     }
   }
 
-  const service = booking.serviceId as unknown as { price: number };
+  const service = booking.serviceId as unknown as { priceInPaisa: number };
   const fraudResult = await fraudService.checkFraud({
     customerId: String(booking.customerId),
     serviceId: String(booking.serviceId),
     bookingDate: booking.bookingDate,
-    amount: service.price,
+    amountInPaisa: service.priceInPaisa,
     ipAddress: req.ip || undefined,
     userAgent: req.get('user-agent') || undefined
   });
@@ -78,9 +78,9 @@ export const createCheckout = asyncHandler(async (req: AuthRequest, res: Respons
     payment = await Payment.create({
       bookingId: booking._id,
       salonId: booking.salonId,
-      amount: service.price,
-      platformCommission: 0,
-      salonAmount: service.price,
+      amountInPaisa: service.priceInPaisa,
+      platformCommissionInPaisa: 0,
+      salonAmountInPaisa: service.priceInPaisa,
       status: PaymentStatus.PENDING,
       idempotencyKey,
       fraudFlag: fraudResult.flags[0] || 'none',
@@ -91,7 +91,7 @@ export const createCheckout = asyncHandler(async (req: AuthRequest, res: Respons
   }
 
   const tracker = await safepayService.createPaymentTracker({
-    amount: service.price,
+    amountInPaisa: service.priceInPaisa,
     currency: 'PKR',
     orderId: String(booking._id),
     customerId: String(booking.customerId)
@@ -123,7 +123,7 @@ export const getPaymentStatus = asyncHandler(async (req: AuthRequest, res: Respo
     .populate({
       path: 'bookingId',
       populate: [
-        { path: 'serviceId', select: 'name price duration' },
+        { path: 'serviceId', select: 'name priceInPaisa duration' },
         { path: 'salonId', select: 'name' },
         { path: 'staffId', select: 'name' }
       ]
@@ -161,7 +161,7 @@ export const getPaymentStatus = asyncHandler(async (req: AuthRequest, res: Respo
     data: {
       status: payment.status,
       paidAt: payment.paidAt,
-      amount: payment.amount,
+      amountInPaisa: payment.amountInPaisa,
       tracker: payment.trackerId,
       booking: payment.bookingId
     }

@@ -5,15 +5,16 @@ import { eventService } from '../../services/eventService';
 import { posService } from '../../services/posService';
 import { customerService } from '../../services/customerService';
 import { authService } from '../../services/authService';
+import { formatMoney, paisaToRupees, rupeesToPaisa } from '../../utils/money';
 
 interface LineItem {
   id: string;
   type: 'service' | 'event';
   name: string;
-  price: number;
+  priceInPaisa: number;
   qty: number;
-  discount: number;
-  total: number;
+  discountInPaisa: number;
+  totalInPaisa: number;
 }
 
 interface BillRecord {
@@ -21,13 +22,13 @@ interface BillRecord {
   receiptRef: string;
   customerName: string;
   items: LineItem[];
-  subtotal: number;
-  itemDiscount: number;
+  subtotalInPaisa: number;
+  itemDiscountInPaisa: number;
   gstPercent: number;
-  gstAmount: number;
+  gstAmountInPaisa: number;
   globalDiscountPercent: number;
-  globalDiscountAmount: number;
-  grandTotal: number;
+  globalDiscountAmountInPaisa: number;
+  grandTotalInPaisa: number;
   createdAt: string;
 }
 
@@ -41,7 +42,7 @@ const OwnerPOSPage = () => {
   const [showItemModal, setShowItemModal] = useState(false);
   const [itemSearch, setItemSearch] = useState('');
   const [itemTab, setItemTab] = useState<'services' | 'events'>('services');
-  const [receiptData, setReceiptData] = useState<{ ref: string; items: LineItem[]; subtotal: number; gst: number; discount: number; total: number; customer: string } | null>(null);
+  const [receiptData, setReceiptData] = useState<{ ref: string; items: LineItem[]; subtotalInPaisa: number; gstInPaisa: number; discountInPaisa: number; totalInPaisa: number; customer: string } | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
@@ -77,25 +78,26 @@ const OwnerPOSPage = () => {
     b.customerName?.toLowerCase().includes(retrieveSearch.toLowerCase())
   );
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const totalItemDiscount = items.reduce((sum, item) => sum + item.discount, 0);
-  const gstAmount = (subtotal - totalItemDiscount) * (gstPercent / 100);
-  const globalDiscountAmount = (subtotal - totalItemDiscount) * (globalDiscount / 100);
-  const grandTotal = subtotal - totalItemDiscount + gstAmount - globalDiscountAmount;
+  const subtotalInPaisa = items.reduce((sum, item) => sum + item.priceInPaisa * item.qty, 0);
+  const totalItemDiscountInPaisa = items.reduce((sum, item) => sum + item.discountInPaisa, 0);
+  const netAfterItemDiscountInPaisa = subtotalInPaisa - totalItemDiscountInPaisa;
+  const gstAmountInPaisa = Math.round(netAfterItemDiscountInPaisa * (gstPercent / 100));
+  const globalDiscountAmountInPaisa = Math.round(netAfterItemDiscountInPaisa * (globalDiscount / 100));
+  const grandTotalInPaisa = netAfterItemDiscountInPaisa + gstAmountInPaisa - globalDiscountAmountInPaisa;
 
-  const addItem = (s: { _id: string; name: string; price: number; totalDuration?: number; finalPrice?: number; totalPrice?: number }, type: 'service' | 'event') => {
-    const price = type === 'event' ? (s.finalPrice || s.totalPrice || s.price) : s.price;
+  const addItem = (s: { _id: string; name: string; priceInPaisa: number; totalDuration?: number; finalPriceInPaisa?: number; totalPriceInPaisa?: number }, type: 'service' | 'event') => {
+    const priceInPaisa = type === 'event' ? (s.finalPriceInPaisa || s.totalPriceInPaisa || s.priceInPaisa) : s.priceInPaisa;
     const existing = items.findIndex((i) => i.id === s._id && i.type === type);
     if (existing >= 0) {
       setItems((prev) =>
         prev.map((item, idx) =>
-          idx === existing ? { ...item, qty: item.qty + 1, total: (item.qty + 1) * item.price - item.discount } : item
+          idx === existing ? { ...item, qty: item.qty + 1, totalInPaisa: (item.qty + 1) * item.priceInPaisa - item.discountInPaisa } : item
         )
       );
     } else {
       setItems((prev) => [
         ...prev,
-        { id: s._id, type, name: s.name, price, qty: 1, discount: 0, total: price },
+        { id: s._id, type, name: s.name, priceInPaisa, qty: 1, discountInPaisa: 0, totalInPaisa: priceInPaisa },
       ]);
     }
     setShowItemModal(false);
@@ -108,9 +110,9 @@ const OwnerPOSPage = () => {
       prev.map((item, i) => {
         if (i !== index) return item;
         const qty = field === 'qty' ? Math.max(1, value) : item.qty;
-        const discount = field === 'discount' ? Math.max(0, value) : item.discount;
-        const total = qty * item.price - discount;
-        return { ...item, qty, discount, total: Math.max(0, total) };
+        const discountInPaisa = field === 'discount' ? Math.max(0, rupeesToPaisa(value)) : item.discountInPaisa;
+        const totalInPaisa = qty * item.priceInPaisa - discountInPaisa;
+        return { ...item, qty, discountInPaisa, totalInPaisa: Math.max(0, totalInPaisa) };
       })
     );
   };
@@ -142,30 +144,24 @@ const OwnerPOSPage = () => {
           serviceId: i.id,
           type: i.type,
           name: i.name,
-          price: i.price,
           qty: i.qty,
-          discount: i.discount,
-          total: i.total,
+          discountInPaisa: i.discountInPaisa,
         })),
-        subtotal,
-        itemDiscount: totalItemDiscount,
         gstPercent,
-        gstAmount,
         globalDiscountPercent: globalDiscount,
-        globalDiscountAmount,
-        grandTotal,
         receiptRef: ref,
       };
 
-      await posService.create(payload);
+      const result = await posService.create(payload);
+      const savedPos = result.data as BillRecord;
 
       setReceiptData({
         ref,
-        items: [...items],
-        subtotal,
-        gst: gstAmount,
-        discount: totalItemDiscount + globalDiscountAmount,
-        total: grandTotal,
+        items: savedPos.items,
+        subtotalInPaisa: savedPos.subtotalInPaisa,
+        gstInPaisa: savedPos.gstAmountInPaisa,
+        discountInPaisa: savedPos.itemDiscountInPaisa + savedPos.globalDiscountAmountInPaisa,
+        totalInPaisa: savedPos.grandTotalInPaisa,
         customer: selectedCustomer?.name || 'Walk-in',
       });
       setItems([]);
@@ -329,14 +325,14 @@ const OwnerPOSPage = () => {
                     <div className="font-medium">{item.name}</div>
                     <div className="text-xs capitalize text-[var(--text-muted)]">{item.type}</div>
                   </td>
-                  <td className="px-3 py-2 align-middle">${item.price.toFixed(2)}</td>
+                  <td className="px-3 py-2 align-middle">{formatMoney(item.priceInPaisa)}</td>
                   <td className="px-3 py-2 align-middle">
                     <input className="w-[70px] rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-center text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" value={item.qty} min={1} onChange={(e) => updateField(i, 'qty', Number(e.target.value))} />
                   </td>
                   <td className="px-3 py-2 align-middle">
-                    <input className="w-[90px] rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-center text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" value={item.discount} min={0} step={0.01} onChange={(e) => updateField(i, 'discount', Number(e.target.value))} />
+                    <input className="w-[90px] rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-center text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" value={paisaToRupees(item.discountInPaisa)} min={0} step={0.01} onChange={(e) => updateField(i, 'discount', Number(e.target.value))} />
                   </td>
-                  <td className="px-3 py-2 align-middle font-semibold">${item.total.toFixed(2)}</td>
+                  <td className="px-3 py-2 align-middle font-semibold">{formatMoney(item.totalInPaisa)}</td>
                   <td className="px-3 py-2 align-middle"><button className="cursor-pointer rounded-md border-0 bg-none px-2 py-1 text-lg text-red-500 hover:bg-red-50" onClick={() => removeItem(i)}>x</button></td>
                 </tr>
               ))
@@ -363,13 +359,13 @@ const OwnerPOSPage = () => {
         </div>
 
         <div className="min-w-[280px] text-right">
-          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Item Discount</span><span>-${totalItemDiscount.toFixed(2)}</span></div>
-          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>GST ({gstPercent}%)</span><span>+${gstAmount.toFixed(2)}</span></div>
-          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Discount ({globalDiscount}%)</span><span>-${globalDiscountAmount.toFixed(2)}</span></div>
-          <div className="mt-1 flex justify-between border-t-2 border-[var(--border)] px-0 pt-2 text-2xl font-bold"><span>Total</span><span>${grandTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Subtotal</span><span>{formatMoney(subtotalInPaisa)}</span></div>
+          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Item Discount</span><span>-{formatMoney(totalItemDiscountInPaisa)}</span></div>
+          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>GST ({gstPercent}%)</span><span>+{formatMoney(gstAmountInPaisa)}</span></div>
+          <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Discount ({globalDiscount}%)</span><span>-{formatMoney(globalDiscountAmountInPaisa)}</span></div>
+          <div className="mt-1 flex justify-between border-t-2 border-[var(--border)] px-0 pt-2 text-2xl font-bold"><span>Total</span><span>{formatMoney(grandTotalInPaisa)}</span></div>
           <button className="mt-3 w-full cursor-pointer rounded-lg border-0 bg-[var(--accent-2)] px-5 py-3.5 text-base font-semibold text-slate-900 disabled:opacity-50" disabled={items.length === 0 || checkoutLoading} onClick={handleCheckout}>
-            {checkoutLoading ? 'Processing...' : `${editingBillId ? 'Update' : 'Proceed'} $${grandTotal.toFixed(2)}`}
+            {checkoutLoading ? 'Processing...' : `${editingBillId ? 'Update' : 'Proceed'} ${formatMoney(grandTotalInPaisa)}`}
           </button>
         </div>
       </div>
@@ -388,14 +384,14 @@ const OwnerPOSPage = () => {
                 ? (filteredServices.length > 0 ? filteredServices : services).map((s) => (
                     <div key={s._id} className="cursor-pointer rounded-lg border border-[var(--border)] p-3 hover:border-[var(--accent-2)] hover:bg-[var(--surface-soft)]" onClick={() => addItem(s, 'service')}>
                       <div className="text-sm font-semibold">{s.name}</div>
-                      <div className="mt-1 text-base font-bold text-[var(--accent-2)]">${s.price}</div>
+                      <div className="mt-1 text-base font-bold text-[var(--accent-2)]">{formatMoney(s.priceInPaisa)}</div>
                       <div className="text-xs text-[var(--text-muted)]">{s.duration} min</div>
                     </div>
                   ))
                 : (filteredEvents.length > 0 ? filteredEvents : events).map((e) => (
                     <div key={e._id} className="cursor-pointer rounded-lg border border-[var(--border)] p-3 hover:border-[var(--accent-2)] hover:bg-[var(--surface-soft)]" onClick={() => addItem(e, 'event')}>
                       <div className="text-sm font-semibold">{e.name}</div>
-                      <div className="mt-1 text-base font-bold text-[var(--accent-2)]">${e.finalPrice || e.totalPrice}</div>
+                      <div className="mt-1 text-base font-bold text-[var(--accent-2)]">{formatMoney(e.finalPriceInPaisa || e.totalPriceInPaisa)}</div>
                       <div className="text-xs text-[var(--text-muted)]">{e.totalDuration} min</div>
                       {e.discount ? <div className="text-xs text-[var(--text-muted)]">{e.discount}% off</div> : null}
                     </div>
@@ -425,7 +421,7 @@ const OwnerPOSPage = () => {
                       <div className="text-xs text-[var(--text-muted)]">{bill.customerName} &middot; {new Date(bill.createdAt).toLocaleString()}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-base font-bold">${bill.grandTotal.toFixed(2)}</div>
+                      <div className="text-base font-bold">{formatMoney(bill.grandTotalInPaisa)}</div>
                       <div className="rounded-full bg-[var(--surface-soft)] px-2 py-0.5 text-xs text-[var(--text-muted)]">{bill.items.length} item{bill.items.length > 1 ? 's' : ''}</div>
                     </div>
                   </div>
@@ -488,16 +484,16 @@ const OwnerPOSPage = () => {
                 <div key={i} className="flex justify-between py-1 text-xs">
                   <span className="flex-1">{item.name}</span>
                   <span className="w-10 text-center">{item.qty}</span>
-                  <span className="w-[70px] text-right">${item.total.toFixed(2)}</span>
+                  <span className="w-[70px] text-right">{formatMoney(item.totalInPaisa)}</span>
                 </div>
               ))}
             </div>
 
             <div className="my-3">
-              <div className="flex justify-between text-sm"><span>Subtotal</span><span>${receiptData.subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm"><span>Discount</span><span>-${receiptData.discount.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm"><span>GST</span><span>+${receiptData.gst.toFixed(2)}</span></div>
-              <div className="mt-2 flex justify-between border-t-2 border-dashed border-black pt-2 text-base font-bold"><span>Total</span><span>${receiptData.total.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatMoney(receiptData.subtotalInPaisa)}</span></div>
+              <div className="flex justify-between text-sm"><span>Discount</span><span>-{formatMoney(receiptData.discountInPaisa)}</span></div>
+              <div className="flex justify-between text-sm"><span>GST</span><span>+{formatMoney(receiptData.gstInPaisa)}</span></div>
+              <div className="mt-2 flex justify-between border-t-2 border-dashed border-black pt-2 text-base font-bold"><span>Total</span><span>{formatMoney(receiptData.totalInPaisa)}</span></div>
             </div>
 
             <div className="border-dashed border-t border-black py-3 text-center text-xs text-gray-500">

@@ -10,6 +10,7 @@ import { categoryService, type CategoryRecord } from '../services/categoryServic
 import GenericModal from './GenericModal';
 import { useInvalidate } from '../hooks/useInvalidate';
 import { useToastStore } from '../store/toastStore';
+import { paisaToRupees, rupeesToPaisa } from '../utils/money';
 
 const serviceSchema = z.object({
   name: z.string().min(2, 'Service name must be at least 2 characters'),
@@ -37,7 +38,7 @@ export interface ServiceRecord {
   name?: string;
   categoryId?: string | { _id?: string; name?: string };
   duration?: number;
-  price?: number;
+  priceInPaisa?: number;
   description?: string;
   aiScanLink?: string;
   salonId?: string;
@@ -76,7 +77,7 @@ export const ServiceFormModal = ({
     name: service?.name || '',
     categoryId: selectedCategoryId,
     duration: service?.duration ?? 30,
-    price: service?.price ?? 0,
+    price: service?.priceInPaisa != null ? paisaToRupees(service.priceInPaisa) : 0,
     description: service?.description || '',
     aiScanLink: service?.aiScanLink || ''
   };
@@ -89,7 +90,7 @@ export const ServiceFormModal = ({
         name: data.name,
         categoryId: data.categoryId,
         duration: Number(data.duration),
-        price: Number(data.price),
+        priceInPaisa: rupeesToPaisa(data.price),
         description: data.description || '',
         aiScanLink: data.aiScanLink || ''
       };

@@ -1,25 +1,25 @@
-import { Payment } from '../models/Payment.js';
+﻿import { Payment } from '../models/Payment.js';
 import { Payout } from '../models/Payout.js';
 import { Refund } from '../models/Refund.js';
 import { PaymentStatus, RefundStatus } from '../utils/constants.js';
 
 export interface DeductionBreakdown {
-  totalPayments: number;
-  totalPaidOut: number;
-  salonInitiatedRefunds: number;
-  platformInitiatedRefunds: number;
-  availableBalance: number;
+  totalPaymentsInPaisa: number;
+  totalPaidOutInPaisa: number;
+  salonInitiatedRefundsInPaisa: number;
+  platformInitiatedRefundsInPaisa: number;
+  availableBalanceInPaisa: number;
 }
 
 export async function calculateAvailableBalance(salonId: string): Promise<number> {
   const [totalNetResult, paidOutResult, salonRefundsResult] = await Promise.all([
     Payment.aggregate([
       { $match: { salonId: salonId, status: PaymentStatus.PAID } },
-      { $group: { _id: null, total: { $sum: '$salonAmount' } } }
+      { $group: { _id: null, total: { $sum: '$salonAmountInPaisa' } } }
     ]),
     Payout.aggregate([
       { $match: { salonId: salonId, status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+      { $group: { _id: null, total: { $sum: '$amountInPaisa' } } }
     ]),
     Refund.aggregate([
       {
@@ -29,7 +29,7 @@ export async function calculateAvailableBalance(salonId: string): Promise<number
           initiatedByType: { $in: ['salon_owner', 'salon'] }
         }
       },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+      { $group: { _id: null, total: { $sum: '$amountInPaisa' } } }
     ])
   ]);
 
@@ -44,11 +44,11 @@ export async function getDeductionBreakdown(salonId: string): Promise<DeductionB
   const [totalPaymentsResult, paidOutResult, salonRefundsResult, platformRefundsResult] = await Promise.all([
     Payment.aggregate([
       { $match: { salonId: salonId, status: PaymentStatus.PAID } },
-      { $group: { _id: null, total: { $sum: '$salonAmount' } } }
+      { $group: { _id: null, total: { $sum: '$salonAmountInPaisa' } } }
     ]),
     Payout.aggregate([
       { $match: { salonId: salonId, status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+      { $group: { _id: null, total: { $sum: '$amountInPaisa' } } }
     ]),
     Refund.aggregate([
       {
@@ -58,7 +58,7 @@ export async function getDeductionBreakdown(salonId: string): Promise<DeductionB
           initiatedByType: { $in: ['salon_owner', 'salon'] }
         }
       },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+      { $group: { _id: null, total: { $sum: '$amountInPaisa' } } }
     ]),
     Refund.aggregate([
       {
@@ -68,20 +68,20 @@ export async function getDeductionBreakdown(salonId: string): Promise<DeductionB
           initiatedByType: { $in: ['admin', 'system', 'customer'] }
         }
       },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+      { $group: { _id: null, total: { $sum: '$amountInPaisa' } } }
     ])
   ]);
 
-  const totalPayments = totalPaymentsResult[0]?.total || 0;
-  const totalPaidOut = paidOutResult[0]?.total || 0;
-  const salonInitiatedRefunds = salonRefundsResult[0]?.total || 0;
-  const platformInitiatedRefunds = platformRefundsResult[0]?.total || 0;
+  const totalPaymentsInPaisa = totalPaymentsResult[0]?.total || 0;
+  const totalPaidOutInPaisa = paidOutResult[0]?.total || 0;
+  const salonInitiatedRefundsInPaisa = salonRefundsResult[0]?.total || 0;
+  const platformInitiatedRefundsInPaisa = platformRefundsResult[0]?.total || 0;
 
   return {
-    totalPayments,
-    totalPaidOut,
-    salonInitiatedRefunds,
-    platformInitiatedRefunds,
-    availableBalance: totalPayments - totalPaidOut - salonInitiatedRefunds
+    totalPaymentsInPaisa,
+    totalPaidOutInPaisa,
+    salonInitiatedRefundsInPaisa,
+    platformInitiatedRefundsInPaisa,
+    availableBalanceInPaisa: totalPaymentsInPaisa - totalPaidOutInPaisa - salonInitiatedRefundsInPaisa
   };
 }

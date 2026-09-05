@@ -40,8 +40,8 @@ struct OwnerDashboardView: View {
                     statCard("Upcoming", "\(viewModel.totals?.upcomingAppointments ?? 0)")
                 }
                 HStack(spacing: 10) {
-                    statCard("Gross Revenue", "PKR \(Int(viewModel.totals?.grossRevenue ?? 0))")
-                    statCard("Net Revenue", "PKR \(Int(viewModel.totals?.netRevenue ?? 0))")
+                    statCard("Gross Revenue", (viewModel.totals?.grossRevenueInPaisa).asPkr())
+                    statCard("Net Revenue", (viewModel.totals?.netRevenueInPaisa).asPkr())
                 }
 
                 if viewModel.showAiReferrals {
@@ -87,7 +87,7 @@ struct OwnerDashboardView: View {
                     Text("Bookings").font(.system(size: 10.5)).foregroundColor(Color.hermosoTextMuted)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("PKR \(Int(viewModel.totals?.aiScanRevenue ?? 0))")
+                    Text((viewModel.totals?.aiScanRevenueInPaisa).asPkr())
                         .font(.system(size: 20, weight: .heavy))
                         .foregroundColor(Color(hex: "#10B981"))
                     Text("Revenue").font(.system(size: 10.5)).foregroundColor(Color.hermosoTextMuted)

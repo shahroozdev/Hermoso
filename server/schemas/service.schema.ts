@@ -5,7 +5,7 @@ export const createServiceSchema = z.object({
   body: z.object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100),
     description: z.string().max(500).optional().default(''),
-    price: z.number().min(0, 'Price must be greater than or equal to 0'),
+    priceInPaisa: z.number().int('Price must be an integer number of paisa').nonnegative('Price must be greater than or equal to 0'),
     duration: z.number().min(5, 'Duration must be at least 5 minutes'),
     categoryId: z.string().min(1, 'Category ID is required'),
     salonId: z.string().optional(),
@@ -18,7 +18,7 @@ export const updateServiceSchema = z.object({
   body: z.object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100).optional(),
     description: z.string().max(500).optional(),
-    price: z.number().min(0, 'Price must be greater than or equal to 0').optional(),
+    priceInPaisa: z.number().int('Price must be an integer number of paisa').nonnegative('Price must be greater than or equal to 0').optional(),
     duration: z.number().min(5, 'Duration must be at least 5 minutes').optional(),
     categoryId: z.string().optional(),
     active: z.boolean().optional(),

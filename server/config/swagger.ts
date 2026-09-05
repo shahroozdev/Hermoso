@@ -105,11 +105,11 @@ const options: swaggerJsdoc.Options = {
         // Service schemas with Zod validation
         CreateServiceRequest: {
           type: 'object',
-          required: ['name', 'price', 'duration', 'categoryId'],
+          required: ['name', 'priceInPaisa', 'duration', 'categoryId'],
           properties: {
             name: { type: 'string', minLength: 2, maxLength: 100, example: 'Haircut & Style' },
             description: { type: 'string', maxLength: 500, example: 'Professional haircut with styling' },
-            price: { type: 'number', minimum: 0, example: 50 },
+            priceInPaisa: { type: 'number', minimum: 0, example: 5000, description: 'Price in paisa (1 rupee = 100 paisa)' },
             duration: { type: 'number', minimum: 5, example: 60 },
             categoryId: { type: 'string', example: '507f1f77bcf86cd799439011' }
           }
@@ -157,15 +157,15 @@ const options: swaggerJsdoc.Options = {
                 properties: {
                   serviceId: { type: 'string' },
                   serviceName: { type: 'string' },
-                  price: { type: 'number' },
+                  priceInPaisa: { type: 'number' },
                   duration: { type: 'number' }
                 }
               }
             },
-            totalPrice: { type: 'number' },
+            totalPriceInPaisa: { type: 'number' },
             totalDuration: { type: 'number' },
             discount: { type: 'number' },
-            finalPrice: { type: 'number' },
+            finalPriceInPaisa: { type: 'number' },
             active: { type: 'boolean' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }

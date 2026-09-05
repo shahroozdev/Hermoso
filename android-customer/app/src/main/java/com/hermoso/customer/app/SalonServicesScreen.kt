@@ -312,7 +312,7 @@ fun SalonServicesScreen(navController: NavHostController, salonId: String) {
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Text(
-                                    "PKR ${(service.price ?: 0.0).toInt()}",
+                                    service.priceInPaisa.toPkr(),
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Purple,
                                     style = MaterialTheme.typography.titleMedium

@@ -61,7 +61,7 @@ fun OwnerServicesScreen() {
                         Text(s.name ?: "Service", color = Cream, fontWeight = FontWeight.Bold)
                         Text("${s.duration ?: 0} min", color = TextMuted)
                     }
-                    Text("PKR ${(s.price ?: 0.0).toInt()}", color = PurpleLight, fontWeight = FontWeight.Bold)
+                    Text(s.priceInPaisa.toPkr(), color = PurpleLight, fontWeight = FontWeight.Bold)
                 }
             }
         }

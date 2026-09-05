@@ -113,7 +113,7 @@ fun BookingListScreen() {
                     ) {
                         StatusBadge(status = booking.status)
                         Text(
-                            text = "PKR ${(booking.price ?: 0.0).toInt()}",
+                            text = booking.priceInPaisa.toPkr(),
                             color = Purple,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp

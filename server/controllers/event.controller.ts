@@ -4,6 +4,7 @@ import { Service } from '../models/Service.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { applyPercent, sumPaisa } from '../utils/money.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createEventSchema,
@@ -46,14 +47,14 @@ export const createEvent = asyncHandler(
     const eventServices = foundServices.map(service => ({
       serviceId: service._id,
       serviceName: service.name,
-      price: service.price,
+      priceInPaisa: service.priceInPaisa,
       duration: service.duration,
     }));
 
     // Calculate totals
-    const totalPrice = eventServices.reduce((sum, s) => sum + s.price, 0);
+    const totalPriceInPaisa = sumPaisa(eventServices.map((s) => s.priceInPaisa));
     const totalDuration = eventServices.reduce((sum, s) => sum + s.duration, 0);
-    const finalPrice = totalPrice - (totalPrice * discount / 100);
+    const finalPriceInPaisa = totalPriceInPaisa - applyPercent(totalPriceInPaisa, discount);
 
     const event = await Event.create({
       salonId,
@@ -61,10 +62,10 @@ export const createEvent = asyncHandler(
       description,
       category,
       services: eventServices,
-      totalPrice,
+      totalPriceInPaisa,
       totalDuration,
       discount,
-      finalPrice,
+      finalPriceInPaisa,
       images
     });
 
@@ -142,12 +143,12 @@ export const updateEvent = asyncHandler(
       const eventServices = foundServices.map(service => ({
         serviceId: service._id,
         serviceName: service.name,
-        price: service.price,
+        priceInPaisa: service.priceInPaisa,
         duration: service.duration
       }));
 
       event.services = eventServices;
-      event.totalPrice = eventServices.reduce((sum, s) => sum + s.price, 0);
+      event.totalPriceInPaisa = sumPaisa(eventServices.map((s) => s.priceInPaisa));
       event.totalDuration = eventServices.reduce((sum, s) => sum + s.duration, 0);
     }
 
@@ -155,7 +156,7 @@ export const updateEvent = asyncHandler(
     event.description = description || event.description;
     event.category = category || event.category;
     event.discount = discount;
-    event.finalPrice = event.totalPrice - (event.totalPrice * discount / 100);
+    event.finalPriceInPaisa = event.totalPriceInPaisa - applyPercent(event.totalPriceInPaisa, discount);
     if (images) event.images = images;
 
     await event.save();

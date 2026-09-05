@@ -4,23 +4,16 @@ interface POSItem {
   serviceId: string;
   type: 'service' | 'event';
   name: string;
-  price: number;
   qty: number;
-  discount: number;
-  total: number;
+  discountInPaisa: number;
 }
 
 interface CreatePOSPayload {
   customerId?: string;
   customerName: string;
   items: POSItem[];
-  subtotal: number;
-  itemDiscount: number;
   gstPercent: number;
-  gstAmount: number;
   globalDiscountPercent: number;
-  globalDiscountAmount: number;
-  grandTotal: number;
   receiptRef: string;
 }
 

@@ -1,13 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IPOSItem {
   serviceId: mongoose.Types.ObjectId;
   type: 'service' | 'event';
   name: string;
-  price: number;
+  priceInPaisa: number;
   qty: number;
-  discount: number;
-  total: number;
+  discountInPaisa: number;
+  totalInPaisa: number;
 }
 
 export interface IPOS extends Document {
@@ -15,13 +16,13 @@ export interface IPOS extends Document {
   customerId?: mongoose.Types.ObjectId;
   customerName: string;
   items: IPOSItem[];
-  subtotal: number;
-  itemDiscount: number;
+  subtotalInPaisa: number;
+  itemDiscountInPaisa: number;
   gstPercent: number;
-  gstAmount: number;
+  gstAmountInPaisa: number;
   globalDiscountPercent: number;
-  globalDiscountAmount: number;
-  grandTotal: number;
+  globalDiscountAmountInPaisa: number;
+  grandTotalInPaisa: number;
   receiptRef: string;
   status: 'completed' | 'refunded';
 }
@@ -36,19 +37,19 @@ const posSchema = new Schema<IPOS>(
         serviceId: { type: Schema.Types.ObjectId, ref: 'Service', required: true },
         type: { type: String, enum: ['service', 'event'], required: true },
         name: { type: String, required: true },
-        price: { type: Number, required: true, min: 0 },
+        priceInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
         qty: { type: Number, required: true, min: 1 },
-        discount: { type: Number, default: 0, min: 0 },
-        total: { type: Number, required: true, min: 0 },
+        discountInPaisa: { type: Number, default: 0, min: 0, validate: integerPaisaValidator },
+        totalInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
       }
     ],
-    subtotal: { type: Number, required: true, min: 0 },
-    itemDiscount: { type: Number, default: 0, min: 0 },
+    subtotalInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
+    itemDiscountInPaisa: { type: Number, default: 0, min: 0, validate: integerPaisaValidator },
     gstPercent: { type: Number, default: 0, min: 0, max: 100 },
-    gstAmount: { type: Number, default: 0, min: 0 },
+    gstAmountInPaisa: { type: Number, default: 0, min: 0, validate: integerPaisaValidator },
     globalDiscountPercent: { type: Number, default: 0, min: 0, max: 100 },
-    globalDiscountAmount: { type: Number, default: 0, min: 0 },
-    grandTotal: { type: Number, required: true, min: 0 },
+    globalDiscountAmountInPaisa: { type: Number, default: 0, min: 0, validate: integerPaisaValidator },
+    grandTotalInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     receiptRef: { type: String, required: true, unique: true },
     status: { type: String, enum: ['completed', 'refunded'], default: 'completed' },
   },

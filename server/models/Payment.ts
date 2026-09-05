@@ -1,19 +1,20 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { PaymentStatus, FraudFlag, type PaymentStatusType, type FraudFlagType } from '../utils/constants.js';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IPayment extends Document {
   bookingId: mongoose.Types.ObjectId;
   salonId: mongoose.Types.ObjectId;
-  amount: number;
-  platformCommission: number;
-  salonAmount: number;
+  amountInPaisa: number;
+  platformCommissionInPaisa: number;
+  salonAmountInPaisa: number;
   status: PaymentStatusType;
   trackerId: string | null;
   idempotencyKey: string;
   safepayStatus: string | null;
   paidAt: Date | null;
   refundedAt: Date | null;
-  refundAmount: number;
+  refundAmountInPaisa: number;
   refundTrackerId: string | null;
   fraudFlag: FraudFlagType;
   fraudReasons: string[];
@@ -25,9 +26,9 @@ const paymentSchema = new Schema<IPayment>(
   {
     bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true, unique: true, index: true },
     salonId: { type: Schema.Types.ObjectId, ref: 'Salon', required: true, index: true },
-    amount: { type: Number, required: true, min: 0 },
-    platformCommission: { type: Number, required: true, min: 0 },
-    salonAmount: { type: Number, required: true, min: 0 },
+    amountInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
+    platformCommissionInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
+    salonAmountInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     status: {
       type: String,
       enum: Object.values(PaymentStatus),
@@ -39,7 +40,7 @@ const paymentSchema = new Schema<IPayment>(
     safepayStatus: { type: String, default: null },
     paidAt: { type: Date, default: null },
     refundedAt: { type: Date, default: null },
-    refundAmount: { type: Number, default: 0, min: 0 },
+    refundAmountInPaisa: { type: Number, default: 0, min: 0, validate: integerPaisaValidator },
     refundTrackerId: { type: String, default: null },
     fraudFlag: {
       type: String,

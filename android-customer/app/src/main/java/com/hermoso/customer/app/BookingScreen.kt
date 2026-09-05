@@ -286,8 +286,7 @@ fun BookingScreen(
                             placeholder = "Choose a service",
                             options = services.mapNotNull { svc ->
                                 svc._id?.let {
-                                    val price = svc.price?.toInt() ?: 0
-                                    it to "${svc.name ?: "Service"} (PKR $price)"
+                                    it to "${svc.name ?: "Service"} (${svc.priceInPaisa.toPkr()})"
                                 }
                             },
                             enabled = selectedSalonId.isNotBlank() && !loadingOptions && !submitting
@@ -392,7 +391,7 @@ fun BookingScreen(
                             SummaryRow("Date", selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy")))
                             SummaryRow("Time", if (selectedBookingTime.isBlank()) "-" else selectedBookingTime)
                             HorizontalDivider(color = Cream, thickness = 1.dp)
-                            SummaryRow("Total Amount", if (selectedService?.price != null) "PKR ${selectedService.price.toInt()}" else "-", highlight = true)
+                            SummaryRow("Total Amount", if (selectedService?.priceInPaisa != null) selectedService.priceInPaisa.toPkr() else "-", highlight = true)
                         }
                     }
                 }

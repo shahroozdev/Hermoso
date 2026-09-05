@@ -13,6 +13,7 @@ import { Review } from '../models/Review.js';
 import { Payout } from '../models/Payout.js';
 import { Notification } from '../models/Notification.js';
 import { BookingStatus, ReviewStatus, Roles, SalonStatus } from '../utils/constants.js';
+import { applyPercent, rupeesToPaisa, sumPaisa } from '../utils/money.js';
 import {
   mockCategories,
   mockSalonNames,
@@ -158,7 +159,7 @@ const seed = async () => {
         salonId: salon._id,
         name,
         description: mockServiceDescriptions[mockServiceNames.indexOf(name)] || 'Professional service',
-        price: getRandomItem(mockServicePrices),
+        priceInPaisa: rupeesToPaisa(getRandomItem(mockServicePrices)),
         duration: getRandomItem(mockServiceDurations),
         categoryId: cat._id,
         category: cat.name,
@@ -178,10 +179,10 @@ const seed = async () => {
       // Select 2-5 random services for the event
       const eventServices = getRandomItems(salonServices_db, 2, Math.min(5, salonServices_db.length));
 
-      const totalPrice = eventServices.reduce((sum, s) => sum + s.price, 0);
+      const totalPriceInPaisa = sumPaisa(eventServices.map((s) => s.priceInPaisa));
       const totalDuration = eventServices.reduce((sum, s) => sum + s.duration, 0);
       const discount = [0, 5, 10, 15, 20][Math.floor(Math.random() * 5)];
-      const finalPrice = totalPrice - (totalPrice * discount / 100);
+      const finalPriceInPaisa = totalPriceInPaisa - applyPercent(totalPriceInPaisa, discount);
 
       await Event.create({
         salonId: salon._id,
@@ -191,13 +192,13 @@ const seed = async () => {
         services: eventServices.map(service => ({
           serviceId: service._id,
           serviceName: service.name,
-          price: service.price,
+          priceInPaisa: service.priceInPaisa,
           duration: service.duration
         })),
-        totalPrice,
+        totalPriceInPaisa,
         totalDuration,
         discount,
-        finalPrice,
+        finalPriceInPaisa,
         active: true,
         images: []
       });
@@ -262,18 +263,18 @@ const seed = async () => {
         bookingDate: bookingDate,
         bookingTime: `${String(bookingHour).padStart(2, '0')}:${String(bookingMinute).padStart(2, '0')}`,
         status: getRandomItem(Object.values(BookingStatus)),
-        price: serviceToBook.price
+        priceInPaisa: serviceToBook.priceInPaisa
       });
 
       // Create payment for confirmed/completed bookings
       if ([BookingStatus.CONFIRMED, BookingStatus.COMPLETED].includes(booking.status as any)) {
-        const platformCommission = Math.floor(booking.price * salon.commissionRate / 100);
+        const platformCommissionInPaisa = applyPercent(booking.priceInPaisa, salon.commissionRate);
         await Payment.create({
           bookingId: booking._id,
           salonId: salon._id,
-          amount: booking.price,
-          platformCommission: platformCommission,
-          salonAmount: booking.price - platformCommission,
+          amountInPaisa: booking.priceInPaisa,
+          platformCommissionInPaisa,
+          salonAmountInPaisa: booking.priceInPaisa - platformCommissionInPaisa,
           status: 'paid'
         });
       }
@@ -294,7 +295,7 @@ const seed = async () => {
     if (Math.random() > 0.5) {
       await Payout.create({
         salonId: salon._id,
-        amount: Math.floor(Math.random() * 10000) + 5000,
+        amountInPaisa: rupeesToPaisa(Math.floor(Math.random() * 10000) + 5000),
         status: getRandomItem(['pending', 'completed', 'failed']),
         payoutDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
       });

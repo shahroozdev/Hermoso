@@ -90,7 +90,7 @@ struct BookingsListView: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.red)
                 }
-                Text("PKR \(Int(booking.price ?? 0))")
+                Text(booking.priceInPaisa.asPkr())
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(Color.hermosoPurple)
             }

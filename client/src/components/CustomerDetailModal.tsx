@@ -2,6 +2,7 @@ import GenericModal from './GenericModal';
 import LoadingBlock from './LoadingBlock';
 import { useApi } from '../hooks/useApi';
 import { customerService } from '../services/customerService';
+import { formatMoney } from '../utils/money';
 
 interface CustomerDetailModalProps {
   customerId: string;
@@ -55,7 +56,7 @@ const CustomerDetailModal = ({ customerId, onClose }: CustomerDetailModalProps) 
                     </div>
                     <div className="mt-1 flex justify-between text-muted">
                       <span>{(b.serviceId as Record<string, string>)?.name || 'N/A'}</span>
-                      <span>PKR {(b as Record<string, number>)?.price?.toLocaleString() || '0'}</span>
+                      <span>{formatMoney((b as Record<string, number>)?.priceInPaisa)}</span>
                     </div>
                     <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs capitalize font-medium ${(b as Record<string, string>)?.status === 'confirmed' ? 'bg-green-100 text-green-800' : (b as Record<string, string>)?.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       {(b as Record<string, string>)?.status || 'pending'}

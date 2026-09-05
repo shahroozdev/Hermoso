@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { BookingStatus, type BookingStatusType } from '../utils/constants.js';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IBooking extends Document {
   customerId: mongoose.Types.ObjectId;
@@ -9,7 +10,7 @@ export interface IBooking extends Document {
   bookingDate: Date;
   bookingTime: string;
   status: BookingStatusType;
-  price: number;
+  priceInPaisa: number;
   notes: string;
   reminderSentAt: Date | null;
 }
@@ -23,7 +24,7 @@ const bookingSchema = new Schema<IBooking>(
     bookingDate: { type: Date, required: true, index: true },
     bookingTime: { type: String, required: true },
     status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.PENDING, index: true },
-    price: { type: Number, required: true, min: 0 },
+    priceInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     notes: { type: String, default: '' },
     reminderSentAt: { type: Date, default: null }
   },

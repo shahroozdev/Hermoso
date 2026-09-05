@@ -140,7 +140,7 @@ data class ServiceIdDto(
 data class ServiceDto(
     val _id: String?,
     val name: String?,
-    val price: Double?,
+    val priceInPaisa: Long?,
     val duration: Int?,
     val serviceId: ServiceIdDto?,
     val description:String?
@@ -341,7 +341,7 @@ data class BookingItemDto(
     val bookingDate: String?,
     val bookingTime: String?,
     val status: String?,
-    val price: Double?,
+    val priceInPaisa: Long?,
     val salonId: SalonDto?,
     val serviceId: ServiceDto?,
     val staffId: StaffDto?,
@@ -370,7 +370,7 @@ data class CheckoutData(
 data class PaymentStatusData(
     val status: String?,
     val paidAt: String?,
-    val amount: Double?,
+    val amountInPaisa: Long?,
     val tracker: String?,
     val booking: BookingItemDto?
 )
@@ -383,13 +383,13 @@ data class RefundRequest(
 data class RefundData(
     val refundId: String?,
     val status: String?,
-    val amount: Double?,
+    val amountInPaisa: Long?,
     val message: String?
 )
 
 data class RefundDto(
     val _id: String?,
-    val amount: Double?,
+    val amountInPaisa: Long?,
     val status: String?,
     val reason: String?,
     val createdAt: String?

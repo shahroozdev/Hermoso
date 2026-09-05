@@ -2,6 +2,7 @@ import { Payment } from '../models/Payment.js';
 import { Booking } from '../models/Booking.js';
 import { Refund } from '../models/Refund.js';
 import { RefundStatus, PaymentStatus, BookingStatus } from '../utils/constants.js';
+import { paisaToRupees } from '../utils/money.js';
 import * as safepayService from './safepay.service.js';
 import { createNotification } from './notification.service.js';
 import { sendEmail } from './email.service.js';
@@ -12,7 +13,7 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 export interface RefundEligibility {
   eligible: boolean;
   reason: string;
-  amount: number;
+  amountInPaisa: number;
 }
 
 export async function getRefundEligibility(
@@ -24,16 +25,16 @@ export async function getRefundEligibility(
     .populate('salonId', 'name');
 
   if (!booking) {
-    return { eligible: false, reason: 'Booking not found', amount: 0 };
+    return { eligible: false, reason: 'Booking not found', amountInPaisa: 0 };
   }
 
   if (String(booking.customerId) !== customerId) {
-    return { eligible: false, reason: 'Not your booking', amount: 0 };
+    return { eligible: false, reason: 'Not your booking', amountInPaisa: 0 };
   }
 
   const payment = await Payment.findOne({ bookingId });
   if (!payment || payment.status !== PaymentStatus.PAID) {
-    return { eligible: false, reason: 'No paid payment found for this booking', amount: 0 };
+    return { eligible: false, reason: 'No paid payment found for this booking', amountInPaisa: 0 };
   }
 
   const existingRefund = await Refund.findOne({
@@ -41,11 +42,11 @@ export async function getRefundEligibility(
     status: { $in: [RefundStatus.PENDING, RefundStatus.PROCESSING] }
   });
   if (existingRefund) {
-    return { eligible: false, reason: 'A refund is already being processed', amount: 0 };
+    return { eligible: false, reason: 'A refund is already being processed', amountInPaisa: 0 };
   }
 
   if (booking.status === BookingStatus.CANCELLED) {
-    return { eligible: true, reason: 'Booking was cancelled', amount: payment.amount };
+    return { eligible: true, reason: 'Booking was cancelled', amountInPaisa: payment.amountInPaisa };
   }
 
   const appointmentTime = new Date(booking.bookingDate);
@@ -56,13 +57,13 @@ export async function getRefundEligibility(
   const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
 
   if (timeUntilAppointment >= TWENTY_FOUR_HOURS_MS) {
-    return { eligible: true, reason: 'Cancellation within 24-hour window', amount: payment.amount };
+    return { eligible: true, reason: 'Cancellation within 24-hour window', amountInPaisa: payment.amountInPaisa };
   }
 
   return {
     eligible: false,
     reason: 'Cancellations less than 24 hours before appointment are non-refundable',
-    amount: 0
+    amountInPaisa: 0
   };
 }
 
@@ -72,7 +73,7 @@ export async function createRefund(params: {
   reason: string;
   initiatedBy: string;
   initiatedByType: 'customer' | 'salon_owner' | 'admin' | 'system';
-  amount?: number;
+  amountInPaisa?: number;
 }): Promise<{ refund: InstanceType<typeof Refund>; success: boolean; message: string }> {
   const payment = await Payment.findById(params.paymentId);
   if (!payment) {
@@ -83,8 +84,8 @@ export async function createRefund(params: {
     throw new Error('Payment is not in paid status');
   }
 
-  const refundAmount = params.amount || payment.amount;
-  if (refundAmount > payment.amount - payment.refundAmount) {
+  const refundAmountInPaisa = params.amountInPaisa || payment.amountInPaisa;
+  if (refundAmountInPaisa > payment.amountInPaisa - payment.refundAmountInPaisa) {
     throw new Error('Refund amount exceeds available amount');
   }
 
@@ -93,7 +94,7 @@ export async function createRefund(params: {
     bookingId: params.bookingId,
     salonId: payment.salonId,
     customerId: payment.bookingId ? (await Booking.findById(params.bookingId))?.customerId : undefined,
-    amount: refundAmount,
+    amountInPaisa: refundAmountInPaisa,
     reason: params.reason,
     initiatedBy: params.initiatedBy,
     initiatedByType: params.initiatedByType,
@@ -108,7 +109,7 @@ export async function createRefund(params: {
     const booking = await Booking.findById(params.bookingId);
     const result = await safepayService.initiateRefund({
       trackerToken: payment.trackerId,
-      amount: refundAmount,
+      amountInPaisa: refundAmountInPaisa,
       currency: 'PKR'
     });
 
@@ -116,11 +117,11 @@ export async function createRefund(params: {
     refund.safepayRefundId = result.state;
     await refund.save();
 
-    const newRefundTotal = payment.refundAmount + refundAmount;
-    payment.refundAmount = newRefundTotal;
+    const newRefundTotalInPaisa = payment.refundAmountInPaisa + refundAmountInPaisa;
+    payment.refundAmountInPaisa = newRefundTotalInPaisa;
     payment.refundTrackerId = result.state;
 
-    if (newRefundTotal >= payment.amount) {
+    if (newRefundTotalInPaisa >= payment.amountInPaisa) {
       payment.status = PaymentStatus.REFUNDED;
       payment.refundedAt = new Date();
     } else {
@@ -136,9 +137,10 @@ export async function createRefund(params: {
 
     const customer = await User.findById(payment.bookingId ? (await Booking.findById(params.bookingId))?.customerId : null);
     if (customer) {
+      const refundAmountInRupees = paisaToRupees(refundAmountInPaisa);
       await createNotification({
         title: 'Refund Processed',
-        message: `Your refund of PKR ${refundAmount} has been initiated. It will be reflected in 7-14 business days.`,
+        message: `Your refund of PKR ${refundAmountInRupees} has been initiated. It will be reflected in 7-14 business days.`,
         type: 'booking_update',
         targetRole: 'customer',
         userId: String(customer._id)
@@ -148,7 +150,7 @@ export async function createRefund(params: {
         await sendEmail({
           to: customer.email,
           subject: 'Hermoso Refund Confirmation',
-          html: `<p>Hi ${customer.name},</p><p>Your refund of <strong>PKR ${refundAmount}</strong> has been initiated.</p><p>It will be reflected in your account within 7-14 business days.</p><p>Reason: ${params.reason}</p>`
+          html: `<p>Hi ${customer.name},</p><p>Your refund of <strong>PKR ${refundAmountInRupees}</strong> has been initiated.</p><p>It will be reflected in your account within 7-14 business days.</p><p>Reason: ${params.reason}</p>`
         });
       }
     }
@@ -204,7 +206,7 @@ export async function handleRefundWebhook(params: {
   if (payment) {
     if (params.status === 'failed') {
       payment.status = PaymentStatus.PAID;
-      payment.refundAmount = Math.max(0, payment.refundAmount - refund.amount);
+      payment.refundAmountInPaisa = Math.max(0, payment.refundAmountInPaisa - refund.amountInPaisa);
       payment.refundedAt = null;
       await payment.save();
     }

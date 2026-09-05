@@ -60,7 +60,7 @@ export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: R
     {
       $addFields: {
         bookingsCount: { $size: '$bookings' },
-        totalSpent: { $ifNull: [{ $sum: '$bookings.price' }, 0] },
+        totalSpentInPaisa: { $ifNull: [{ $sum: '$bookings.priceInPaisa' }, 0] },
         eventCount: {
           $size: {
             $filter: {
@@ -101,12 +101,12 @@ export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: R
         totalCustomers: { $sum: 1 },
         returningCustomers: { $sum: { $cond: [{ $gte: [{ $size: '$bookings' }, 2] }, 1, 0] } },
         flaggedAccounts: { $sum: { $cond: [{ $eq: ['$status', 'suspended'] }, 1, 0] } },
-        totalRevenue: { $sum: { $ifNull: [{ $sum: '$bookings.price' }, 0] } },
+        totalRevenueInPaisa: { $sum: { $ifNull: [{ $sum: '$bookings.priceInPaisa' }, 0] } },
       },
     },
   ]);
 
-  const defaultStats = { totalCustomers: 0, returningCustomers: 0, flaggedAccounts: 0, totalRevenue: 0 };
+  const defaultStats = { totalCustomers: 0, returningCustomers: 0, flaggedAccounts: 0, totalRevenueInPaisa: 0 };
   const summary = stats[0] || defaultStats;
 
   res.json({
@@ -131,7 +131,7 @@ export const getCustomerActivity = asyncHandler(async (req: AuthRequest, res: Re
 
   const bookings = await Booking.find(bookingQuery)
     .populate('salonId', 'name')
-    .populate('serviceId', 'name price')
+    .populate('serviceId', 'name priceInPaisa')
     .sort({ createdAt: -1 });
 
   res.json({ success: true, data: { customer, bookings } });

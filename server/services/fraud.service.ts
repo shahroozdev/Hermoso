@@ -7,8 +7,8 @@ const VELOCITY_WINDOW_MS = 60 * 60 * 1000;
 const DUPLICATE_WINDOW_MS = 5 * 60 * 1000;
 const VELOCITY_LIMIT = 5;
 const RAPID_LIMIT = 3;
-const MAX_AMOUNT = 50000;
-const MIN_AMOUNT = 1;
+const MAX_AMOUNT_IN_PAISA = 50000 * 100;
+const MIN_AMOUNT_IN_PAISA = 1 * 100;
 
 export interface FraudCheckResult {
   allowed: boolean;
@@ -21,7 +21,7 @@ export async function checkFraud(params: {
   customerId: string;
   serviceId: string;
   bookingDate: Date;
-  amount: number;
+  amountInPaisa: number;
   ipAddress?: string;
   userAgent?: string;
 }): Promise<FraudCheckResult> {
@@ -100,14 +100,14 @@ export async function checkFraud(params: {
     reasons.push(`Customer has made ${rapidCount} bookings in the last 10 minutes`);
   }
 
-  if (params.amount > MAX_AMOUNT) {
+  if (params.amountInPaisa > MAX_AMOUNT_IN_PAISA) {
     flags.push(FraudFlag.SUSPICIOUS_AMOUNT);
-    reasons.push(`Payment amount PKR ${params.amount} exceeds maximum threshold`);
+    reasons.push(`Payment amount PKR ${params.amountInPaisa / 100} exceeds maximum threshold`);
   }
 
-  if (params.amount < MIN_AMOUNT) {
+  if (params.amountInPaisa < MIN_AMOUNT_IN_PAISA) {
     flags.push(FraudFlag.SUSPICIOUS_AMOUNT);
-    reasons.push(`Payment amount PKR ${params.amount} is below minimum threshold`);
+    reasons.push(`Payment amount PKR ${params.amountInPaisa / 100} is below minimum threshold`);
   }
 
   return {
@@ -144,7 +144,7 @@ export async function getUnresolvedFrauds(page = 1, limit = 20) {
   const [data, total] = await Promise.all([
     FraudLog.find({ resolved: false })
       .populate('customerId', 'name email')
-      .populate('paymentId', 'amount status')
+      .populate('paymentId', 'amountInPaisa status')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),

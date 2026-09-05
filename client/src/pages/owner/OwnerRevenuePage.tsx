@@ -1,9 +1,9 @@
 import { payoutService } from '../../services/payoutService';
-import { formatCurrency } from '../../utils/format';
+import { formatMoney } from '../../utils/money';
 import TABLE from "@/components/table";
 
 interface PayoutItem {
-  amount?: number;
+  amountInPaisa?: number;
   status?: string;
   createdAt?: string;
   payoutDate?: string;
@@ -21,7 +21,7 @@ const OwnerRevenuePage = () => {
         columns={[{ title: 'Amount' }, { title: 'Status' }, { title: 'Created' }, { title: 'Payout Date' }]}
         rows={(data) =>
           data?.map((item) => [
-            formatCurrency(item.amount),
+            formatMoney(item.amountInPaisa),
             item.status,
             item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-',
             item.payoutDate ? new Date(item.payoutDate).toLocaleDateString() : '-',

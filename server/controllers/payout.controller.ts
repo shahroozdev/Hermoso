@@ -9,15 +9,15 @@ import type { AuthRequest } from '../middleware/auth.middleware.js';
 export const requestPayout = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user?.salonId) return next(new ApiError(400, 'Salon owner account is required'));
 
-  const available = await deductionService.calculateAvailableBalance(String(req.user.salonId));
+  const availableInPaisa = await deductionService.calculateAvailableBalance(String(req.user.salonId));
 
-  const amount = Number(req.body.amount);
-  if (amount <= 0 || amount > available) {
-    return next(new ApiError(400, `Invalid payout amount. Available balance: ${available}`));
+  const amountInPaisa = Number(req.body.amountInPaisa);
+  if (!Number.isInteger(amountInPaisa) || amountInPaisa <= 0 || amountInPaisa > availableInPaisa) {
+    return next(new ApiError(400, `Invalid payout amount. Available balance: ${availableInPaisa}`));
   }
 
-  const payout = await Payout.create({ salonId: req.user.salonId, amount, status: 'pending' });
-  res.status(201).json({ success: true, data: payout, availableBalance: available });
+  const payout = await Payout.create({ salonId: req.user.salonId, amountInPaisa, status: 'pending' });
+  res.status(201).json({ success: true, data: payout, availableBalanceInPaisa: availableInPaisa });
 });
 
 export const getPayoutStats = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -32,10 +32,10 @@ export const getPayoutStats = asyncHandler(async (req: AuthRequest, res: Respons
       $group: {
         _id: null,
         pendingPayouts: { $sum: { $cond: [{ $in: ['$status', ['pending', 'processing']] }, 1, 0] } },
-        pendingTotal: { $sum: { $cond: [{ $in: ['$status', ['pending', 'processing']] }, '$amount', 0] } },
+        pendingTotalInPaisa: { $sum: { $cond: [{ $in: ['$status', ['pending', 'processing']] }, '$amountInPaisa', 0] } },
         paidPayouts: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
-        paidTotal: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$amount', 0] } },
-        totalAmount: { $sum: '$amount' },
+        paidTotalInPaisa: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$amountInPaisa', 0] } },
+        totalAmountInPaisa: { $sum: '$amountInPaisa' },
         totalCount: { $sum: 1 },
       },
     },
@@ -45,10 +45,10 @@ export const getPayoutStats = asyncHandler(async (req: AuthRequest, res: Respons
     success: true,
     data: {
       pendingPayouts: stats?.pendingPayouts || 0,
-      pendingTotal: stats?.pendingTotal || 0,
+      pendingTotalInPaisa: stats?.pendingTotalInPaisa || 0,
       paidPayouts: stats?.paidPayouts || 0,
-      paidTotal: stats?.paidTotal || 0,
-      avgPayout: stats?.totalCount ? Math.round(stats.totalAmount / stats.totalCount) : 0,
+      paidTotalInPaisa: stats?.paidTotalInPaisa || 0,
+      avgPayoutInPaisa: stats?.totalCount ? Math.round(stats.totalAmountInPaisa / stats.totalCount) : 0,
     },
   });
 });

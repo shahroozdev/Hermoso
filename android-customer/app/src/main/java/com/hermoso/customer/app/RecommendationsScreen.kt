@@ -143,7 +143,7 @@ fun RecommendationsScreen(navController: NavHostController) {
                     Column {
                         Text(treatment.name ?: "Service", fontWeight = FontWeight.Bold)
                         Text("Recommended from your latest scan", color = TextMuted)
-                        Text("PKR ${treatment.price ?: 0.0} - ${treatment.duration ?: 0} min", color = Purple, fontWeight = FontWeight.SemiBold)
+                        Text("${treatment.priceInPaisa.toPkr()} - ${treatment.duration ?: 0} min", color = Purple, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

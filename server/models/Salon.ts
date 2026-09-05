@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { SalonStatus, type SalonStatusType } from '../utils/constants.js';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IDayHours {
   open?: string;
@@ -49,7 +50,7 @@ export interface ISalon extends Document {
   southAsianSpecialist?: boolean;
   // Additional fields for enhanced matching
   rating: number;
-  averagePrice?: number;
+  averagePriceInPaisa?: number;
 }
 
 const salonSchema = new Schema<ISalon>(
@@ -83,7 +84,7 @@ const salonSchema = new Schema<ISalon>(
     southAsianSpecialist: { type: Boolean, default: false, index: true },
     // Additional fields for enhanced matching
     rating: { type: Number, default: 0, min: 0, max: 5 },
-    averagePrice: { type: Number, min: 0 }
+    averagePriceInPaisa: { type: Number, min: 0, validate: integerPaisaValidator }
   },
   { timestamps: true }
 );

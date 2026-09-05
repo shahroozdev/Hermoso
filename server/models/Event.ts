@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { EventCategory, type EventCategoryType } from '../utils/constants.js';
+import { applyPercent, integerPaisaValidator, sumPaisa } from '../utils/money.js';
 
 export interface IEvent extends Document {
   salonId: mongoose.Types.ObjectId;
@@ -9,13 +10,13 @@ export interface IEvent extends Document {
   services: Array<{
     serviceId: mongoose.Types.ObjectId;
     serviceName: string;
-    price: number;
+    priceInPaisa: number;
     duration: number;
   }>;
-  totalPrice: number;
+  totalPriceInPaisa: number;
   totalDuration: number;
   discount: number;
-  finalPrice: number;
+  finalPriceInPaisa: number;
   active: boolean;
   images: string[];
 }
@@ -35,14 +36,14 @@ const eventSchema = new Schema<IEvent>(
       {
         serviceId: { type: Schema.Types.ObjectId, ref: 'Service', required: true },
         serviceName: { type: String, required: true },
-        price: { type: Number, required: true, min: 0 },
+        priceInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
         duration: { type: Number, required: true, min: 5 }
       }
     ],
-    totalPrice: { type: Number, required: true, min: 0 },
+    totalPriceInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     totalDuration: { type: Number, required: true, min: 5 },
     discount: { type: Number, default: 0, min: 0, max: 100 },
-    finalPrice: { type: Number, required: true, min: 0 },
+    finalPriceInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     active: { type: Boolean, default: true },
     images: [{ type: String }]
   },
@@ -56,9 +57,9 @@ eventSchema.index({ salonId: 1, active: 1 });
 // Pre-save hook to calculate totals and final price
 eventSchema.pre('save', function(next) {
   if (this.services && this.services.length > 0) {
-    this.totalPrice = this.services.reduce((sum, service) => sum + service.price, 0);
+    this.totalPriceInPaisa = sumPaisa(this.services.map((service) => service.priceInPaisa));
     this.totalDuration = this.services.reduce((sum, service) => sum + service.duration, 0);
-    this.finalPrice = this.totalPrice - (this.totalPrice * this.discount / 100);
+    this.finalPriceInPaisa = this.totalPriceInPaisa - applyPercent(this.totalPriceInPaisa, this.discount);
   }
   next();
 });

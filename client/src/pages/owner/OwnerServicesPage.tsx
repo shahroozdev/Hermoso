@@ -5,13 +5,14 @@ import ActionsMenu from '@/components/ActionsMenu';
 import TABLE from "@/components/table";
 import { useInvalidate } from '@/hooks/useInvalidate';
 import { useToastStore } from '@/store/toastStore';
+import { formatMoney } from '@/utils/money';
 
 interface ServiceItem extends ServiceRecord {
   name?: string;
   category?: string;
   categoryId?: { name?: string };
   duration?: number;
-  price?: number;
+  priceInPaisa?: number;
 }
 
 const aiScanLabel = (value?: string) => AI_SCAN_CATEGORIES.find((c) => c.value === value)?.label || "-";
@@ -57,7 +58,7 @@ const OwnerServicesPage = () => {
             item.name,
             item.category || item.categoryId?.name || '-',
             item.duration ? `${item.duration} min` : '-',
-            item.price != null ? `$${item.price}` : '-',
+            item.priceInPaisa != null ? formatMoney(item.priceInPaisa) : '-',
             item.description || '-',
             aiScanLabel(item.aiScanLink),
             <ActionsMenu

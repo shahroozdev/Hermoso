@@ -19,7 +19,7 @@ export interface SalonItem {
   owner?:Record<string, string>;
   servicesCount?:number;
   bookingsCount?:number;
-  revenue?:number;
+  revenueInPaisa?:number;
   commissionRate?:number;
   active?:string
 }

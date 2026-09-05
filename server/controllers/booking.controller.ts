@@ -10,13 +10,8 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { createNotification } from '../services/notification.service.js';
 import { sendEmail } from '../services/email.service.js';
 import * as refundService from '../services/refund.service.js';
+import { calculateCommission } from '../utils/money.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
-
-const calculateCommission = (amount: number, commissionRate: number) => {
-  const platformCommission = Number(((amount * commissionRate) / 100).toFixed(2));
-  const salonAmount = Number((amount - platformCommission).toFixed(2));
-  return { platformCommission, salonAmount };
-};
 
 interface CreateBookingBody {
   salonId: string;
@@ -32,7 +27,7 @@ export const getBookingFormOptions = asyncHandler(async (req: AuthRequest, res: 
 
   const [salon, services, staffUsers] = await Promise.all([
     Salon.findById(salonId).select('_id name'),
-    Service.find({ salonId, active: true }).select('_id name price duration').sort({ createdAt: -1 }),
+    Service.find({ salonId, active: true }).select('_id name priceInPaisa duration').sort({ createdAt: -1 }),
     User.find({ salonId, role: Roles.STAFF, status: 'active' }).select('_id name staffDetails.services').sort({ createdAt: -1 })
   ]);
 
@@ -174,7 +169,7 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
       staffId,
       bookingDate: normalizedDate,
       bookingTime,
-      price: service.price,
+      priceInPaisa: service.priceInPaisa,
       status: BookingStatus.PENDING
     });
   } catch (error: unknown) {
@@ -185,14 +180,14 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
     throw error;
   }
 
-  const { platformCommission, salonAmount } = calculateCommission(service.price, salon.commissionRate);
+  const { platformCommissionInPaisa, salonAmountInPaisa } = calculateCommission(service.priceInPaisa, salon.commissionRate);
 
   const payment = await Payment.create({
     bookingId: booking._id,
     salonId,
-    amount: service.price,
-    platformCommission,
-    salonAmount,
+    amountInPaisa: service.priceInPaisa,
+    platformCommissionInPaisa,
+    salonAmountInPaisa,
     status: PaymentStatus.PENDING,
     idempotencyKey: `${booking._id}-${Date.now()}`
   });
@@ -410,7 +405,7 @@ export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) 
   const data = await Booking.find(query)
     .populate('customerId', 'name email')
     .populate('salonId', 'name location')
-    .populate('serviceId', 'name price duration')
+    .populate('serviceId', 'name priceInPaisa duration')
     .populate('staffId', 'name role')
     .sort({ createdAt: -1 })
     .skip((Number(page) - 1) * Number(limit))

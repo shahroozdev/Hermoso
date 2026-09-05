@@ -81,7 +81,7 @@ export const getRefundById = asyncHandler(async (req: AuthRequest, res: Response
     .populate({
       path: 'bookingId',
       populate: [
-        { path: 'serviceId', select: 'name price' },
+        { path: 'serviceId', select: 'name priceInPaisa' },
         { path: 'salonId', select: 'name' }
       ]
     });
@@ -109,9 +109,9 @@ export const updateRefund = asyncHandler(async (req: AuthRequest, res: Response,
   if (status === 'completed') {
     const payment = await Payment.findById(refund.paymentId);
     if (payment) {
-      const newRefundTotal = payment.refundAmount + refund.amount;
-      payment.refundAmount = newRefundTotal;
-      if (newRefundTotal >= payment.amount) {
+      const newRefundTotalInPaisa = payment.refundAmountInPaisa + refund.amountInPaisa;
+      payment.refundAmountInPaisa = newRefundTotalInPaisa;
+      if (newRefundTotalInPaisa >= payment.amountInPaisa) {
         payment.status = 'refunded';
       } else {
         payment.status = 'partially_refunded';
@@ -133,7 +133,7 @@ export const getRefundStats = asyncHandler(async (req: AuthRequest, res: Respons
         $group: {
           _id: null,
           count: { $sum: 1 },
-          totalAmount: { $sum: '$amount' }
+          totalAmountInPaisa: { $sum: '$amountInPaisa' }
         }
       }
     ]),
@@ -144,7 +144,7 @@ export const getRefundStats = asyncHandler(async (req: AuthRequest, res: Respons
         $group: {
           _id: null,
           count: { $sum: 1 },
-          totalAmount: { $sum: '$amount' }
+          totalAmountInPaisa: { $sum: '$amountInPaisa' }
         }
       }
     ]),
@@ -168,12 +168,12 @@ export const getRefundStats = asyncHandler(async (req: AuthRequest, res: Respons
     data: {
       total: {
         count: totalRefunds[0]?.count || 0,
-        amount: totalRefunds[0]?.totalAmount || 0
+        amountInPaisa: totalRefunds[0]?.totalAmountInPaisa || 0
       },
       pending: pendingRefunds,
       completed: {
         count: completedRefunds[0]?.count || 0,
-        amount: completedRefunds[0]?.totalAmount || 0
+        amountInPaisa: completedRefunds[0]?.totalAmountInPaisa || 0
       },
       refundRate: `${rate}%`
     }

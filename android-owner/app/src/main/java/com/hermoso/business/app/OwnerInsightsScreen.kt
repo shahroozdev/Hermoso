@@ -29,8 +29,8 @@ fun OwnerInsightsScreen() {
         message = try {
             val dashboard = withContext(Dispatchers.IO) { AuthApiClient.api.getOwnerDashboard() }
             val upcoming = dashboard.data?.totals?.upcomingAppointments ?: 0
-            val net = (dashboard.data?.totals?.netRevenue ?: 0.0).toInt()
-            "AI suggests promoting your top service this week. You have $upcoming upcoming bookings and PKR $net net revenue trend."
+            val net = dashboard.data?.totals?.netRevenueInPaisa.toPkr()
+            "AI suggests promoting your top service this week. You have $upcoming upcoming bookings and $net net revenue trend."
         } catch (_: Throwable) {
             "Unable to fetch AI insight right now."
         }

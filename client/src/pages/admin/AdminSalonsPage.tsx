@@ -15,6 +15,7 @@ import { SalonItem } from "../shared/SalonListPage";
 import SearchableSelect from "@/components/form/SearchableSelect";
 import { downloadCsv } from "@/utils";
 import { ownerService } from "@/services/ownerService";
+import { formatMoney, rupeesToPaisa } from "@/utils/money";
 
 const statusClass = (status) => {
   if (status === "approved") return "ha-pill ha-pill-active";
@@ -136,8 +137,8 @@ const AdminSalonsPage = () => {
         ...(servicesMax ? { servicesMax } : {}),
         ...(bookingsMin ? { bookingsMin } : {}),
         ...(bookingsMax ? { bookingsMax } : {}),
-        ...(revenueMin ? { revenueMin } : {}),
-        ...(revenueMax ? { revenueMax } : {}),
+        ...(revenueMin ? { revenueMin: rupeesToPaisa(Number(revenueMin)) } : {}),
+        ...(revenueMax ? { revenueMax: rupeesToPaisa(Number(revenueMax)) } : {}),
         ...(commissionMin ? { commissionMin } : {}),
         ...(commissionMax ? { commissionMax } : {}),
       });
@@ -150,7 +151,7 @@ const AdminSalonsPage = () => {
           s.location?.city || "-",
           String(s.servicesCount ?? 0),
           String(s.bookingsCount ?? 0),
-          String(Math.round(s.revenue || 0)),
+          String(Math.round((s.revenueInPaisa || 0) / 100)),
           String(s.commissionRate ?? 10),
           s.status || "",
           s.active ? "Active" : "Inactive",
@@ -267,8 +268,8 @@ const AdminSalonsPage = () => {
             ...(servicesMax ? { servicesMax } : {}),
             ...(bookingsMin ? { bookingsMin } : {}),
             ...(bookingsMax ? { bookingsMax } : {}),
-            ...(revenueMin ? { revenueMin } : {}),
-            ...(revenueMax ? { revenueMax } : {}),
+            ...(revenueMin ? { revenueMin: rupeesToPaisa(Number(revenueMin)) } : {}),
+            ...(revenueMax ? { revenueMax: rupeesToPaisa(Number(revenueMax)) } : {}),
             ...(commissionMin ? { commissionMin } : {}),
             ...(commissionMax ? { commissionMax } : {}),
           }}
@@ -302,7 +303,7 @@ const AdminSalonsPage = () => {
               salon.location?.city || "-",
               salon.servicesCount || 0,
               (salon.bookingsCount || 0).toLocaleString(),
-              Math.round(salon.revenue || 0).toLocaleString(),
+              formatMoney(salon.revenueInPaisa),
               salon.commissionRate ?? 10,
               <span className={statusClass(salon.status)}>{salon.status}</span>,
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>

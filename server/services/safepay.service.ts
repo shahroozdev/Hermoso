@@ -24,7 +24,7 @@ async function getSafepayClient() {
 }
 
 export interface CreateTrackerParams {
-  amount: number;
+  amountInPaisa: number;
   currency: string;
   orderId: string;
   customerId?: string;
@@ -45,7 +45,9 @@ export async function createPaymentTracker(params: CreateTrackerParams): Promise
     mode: 'payment',
     entry_mode: 'raw',
     currency: params.currency,
-    amount: Math.round(params.amount * 100),
+    // Safepay's API expects the amount in paisa (smallest currency unit) — our own
+    // amounts are already stored/passed in paisa, so no conversion is needed here.
+    amount: params.amountInPaisa,
     metadata: {
       order_id: params.orderId,
       ...(params.customerId ? { customer_id: params.customerId } : {})
@@ -90,7 +92,7 @@ export function generateCheckoutUrl(params: {
 
 export async function getTrackerStatus(trackerToken: string): Promise<{
   state: string;
-  amount: number;
+  amountInPaisa: number;
   currency: string;
 }> {
   const client = await getSafepayClient();
@@ -98,14 +100,14 @@ export async function getTrackerStatus(trackerToken: string): Promise<{
 
   return {
     state: response.data.tracker.state,
-    amount: response.data.tracker.purchase_totals?.quote_amount?.amount || 0,
+    amountInPaisa: response.data.tracker.purchase_totals?.quote_amount?.amount || 0,
     currency: response.data.tracker.purchase_totals?.quote_amount?.currency || 'PKR'
   };
 }
 
 export async function initiateRefund(params: {
   trackerToken: string;
-  amount: number;
+  amountInPaisa: number;
   currency: string;
 }): Promise<{ state: string }> {
   const client = await getSafepayClient();
@@ -114,7 +116,7 @@ export async function initiateRefund(params: {
     tracker: params.trackerToken,
     payload: {
       currency: params.currency,
-      amount: Math.round(params.amount * 100)
+      amount: params.amountInPaisa
     }
   });
 

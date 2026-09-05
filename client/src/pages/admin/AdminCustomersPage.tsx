@@ -6,6 +6,7 @@ import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
 import { useInvalidate } from '../../hooks/useInvalidate';
 import { customerService } from '../../services/customerService';
+import { formatMoney, rupeesToPaisa } from '../../utils/money';
 
 interface CustomerOverview {
   _id: string;
@@ -14,7 +15,7 @@ interface CustomerOverview {
   status?: string;
   createdAt?: string;
   bookingsCount: number;
-  totalSpent: number;
+  totalSpentInPaisa: number;
   eventCount: number;
 }
 
@@ -29,7 +30,7 @@ const AdminCustomersPage = () => {
       totalCustomers: m?.totalCustomers ?? 0,
       returningCustomers: m?.returningCustomers ?? 0,
       flaggedAccounts: m?.flaggedAccounts ?? 0,
-      totalRevenue: m?.totalRevenue ?? 0,
+      totalRevenueInPaisa: m?.totalRevenueInPaisa ?? 0,
     };
   }, [kpiReq.data]);
 
@@ -53,7 +54,7 @@ const AdminCustomersPage = () => {
       <div className="ha-kpi-row">
         <div className="ha-kpi-card"><div className="ha-kpi-label">Total Customers</div><div className="ha-kpi-val">{kpi.totalCustomers.toLocaleString()}</div><div className="ha-kpi-change up">Registered accounts</div></div>
         <div className="ha-kpi-card"><div className="ha-kpi-label">Returning Customers</div><div className="ha-kpi-val">{kpi.returningCustomers.toLocaleString()}</div><div className="ha-kpi-change up">{kpi.totalCustomers ? Math.round((kpi.returningCustomers / kpi.totalCustomers) * 100) : 0}% retention</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Revenue</div><div className="ha-kpi-val">PKR {kpi.totalRevenue.toLocaleString()}</div><div className="ha-kpi-change up">From bookings</div></div>
+        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Revenue</div><div className="ha-kpi-val">{formatMoney(kpi.totalRevenueInPaisa)}</div><div className="ha-kpi-change up">From bookings</div></div>
         <div className="ha-kpi-card"><div className="ha-kpi-label">Flagged Accounts</div><div className="ha-kpi-val white">{kpi.flaggedAccounts}</div><div className="ha-kpi-change" style={{ color: 'var(--rose)' }}>Needs review</div></div>
       </div>
 
@@ -75,7 +76,7 @@ const AdminCustomersPage = () => {
           data?.map((item, idx) => {
             const aiScans = Math.max(0, Math.round(item.bookingsCount * 0.35));
             const isFlagged = item.status === 'suspended' || item.status === 'inactive';
-            const isVip = item.totalSpent >= 80000;
+            const isVip = item.totalSpentInPaisa >= rupeesToPaisa(80000);
             const statusLabel = isFlagged ? 'flagged' : isVip ? 'vip' : 'active';
             const joined = item.createdAt
               ? new Date(item.createdAt).toLocaleString('en-US', { month: 'short', year: 'numeric' })
@@ -91,7 +92,7 @@ const AdminCustomersPage = () => {
               joined,
               item.bookingsCount,
               aiScans,
-              <span className="ha-money">PKR {Math.round(item.totalSpent).toLocaleString()}</span>,
+              <span className="ha-money">{formatMoney(item.totalSpentInPaisa)}</span>,
               <span className={statusLabel === 'active' ? 'ha-pill ha-pill-active' : statusLabel === 'vip' ? 'ha-pill ha-pill-vip' : 'ha-pill ha-pill-suspended'}>
                 {statusLabel}
               </span>,

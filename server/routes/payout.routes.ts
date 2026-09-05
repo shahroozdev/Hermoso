@@ -32,7 +32,7 @@ const router = Router();
  *                   type: boolean
  *                 data:
  *                   type: object
- *                 availableBalance:
+ *                 availableBalanceInPaisa:
  *                   type: number
  *       400:
  *         description: Invalid payout amount or Salon owner required

@@ -167,7 +167,7 @@ final class BookingViewModel: ObservableObject {
     var selectedSalonName: String? { salons.first(where: { $0.id == selectedSalonId })?.name }
     var selectedServiceName: String? { services.first(where: { $0.id == selectedServiceId })?.name }
     var selectedStaffName: String? { staff.first(where: { $0.id == selectedStaffId })?.name }
-    var selectedServicePrice: Double? { services.first(where: { $0.id == selectedServiceId })?.price }
+    var selectedServicePriceInPaisa: Int? { services.first(where: { $0.id == selectedServiceId })?.priceInPaisa }
 
     static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()

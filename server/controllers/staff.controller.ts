@@ -73,7 +73,7 @@ export const getStaff = asyncHandler(async (req: AuthRequest, res: Response) => 
   const [data, total] = await Promise.all([
     User.find(query)
       .select('-password')
-      .populate('staffDetails.services', 'name price duration')
+      .populate('staffDetails.services', 'name priceInPaisa duration')
       .sort({ createdAt: -1 })
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit)),
@@ -96,7 +96,7 @@ export const getStaff = asyncHandler(async (req: AuthRequest, res: Response) => 
 export const getStaffById = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const staff = await User.findOne({ _id: req.params.id, role: Roles.STAFF })
     .select('-password')
-    .populate('staffDetails.services', 'name price duration');
+    .populate('staffDetails.services', 'name priceInPaisa duration');
 
   if (!staff) return next(new ApiError(404, 'Staff not found'));
   if (!isAuthorized(req, staff.salonId)) return next(new ApiError(403, 'Forbidden'));

@@ -26,7 +26,7 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
     Salon.countDocuments(),
     User.countDocuments({ role: Roles.CUSTOMER }),
     Booking.countDocuments(),
-    Payment.aggregate([{ $group: { _id: null, totalRevenue: { $sum: '$platformCommission' }, gross: { $sum: '$amount' } } }]),
+    Payment.aggregate([{ $group: { _id: null, totalRevenue: { $sum: '$platformCommissionInPaisa' }, gross: { $sum: '$amountInPaisa' } } }]),
     getMonthlySeries(),
     Booking.aggregate([
       {
@@ -109,8 +109,8 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
         salons,
         customers,
         bookings,
-        platformRevenue: revenueAgg[0]?.totalRevenue || 0,
-        grossRevenue: revenueAgg[0]?.gross || 0
+        platformRevenueInPaisa: revenueAgg[0]?.totalRevenue || 0,
+        grossRevenueInPaisa: revenueAgg[0]?.gross || 0
       },
       charts: {
         bookingsByMonth,
@@ -144,7 +144,7 @@ export const getOwnerDashboardAnalytics = asyncHandler(async (req: AuthRequest, 
       success: true,
       data: {
         needsSetup: true,
-        totals: { dailyBookings: 0, upcomingAppointments: 0, grossRevenue: 0, netRevenue: 0, aiScanBookings: 0, aiScanRevenue: 0 },
+        totals: { dailyBookings: 0, upcomingAppointments: 0, grossRevenueInPaisa: 0, netRevenueInPaisa: 0, aiScanBookings: 0, aiScanRevenueInPaisa: 0 },
         charts: { bookingsByMonth: [] }
       }
     });
@@ -158,7 +158,7 @@ export const getOwnerDashboardAnalytics = asyncHandler(async (req: AuthRequest, 
   const [dailyBookings, upcomingAppointments, revenueAgg, bookingsByMonth] = await Promise.all([
     Booking.countDocuments({ salonId, bookingDate: { $gte: start, $lt: end } }),
     Booking.countDocuments({ salonId, bookingDate: { $gte: start } }),
-    Payment.aggregate([{ $match: { salonId } }, { $group: { _id: null, gross: { $sum: '$amount' }, net: { $sum: '$salonAmount' } } }]),
+    Payment.aggregate([{ $match: { salonId } }, { $group: { _id: null, gross: { $sum: '$amountInPaisa' }, net: { $sum: '$salonAmountInPaisa' } } }]),
     getMonthlySeries({ salonId })
   ]);
 
@@ -168,8 +168,8 @@ export const getOwnerDashboardAnalytics = asyncHandler(async (req: AuthRequest, 
       totals: {
         dailyBookings,
         upcomingAppointments,
-        grossRevenue: revenueAgg[0]?.gross || 0,
-        netRevenue: revenueAgg[0]?.net || 0
+        grossRevenueInPaisa: revenueAgg[0]?.gross || 0,
+        netRevenueInPaisa: revenueAgg[0]?.net || 0
       },
       charts: { bookingsByMonth }
     }

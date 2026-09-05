@@ -33,6 +33,6 @@ final class OwnerDashboardViewModel: ObservableObject {
     /// Conditional card — only rendered when referral bookings/revenue are
     /// non-zero, matching OwnerDashboardScreen.kt exactly.
     var showAiReferrals: Bool {
-        (totals?.aiScanBookings ?? 0) > 0 || (totals?.aiScanRevenue ?? 0) > 0
+        (totals?.aiScanBookings ?? 0) > 0 || (totals?.aiScanRevenueInPaisa ?? 0) > 0
     }
 }

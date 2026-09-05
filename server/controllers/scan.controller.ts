@@ -143,7 +143,7 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
   const salonId = user?.salonId ? String(user.salonId) : undefined;
   const serviceQuery: Record<string, unknown> = { active: true };
   if (salonId) serviceQuery.salonId = salonId;
-  const services = await Service.find(serviceQuery).select('name price duration');
+  const services = await Service.find(serviceQuery).select('name priceInPaisa duration');
 
   // Extract all treatment names from the analysis
   const allTreatments = [
@@ -239,7 +239,7 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
       recommendedServices: recommendedServices.map((s) => ({
         _id: s._id,
         name: s.name,
-        price: s.price,
+        priceInPaisa: s.priceInPaisa,
         duration: s.duration
       })),
 
@@ -255,7 +255,7 @@ export const analyzeScanImage = asyncHandler(async (req: AuthRequest, res: Respo
  */
 export const getMyScanHistory = asyncHandler(async (req: AuthRequest, res: Response) => {
   const history = await SkinScan.find({ customerId: req.user?._id, faceValid: true })
-    .populate('recommendedServiceIds', 'name price duration')
+    .populate('recommendedServiceIds', 'name priceInPaisa duration')
     .sort({ createdAt: -1 })
     .limit(20);
 
@@ -267,7 +267,7 @@ export const getMyScanHistory = asyncHandler(async (req: AuthRequest, res: Respo
  */
 export const getLatestScan = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const latest = await SkinScan.findOne({ customerId: req.user?._id, faceValid: true })
-    .populate('recommendedServiceIds', 'name price duration')
+    .populate('recommendedServiceIds', 'name priceInPaisa duration')
     .sort({ createdAt: -1 });
 
   if (!latest) return next(new ApiError(404, 'No successful scan found'));
@@ -355,7 +355,7 @@ export const getScanMatches = asyncHandler(async (req: AuthRequest, res: Respons
 
   // Get approved salons
   const salons = await Salon.find({ status: SalonStatus.APPROVED, verified: true })
-    .select('_id name location rating averagePrice openingHours southAsianSpecialist');
+    .select('_id name location rating averagePriceInPaisa openingHours southAsianSpecialist');
 
   // Extract recommended treatment names from scan
   const recommendedTreatments = latest.treatmentPlan.map((t) => t.treatmentName.toLowerCase());
@@ -502,7 +502,7 @@ export const matchSalons = asyncHandler(async (req: AuthRequest, res: Response) 
 
   // Get approved salons
   const salons = await Salon.find({ status: SalonStatus.APPROVED, verified: true })
-    .select('_id name location rating averagePrice openingHours workingHours southAsianSpecialist');
+    .select('_id name location rating averagePriceInPaisa openingHours workingHours southAsianSpecialist');
 
   // Build list of treatment names to match against
   const treatmentNamesToMatch: string[] = [];
@@ -585,7 +585,7 @@ export const matchSalons = asyncHandler(async (req: AuthRequest, res: Response) 
         matchPercent: score,
         matchedServices: matchedServices.map((s) => s.name),
         southAsianSpecialist: salon.southAsianSpecialist || false,
-        averagePrice: salon.averagePrice
+        averagePriceInPaisa: salon.averagePriceInPaisa
       };
     })
     .filter((match) => match.matchPercent >= 60) // Min threshold (CR-18)

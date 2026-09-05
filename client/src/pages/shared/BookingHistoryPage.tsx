@@ -2,6 +2,7 @@ import TABLE from "@/components/table";
 import { bookingService } from "../../services/bookingService";
 import BookingPage from "./BookingPage";
 import { formatTimeAMPM } from "@/utils/format";
+import { formatMoney } from "@/utils/money";
 import { Booking } from "@/types";
 import { Link } from "react-router-dom";
 
@@ -30,7 +31,7 @@ const BookingHistoryPage = () => {
             >
               {item.status}
             </p>,
-            `$${item.price}`,
+            formatMoney(item.priceInPaisa),
             <div className="ha-actions">
               {item?.status !== "cancelled" && (
                 <button className="ha-act-btn">Cancel</button>

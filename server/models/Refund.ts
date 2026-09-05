@@ -1,12 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { RefundStatus, type RefundStatusType } from '../utils/constants.js';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IRefund extends Document {
   paymentId: mongoose.Types.ObjectId;
   bookingId: mongoose.Types.ObjectId;
   salonId: mongoose.Types.ObjectId;
   customerId: mongoose.Types.ObjectId;
-  amount: number;
+  amountInPaisa: number;
   reason: string;
   initiatedBy: mongoose.Types.ObjectId;
   initiatedByType: 'customer' | 'salon_owner' | 'admin' | 'system';
@@ -22,7 +23,7 @@ const refundSchema = new Schema<IRefund>(
     bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true, index: true },
     salonId: { type: Schema.Types.ObjectId, ref: 'Salon', required: true, index: true },
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    amount: { type: Number, required: true, min: 0 },
+    amountInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     reason: { type: String, required: true, trim: true },
     initiatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     initiatedByType: {

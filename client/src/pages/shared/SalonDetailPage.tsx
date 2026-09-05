@@ -7,13 +7,14 @@ import { useApi } from '../../hooks/useApi';
 import { salonService } from '../../services/salonService';
 import { serviceService } from '../../services/serviceService';
 import { categoryService } from '../../services/categoryService';
+import { formatMoney } from '../../utils/money';
 
 interface ServiceItem {
   name?: string;
   category?: string;
   categoryId?: { name?: string };
   duration?: number;
-  price?: number;
+  priceInPaisa?: number;
 }
 
 const SalonDetailPage = () => {
@@ -63,7 +64,7 @@ const SalonDetailPage = () => {
         serviceParams={{ salonId: id, categoryId: categoryId || undefined }}
         columns={[{ title: 'Service' }, { title: 'Category' }, { title: 'Duration' }, { title: 'Price' }]}
         rows={(data) =>
-          data?.map((item) => [item.name, item.category || item.categoryId?.name || '-', `${item.duration} min`, `$${item.price}`])
+          data?.map((item) => [item.name, item.category || item.categoryId?.name || '-', `${item.duration} min`, formatMoney(item.priceInPaisa)])
         }
       />
     </div>

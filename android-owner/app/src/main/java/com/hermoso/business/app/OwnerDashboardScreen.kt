@@ -70,14 +70,14 @@ fun OwnerDashboardScreen() {
         }
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OwnerStatCard("Gross", "PKR ${(dashboard?.totals?.grossRevenue ?: 0.0).toInt()}", Modifier.weight(1f))
-                OwnerStatCard("Net", "PKR ${(dashboard?.totals?.netRevenue ?: 0.0).toInt()}", Modifier.weight(1f))
+                OwnerStatCard("Gross", dashboard?.totals?.grossRevenueInPaisa.toPkr(), Modifier.weight(1f))
+                OwnerStatCard("Net", dashboard?.totals?.netRevenueInPaisa.toPkr(), Modifier.weight(1f))
             }
         }
         // CR-26: AI Scan Referral Metrics
         val aiScanBookings = dashboard?.totals?.aiScanBookings ?: 0
-        val aiScanRevenue = dashboard?.totals?.aiScanRevenue ?: 0.0
-        if (aiScanBookings > 0 || aiScanRevenue > 0) {
+        val aiScanRevenueInPaisa = dashboard?.totals?.aiScanRevenueInPaisa ?: 0L
+        if (aiScanBookings > 0 || aiScanRevenueInPaisa > 0) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -97,7 +97,7 @@ fun OwnerDashboardScreen() {
                                 Text("Bookings from AI Match", color = TextMuted, fontSize = 12.sp)
                             }
                             Column(Modifier.weight(1f)) {
-                                Text("PKR ${aiScanRevenue.toInt()}", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                                Text(aiScanRevenueInPaisa.toPkr(), color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 24.sp)
                                 Text("Revenue from AI Referrals", color = TextMuted, fontSize = 12.sp)
                             }
                         }

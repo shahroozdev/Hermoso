@@ -124,7 +124,7 @@ export const getSalons = asyncHandler(
     const bookingsRange = numericRange(bookingsMin, bookingsMax);
     if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
     const revenueRange = numericRange(revenueMin, revenueMax);
-    if (revenueRange) computedMatch.revenue = revenueRange;
+    if (revenueRange) computedMatch.revenueInPaisa = revenueRange;
 
     const pipeline: mongoose.PipelineStage[] = [
       { $match: query },
@@ -183,7 +183,7 @@ export const getSalons = asyncHandler(
           servicesCount: { $size: "$services" },
           bookingsCount: { $size: "$bookings" },
           reviewsCount: { $size: "$reviews" },
-          revenue: { $sum: "$payments.amount" },
+          revenueInPaisa: { $sum: "$payments.amountInPaisa" },
           active: { $eq: ["$status", "approved"] },
         },
       },
@@ -233,7 +233,7 @@ export const getSalons = asyncHandler(
                 bookingsCount: 1,
                 reviewsCount: 1,
                 avgRating: 1,
-                revenue: 1,
+                revenueInPaisa: 1,
                 active: 1,
                 owner: {
                   _id: "$owner._id",
@@ -487,12 +487,12 @@ export const getSalonRevenue = asyncHandler(
           status: 1,
           commissionRate: 1,
           bookingsCount: { $size: "$bookings" },
-          grossRevenue: { $sum: "$payments.amount" },
-          platformRevenue: { $sum: "$payments.platformCommission" },
-          salonNetRevenue: { $sum: "$payments.salonAmount" },
+          grossRevenueInPaisa: { $sum: "$payments.amountInPaisa" },
+          platformRevenueInPaisa: { $sum: "$payments.platformCommissionInPaisa" },
+          salonNetRevenueInPaisa: { $sum: "$payments.salonAmountInPaisa" },
         },
       },
-      { $sort: { grossRevenue: -1 } as const },
+      { $sort: { grossRevenueInPaisa: -1 } as const },
       { $skip: skip },
       { $limit: limitNum },
     ] as mongoose.PipelineStage[]);
@@ -520,12 +520,12 @@ export const getSalonRevenue = asyncHandler(
           status: 1,
           commissionRate: 1,
           bookingsCount: { $size: "$bookings" },
-          grossRevenue: { $sum: "$payments.amount" },
-          platformRevenue: { $sum: "$payments.platformCommission" },
-          salonNetRevenue: { $sum: "$payments.salonAmount" },
+          grossRevenueInPaisa: { $sum: "$payments.amountInPaisa" },
+          platformRevenueInPaisa: { $sum: "$payments.platformCommissionInPaisa" },
+          salonNetRevenueInPaisa: { $sum: "$payments.salonAmountInPaisa" },
         },
       },
-      { $sort: { grossRevenue: -1 } as const },
+      { $sort: { grossRevenueInPaisa: -1 } as const },
       { $count: "total" },
     ] as mongoose.PipelineStage[]);
 
@@ -562,8 +562,8 @@ export const getRevenueStats = asyncHandler(
       {
         $group: {
           _id: null,
-          totalGMV: { $sum: { $sum: "$payments.amount" } },
-          platformCommission: { $sum: { $sum: "$payments.platformCommission" } },
+          totalGMVInPaisa: { $sum: { $sum: "$payments.amountInPaisa" } },
+          platformCommissionInPaisa: { $sum: { $sum: "$payments.platformCommissionInPaisa" } },
           totalBookings: { $sum: { $size: "$bookings" } },
         },
       },
@@ -575,7 +575,7 @@ export const getRevenueStats = asyncHandler(
         $group: {
           _id: null,
           pendingPayouts: { $sum: 1 },
-          pendingPayoutAmount: { $sum: "$salonAmount" },
+          pendingPayoutAmountInPaisa: { $sum: "$salonAmountInPaisa" },
         },
       },
     ] as mongoose.PipelineStage[]);
@@ -583,13 +583,13 @@ export const getRevenueStats = asyncHandler(
     res.json({
       success: true,
       data: {
-        totalGMV: revenueAgg?.totalGMV || 0,
-        platformCommission: revenueAgg?.platformCommission || 0,
+        totalGMVInPaisa: revenueAgg?.totalGMVInPaisa || 0,
+        platformCommissionInPaisa: revenueAgg?.platformCommissionInPaisa || 0,
         totalBookings: revenueAgg?.totalBookings || 0,
         pendingPayouts: payoutAgg?.pendingPayouts || 0,
-        pendingPayoutAmount: payoutAgg?.pendingPayoutAmount || 0,
-        avgBookingValue: revenueAgg?.totalBookings
-          ? Math.round((revenueAgg?.totalGMV || 0) / revenueAgg.totalBookings)
+        pendingPayoutAmountInPaisa: payoutAgg?.pendingPayoutAmountInPaisa || 0,
+        avgBookingValueInPaisa: revenueAgg?.totalBookings
+          ? Math.round((revenueAgg?.totalGMVInPaisa || 0) / revenueAgg.totalBookings)
           : 0,
       },
     });

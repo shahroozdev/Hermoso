@@ -5,6 +5,7 @@ import TABLE from '@/components/table';
 import { useApi } from '../../hooks/useApi';
 import { useInvalidate } from '../../hooks/useInvalidate';
 import { bookingService } from '../../services/bookingService';
+import { formatMoney } from '../../utils/money';
 
 interface BookingItem {
   _id: string;
@@ -13,7 +14,7 @@ interface BookingItem {
   serviceId?: { name?: string };
   bookingDate?: string;
   bookingTime?: string;
-  price?: number;
+  priceInPaisa?: number;
   status?: string;
 }
 
@@ -77,7 +78,6 @@ const AdminBookingsPage = () => {
           data?.map((item) => {
             const safeId = String(item._id);
             const bookingId = `#HRM-${safeId.slice(-4).toUpperCase()}`;
-            const amount = Math.round(Number(item.price ?? 0));
             const svc = (item.serviceId?.name ?? '').toLowerCase();
             const type = svc.includes('bridal') || svc.includes('package') || svc.includes('event') ? 'event' : 'appointment';
             const d = item.bookingDate ? new Date(item.bookingDate) : null;
@@ -89,7 +89,7 @@ const AdminBookingsPage = () => {
               item.salonId?.name || '-',
               item.serviceId?.name || '-',
               `${datePart} ${timePart}`,
-              <span className="ha-money">{amount.toLocaleString()}</span>,
+              <span className="ha-money">{formatMoney(item.priceInPaisa)}</span>,
               <span className={type === 'event' ? 'ha-pill ha-pill-event' : 'ha-pill ha-pill-booking'}>{type}</span>,
               <span className={statusPillClass(item.status ?? 'pending')}>{item.status || 'pending'}</span>,
               <div className="ha-actions">

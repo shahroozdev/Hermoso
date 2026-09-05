@@ -83,7 +83,7 @@ export interface ScanMetric {
 export interface ScanRecommendation {
   _id: string;
   name: string;
-  price: number;
+  priceInPaisa: number;
   duration: number;
 }
 

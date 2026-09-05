@@ -14,7 +14,7 @@ struct CheckoutData: Codable {
 struct PaymentStatusData: Codable {
     let status: String?
     let paidAt: String?
-    let amount: Double?
+    let amountInPaisa: Int?
     let tracker: String?
     let booking: BookingItemDto?
 }
@@ -27,13 +27,13 @@ struct RefundRequest: Codable {
 struct RefundData: Codable {
     let refundId: String?
     let status: String?
-    let amount: Double?
+    let amountInPaisa: Int?
     let message: String?
 }
 
 struct RefundDto: Codable, Identifiable {
     let _id: String?
-    let amount: Double?
+    let amountInPaisa: Int?
     let status: String?
     let reason: String?
     let createdAt: String?

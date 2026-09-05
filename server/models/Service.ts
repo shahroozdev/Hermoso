@@ -1,10 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { integerPaisaValidator } from '../utils/money.js';
 
 export interface IService extends Document {
   salonId: mongoose.Types.ObjectId;
   name: string;
   description: string;
-  price: number;
+  priceInPaisa: number;
   duration: number;
   categoryId: mongoose.Types.ObjectId;
   category: string;
@@ -18,7 +19,7 @@ const serviceSchema = new Schema<IService>(
     salonId: { type: Schema.Types.ObjectId, ref: 'Salon', required: true, index: true },
     name: { type: String, required: true, trim: true, index: true},
     description: { type: String, default: '' },
-    price: { type: Number, required: true, min: 0 },
+    priceInPaisa: { type: Number, required: true, min: 0, validate: integerPaisaValidator },
     duration: { type: Number, required: true, min: 5 },
     categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
     category: { type: String, required: true, trim: true, index: true },

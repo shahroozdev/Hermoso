@@ -12,8 +12,8 @@ export const payoutService = {
     const { data } = await api.get('/payouts', { params });
     return data;
   },
-  request: async (amount: number) => {
-    const { data } = await api.post('/payouts/request', { amount });
+  request: async (amountInPaisa: number) => {
+    const { data } = await api.post('/payouts/request', { amountInPaisa });
     return data;
   },
   update: async (id: string, payload: { status: string }) => {

@@ -4,6 +4,7 @@ import ErrorBlock from '../../components/ErrorBlock';
 import { useApi } from '../../hooks/useApi';
 import { salonService } from '../../services/salonService';
 import { bookingService } from '../../services/bookingService';
+import { formatMoney } from '../../utils/money';
 
 interface ServiceCardState {
   serviceId: string;
@@ -327,8 +328,8 @@ const BookingForm = ({ selectedSalon, setSelectedSalon, salons, fromAiScan, preS
 
         <select className="rounded border p-2" value={payload.serviceId} onChange={(e) => setPayload({ ...payload, serviceId: e.target.value })} disabled={!selectedSalon}>
           <option value="">Select Service</option>
-          {(bookingOptions.data?.data?.services || []).map((item: { _id: string; name: string; price: number }) => (
-            <option key={item._id} value={item._id}>{item.name} (${item.price})</option>
+          {(bookingOptions.data?.data?.services || []).map((item: { _id: string; name: string; priceInPaisa: number }) => (
+            <option key={item._id} value={item._id}>{item.name} ({formatMoney(item.priceInPaisa)})</option>
           ))}
         </select>
 

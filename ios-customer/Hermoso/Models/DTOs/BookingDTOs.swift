@@ -36,7 +36,7 @@ struct BookingItemDto: Codable, Identifiable {
     let bookingDate: String?
     let bookingTime: String?
     let status: String?
-    let price: Double?
+    let priceInPaisa: Int?
     let salonId: SalonDto?
     let serviceId: ServiceDto?
     let staffId: StaffDto?

@@ -1,8 +1,11 @@
 import { Response, NextFunction } from 'express';
 import { POS } from '../models/POS.js';
+import { Service } from '../models/Service.js';
+import { Event } from '../models/Event.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { applyPercent, sumPaisa } from '../utils/money.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 import { createPOSSchema, getPOSSchema } from '../schemas/pos.schema.js';
 
@@ -12,21 +15,60 @@ export const createPOS = asyncHandler(
     if (!salonId && req.user?.role !== Roles.SUPER_ADMIN) {
       return next(new ApiError(400, 'salonId is required'));
     }
+    const resolvedSalonId = salonId || req.body.salonId;
 
-    const { customerId, customerName, items, subtotal, itemDiscount, gstPercent, gstAmount, globalDiscountPercent, globalDiscountAmount, grandTotal, receiptRef } = req.body;
+    const { customerId, customerName, items, gstPercent, globalDiscountPercent, receiptRef } = req.body;
+
+    // Never trust client-submitted prices/totals — look up the current catalog price
+    // for each item and recompute everything server-side in integer paisa.
+    const resolvedItems = await Promise.all(
+      items.map(async (item: { serviceId: string; type: 'service' | 'event'; name: string; qty: number; discountInPaisa: number }) => {
+        const catalogDoc = item.type === 'service'
+          ? await Service.findOne({ _id: item.serviceId, salonId: resolvedSalonId }).select('priceInPaisa')
+          : await Event.findOne({ _id: item.serviceId, salonId: resolvedSalonId }).select('finalPriceInPaisa');
+
+        if (!catalogDoc) throw new ApiError(400, `Item ${item.serviceId} not found for this salon`);
+
+        const catalogPriceInPaisa = item.type === 'service'
+          ? (catalogDoc as { priceInPaisa: number }).priceInPaisa
+          : (catalogDoc as { finalPriceInPaisa: number }).finalPriceInPaisa;
+
+        const lineSubtotalInPaisa = catalogPriceInPaisa * item.qty;
+        if (item.discountInPaisa > lineSubtotalInPaisa) {
+          throw new ApiError(400, `Discount exceeds line total for item ${item.serviceId}`);
+        }
+
+        return {
+          serviceId: item.serviceId,
+          type: item.type,
+          name: item.name,
+          priceInPaisa: catalogPriceInPaisa,
+          qty: item.qty,
+          discountInPaisa: item.discountInPaisa,
+          totalInPaisa: lineSubtotalInPaisa - item.discountInPaisa,
+        };
+      })
+    );
+
+    const subtotalInPaisa = sumPaisa(resolvedItems.map((item) => item.priceInPaisa * item.qty));
+    const itemDiscountInPaisa = sumPaisa(resolvedItems.map((item) => item.discountInPaisa));
+    const netAfterItemDiscountInPaisa = subtotalInPaisa - itemDiscountInPaisa;
+    const gstAmountInPaisa = applyPercent(netAfterItemDiscountInPaisa, gstPercent);
+    const globalDiscountAmountInPaisa = applyPercent(netAfterItemDiscountInPaisa, globalDiscountPercent);
+    const grandTotalInPaisa = netAfterItemDiscountInPaisa + gstAmountInPaisa - globalDiscountAmountInPaisa;
 
     const pos = await POS.create({
-      salonId: salonId || req.body.salonId,
+      salonId: resolvedSalonId,
       customerId: customerId || undefined,
       customerName: customerName || 'Walk-in',
-      items,
-      subtotal,
-      itemDiscount,
+      items: resolvedItems,
+      subtotalInPaisa,
+      itemDiscountInPaisa,
       gstPercent,
-      gstAmount,
+      gstAmountInPaisa,
       globalDiscountPercent,
-      globalDiscountAmount,
-      grandTotal,
+      globalDiscountAmountInPaisa,
+      grandTotalInPaisa,
       receiptRef,
     });
 
