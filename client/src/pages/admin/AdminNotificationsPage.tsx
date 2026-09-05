@@ -1,9 +1,11 @@
 import { useState } from "react";
 import NotificationModal, { NotificationFormModal, type NotificationRecord } from "../../components/NotificationModal";
 import NotificationDetailModal from "../../components/NotificationDetailModal";
+import GenericModal from "@/components/GenericModal";
 import ActionsMenu from "@/components/ActionsMenu";
 import TABLE from "@/components/table";
 import { useInvalidate } from "../../hooks/useInvalidate";
+import { useApi } from "../../hooks/useApi";
 import { notificationService } from "@/services/notificationService";
 import { formatDateInput, formatTimeAMPM } from "@/utils/format";
 
@@ -24,6 +26,7 @@ const roleLabel = (role: string): string => {
 const AdminNotificationsPage = () => {
   const [viewNotif, setViewNotif] = useState<NotificationItem | null>(null);
   const [editNotif, setEditNotif] = useState<NotificationItem | null>(null);
+  const [recipientsNotif, setRecipientsNotif] = useState<NotificationItem | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const invalidate = useInvalidate();
 
@@ -150,6 +153,9 @@ const AdminNotificationsPage = () => {
                   ...(!isDraft && !item.isRead
                     ? [{ label: "Mark Read", onClick: () => handleMarkRead(item._id) }]
                     : []),
+                  ...(!isDraft
+                    ? [{ label: "View Recipients", onClick: () => setRecipientsNotif(item) }]
+                    : []),
                 ]}
               />,
             ];
@@ -170,7 +176,86 @@ const AdminNotificationsPage = () => {
           onClose={() => setEditNotif(null)}
         />
       )}
+
+      {recipientsNotif && (
+        <RecipientReportModal
+          notification={recipientsNotif}
+          onClose={() => setRecipientsNotif(null)}
+        />
+      )}
     </div>
+  );
+};
+
+interface Recipient {
+  _id: string;
+  user?: { name?: string; email?: string; role?: string } | null;
+  isRead: boolean;
+}
+
+const RecipientReportModal = ({
+  notification,
+  onClose,
+}: {
+  notification: NotificationItem;
+  onClose: () => void;
+}) => {
+  const { data, loading, error } = useApi(
+    () => notificationService.getRecipients(notification._id),
+    ["notification-recipients", notification._id],
+  );
+  const recipients: Recipient[] = data?.data || [];
+  const readCount = recipients.filter((r) => r.isRead).length;
+
+  return (
+    <GenericModal
+      title={`Recipients: ${notification.title}`}
+      onClose={onClose}
+      wide
+      footer={
+        <button type="button" className="ha-btn-primary" onClick={onClose}>
+          Close
+        </button>
+      }
+    >
+      {loading ? (
+        <p className="text-sm text-muted">Loading recipients...</p>
+      ) : error ? (
+        <p className="text-sm text-red-600">{error}</p>
+      ) : (
+        <>
+          <p className="mb-3 text-sm text-muted">
+            {recipients.length.toLocaleString()} recipient{recipients.length === 1 ? "" : "s"} &middot;{" "}
+            {readCount.toLocaleString()} read
+          </p>
+          <div className="ha-table-scroll">
+            <table className="ha-salon-table min-w-full text-left text-sm">
+              <thead>
+                <tr>
+                  <th className="px-3 py-2">Name</th>
+                  <th className="px-3 py-2">Email</th>
+                  <th className="px-3 py-2">Role</th>
+                  <th className="px-3 py-2">Read</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recipients.map((r) => (
+                  <tr key={r._id} className="border-t border-[var(--border)]">
+                    <td className="px-3 py-2">{r.user?.name || "Deleted user"}</td>
+                    <td className="px-3 py-2">{r.user?.email || "-"}</td>
+                    <td className="px-3 py-2 capitalize">{(r.user?.role || "-").replace("_", " ")}</td>
+                    <td className="px-3 py-2">{r.isRead ? "Read" : "Unread"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {recipients.length === 0 && (
+              <p className="px-3 py-4 text-sm text-muted">No recipients found.</p>
+            )}
+          </div>
+        </>
+      )}
+    </GenericModal>
   );
 };
 

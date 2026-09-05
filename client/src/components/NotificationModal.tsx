@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import GenericModal from './GenericModal';
+import SearchableSelect from './form/SearchableSelect';
 import { useInvalidate } from '../hooks/useInvalidate';
 import { notificationService } from '@/services/notificationService';
+
+const RECIPIENT_TYPES = [
+  { value: 'customer', label: 'All Customers' },
+  { value: 'salon_owner', label: 'All Salon Owners' },
+  { value: 'staff', label: 'All Staff' },
+];
 
 export interface NotificationRecord {
   _id: string;
@@ -24,7 +31,7 @@ export const NotificationFormModal = ({
   const isEditing = !!notification;
   const [title, setTitle] = useState(notification?.title || '');
   const [message, setMessage] = useState(notification?.message || '');
-  const targetRole = notification?.targetRole || 'customer';
+  const [targetRole, setTargetRole] = useState(notification?.targetRole || 'customer');
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -85,6 +92,10 @@ export const NotificationFormModal = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase text-muted">Recipient Type</label>
+          <SearchableSelect value={targetRole} onChange={setTargetRole} options={RECIPIENT_TYPES} />
         </div>
         {!isEditing && (
           <p className="text-sm text-muted">

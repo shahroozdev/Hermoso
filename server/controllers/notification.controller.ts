@@ -80,6 +80,25 @@ export const sendNotificationRecord = asyncHandler(async (req: AuthRequest, res:
   res.json({ success: true, data: notification, count: recipients.length });
 });
 
+export const getNotificationRecipients = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const campaign = await Notification.findById(req.params.id);
+  if (!campaign) return next(new ApiError(404, 'Notification not found'));
+  if (campaign.status !== 'sent') return next(new ApiError(400, 'This notification has not been sent yet'));
+
+  const recipients = await Notification.find({ campaignId: campaign._id })
+    .populate('userId', 'name email role')
+    .sort({ createdAt: 1 });
+
+  res.json({
+    success: true,
+    data: recipients.map((r) => ({
+      _id: r._id,
+      user: r.userId,
+      isRead: r.isRead
+    }))
+  });
+});
+
 export const getNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = 1, limit = 15, unreadOnly = 'false' } = req.query;
   const query: Record<string, unknown> = {};

@@ -13,5 +13,13 @@ export const categoryService = {
   create: async (payload: { name: string }) => {
     const { data } = await api.post('/categories', payload);
     return data;
+  },
+  update: async (id: string, payload: { name: string }) => {
+    const { data } = await api.patch(`/categories/${id}`, payload);
+    return data;
+  },
+  delete: async (id: string) => {
+    const { data } = await api.delete(`/categories/${id}`);
+    return data;
   }
 };

@@ -1,4 +1,4 @@
-import { Link, Navigate, Outlet } from "react-router-dom";
+import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
 import { tokenCookies } from "../utils/tokenCookies";
@@ -21,12 +21,17 @@ const PublicLayout = () => {
   const { user } = useAuthStore();
   const token = tokenCookies.getAccessToken();
   const { theme, toggleTheme } = useUIStore();
+  const location = useLocation();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  if (token && user) {
+  // /create-salon is reachable by an already-authenticated owner too (e.g. an
+  // admin created their account without a salon yet) — don't bounce them home.
+  const allowAuthenticated = location.pathname === "/create-salon";
+
+  if (token && user && !allowAuthenticated) {
     return <Navigate to={getRoleHome(user.role)} replace />;
   }
 

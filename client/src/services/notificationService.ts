@@ -36,5 +36,9 @@ export const notificationService = {
   send: async (id: string) => {
     const { data } = await api.post(`/notifications/${id}/send`);
     return data;
+  },
+  getRecipients: async (id: string) => {
+    const { data } = await api.get(`/notifications/${id}/recipients`);
+    return data;
   }
 };

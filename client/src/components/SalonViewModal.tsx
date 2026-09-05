@@ -1,10 +1,13 @@
 import { useState } from "react";
 import GenericModal from "./GenericModal";
-import ServiceModal, { ServiceFormModal, type ServiceRecord } from "./ServiceModal";
+import ServiceModal, { ServiceFormModal, AI_SCAN_CATEGORIES, type ServiceRecord } from "./ServiceModal";
 import TABLE from "./table";
 import ActionsMenu from "./ActionsMenu";
 import { serviceService } from "@/services/serviceService";
 import { useInvalidate } from "@/hooks/useInvalidate";
+import { useToastStore } from "@/store/toastStore";
+
+const aiScanLabel = (value?: string) => AI_SCAN_CATEGORIES.find((c) => c.value === value)?.label || "-";
 
 interface ServiceItem extends ServiceRecord {
   name?: string;
@@ -30,6 +33,7 @@ interface SalonViewModalProps {
     status?: string;
     active?: boolean;
     imageUrl?: string;
+    approvedBy?: { name?: string } | null;
   };
   onClose: () => void;
 }
@@ -45,7 +49,19 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [serviceSearch, setServiceSearch] = useState("");
   const invalidate = useInvalidate();
+  const { showToast } = useToastStore();
   const isSuspended = salon.status === "suspended";
+
+  const handleDeleteService = async (service: ServiceItem) => {
+    if (!window.confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
+    try {
+      await serviceService.delete(service._id);
+      showToast("Service deleted successfully.");
+      invalidate(["salon-services"]);
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to delete service", "error");
+    }
+  };
 
   return (
     <>
@@ -78,6 +94,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
           <Row label="Revenue" value={Math.round(salon.revenue || 0).toLocaleString()} />
           <Row label="Commission Rate" value={`${salon.commissionRate ?? 10}%`} />
           <Row label="Approval" value={salon.status} />
+          <Row label="Approved By" value={salon.approvedBy?.name || (salon.status === "approved" ? "-" : "Not yet approved")} />
           <Row label="Status" value={salon.active ? "Active" : "Inactive"} />
         </div>
 
@@ -109,6 +126,8 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                 { title: "Category" },
                 { title: "Duration" },
                 { title: "Price" },
+                { title: "Description", size: "220px" },
+                { title: "AI Scan" },
                 { title: "Actions" },
               ]}
               rows={(data) =>
@@ -117,11 +136,18 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                   item.category || item.categoryId?.name || "-",
                   item.duration ? `${item.duration} min` : "-",
                   item.price != null ? item.price.toLocaleString() : "-",
+                  item.description || "-",
+                  aiScanLabel(item.aiScanLink),
                   <ActionsMenu
                     items={[
                       {
                         label: "Edit",
                         onClick: () => setEditingService(item),
+                      },
+                      {
+                        label: "Delete",
+                        danger: true,
+                        onClick: () => handleDeleteService(item),
                       },
                     ]}
                   />,

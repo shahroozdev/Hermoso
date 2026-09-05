@@ -137,7 +137,17 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
 export const getOwnerDashboardAnalytics = asyncHandler(async (req: AuthRequest, res: Response) => {
   const salonId = req.user?.salonId;
   if (!salonId) {
-    return res.status(400).json({ success: false, message: 'Salon ID not found' });
+    // A salon owner account can exist before its salon does (e.g. an admin
+    // created the owner separately from "Add Salon"). Treat this as a normal,
+    // expected state to prompt setup rather than a hard error.
+    return res.json({
+      success: true,
+      data: {
+        needsSetup: true,
+        totals: { dailyBookings: 0, upcomingAppointments: 0, grossRevenue: 0, netRevenue: 0, aiScanBookings: 0, aiScanRevenue: 0 },
+        charts: { bookingsByMonth: [] }
+      }
+    });
   }
 
   const today = new Date();

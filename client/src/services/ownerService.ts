@@ -53,5 +53,9 @@ export const ownerService = {
   update: async (id: string, payload: Partial<CreateOwnerPayload>) => {
     const { data } = await api.patch(`/users/${id}`, payload);
     return data;
+  },
+  regeneratePassword: async (id: string) => {
+    const { data } = await api.patch(`/users/${id}/regenerate-password`);
+    return data;
   }
 };

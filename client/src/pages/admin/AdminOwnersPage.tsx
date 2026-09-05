@@ -9,7 +9,7 @@ import { ownerService, type OwnerRecord } from "@/services/ownerService";
 import { useUIStore } from "@/store/uiStore";
 import { useToastStore } from "@/store/toastStore";
 import SearchableSelect from "@/components/form/SearchableSelect";
-import { exportPageTables } from "@/utils";
+import { downloadCsv } from "@/utils";
 
 const statusClass = (status?: string) => {
   if (status === "suspended" || status === "inactive") return "ha-pill ha-pill-suspended";
@@ -33,6 +33,37 @@ const AdminOwnersPage = () => {
   } | null>(null);
   const invalidate = useInvalidate();
 
+  const handleExport = async () => {
+    try {
+      const res = await ownerService.list({
+        search,
+        limit: 1000,
+        ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+        ...(phoneFilter ? { phone: phoneFilter } : {}),
+        ...(locationFilter ? { location: locationFilter } : {}),
+        ...(salonsFilter !== "all" ? { hasSalon: salonsFilter as "yes" | "no" } : {}),
+      });
+      const items: OwnerRecord[] = res?.data || [];
+      const rows = [
+        ["Owner", "Email", "Phone", "Location", "Salons", "Status"],
+        ...items.map((owner) => {
+          const isSuspended = owner.status === "suspended" || owner.status === "inactive";
+          return [
+            owner.name || "",
+            owner.email || "",
+            owner.phone || "-",
+            [owner.location?.city, owner.location?.country].filter(Boolean).join(", ") || "-",
+            String(owner.salonsCount ?? 0),
+            isSuspended ? "suspended" : "active",
+          ];
+        }),
+      ];
+      downloadCsv(`hermoso-owners-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to export owners", "error");
+    }
+  };
+
   const patchStatus = async (id: string, currentStatus: string | undefined) => {
     setErrorAction("");
     const nextStatus = currentStatus === "suspended" || currentStatus === "inactive" ? "active" : "suspended";
@@ -51,7 +82,7 @@ const AdminOwnersPage = () => {
         <div className="ha-card-title">
           All Salon Owners
           <span style={{ display: "inline-flex", gap: 8 }}>
-            <button className="ha-act-btn" onClick={() => exportPageTables("owners")}>
+            <button className="ha-act-btn" onClick={handleExport}>
               Export
             </button>
             <button className="ha-topbar-btn primary" onClick={() => setOwnerModal(true)}>
@@ -198,9 +229,13 @@ const AdminOwnersPage = () => {
         <CreateOwnerModal
           owner={editOwner}
           onClose={() => setEditOwner(null)}
-          onCreated={() => {
+          onCreated={(_owner, credentials) => {
             invalidate();
-            showToast("Owner updated successfully.");
+            if (credentials?.generated) {
+              setNewOwnerCredentials(credentials);
+            } else {
+              showToast("Owner updated successfully.");
+            }
           }}
         />
       )}

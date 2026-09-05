@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createAnnouncement,
   createNotificationRecord,
+  getNotificationRecipients,
   getNotifications,
   markNotificationRead,
   sendNotificationRecord,
@@ -104,6 +105,7 @@ router.post('/announcement', authorize(Roles.SUPER_ADMIN), createAnnouncement);
 router.post('/', authorize(Roles.SUPER_ADMIN), createNotificationRecord);
 router.patch('/:id', authorize(Roles.SUPER_ADMIN), updateNotificationRecord);
 router.post('/:id/send', authorize(Roles.SUPER_ADMIN), sendNotificationRecord);
+router.get('/:id/recipients', authorize(Roles.SUPER_ADMIN), getNotificationRecipients);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getNotifications);
 router.patch('/:id/read', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), markNotificationRead);
 

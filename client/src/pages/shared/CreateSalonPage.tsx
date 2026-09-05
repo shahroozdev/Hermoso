@@ -35,7 +35,7 @@ type FormValues = z.infer<typeof schema>;
 
 const CreateSalonPage = () => {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { user, setAuth } = useAuthStore();
   const [params] = useSearchParams();
   const emailParam = params.get("email") || "";
 
@@ -77,16 +77,20 @@ const CreateSalonPage = () => {
     setError("");
     setIsSubmitting(true);
     try {
-      // Log in first so the salon-creation request carries a valid token for this
-      // owner; otherwise it goes out unauthenticated (or with a stale token from a
-      // previous session) and the backend rejects it.
-      const password = sessionStorage.getItem("pendingSalonPassword");
-      if (!emailParam || !password) {
-        navigate("/login");
-        return;
+      // Two entry paths land here: a brand-new registration (never logged in yet,
+      // needs to log in first so the request carries a valid token — otherwise it
+      // goes out unauthenticated and the backend rejects it) and an already-logged-in
+      // owner whose account has no salon yet (e.g. created directly by an admin),
+      // who already has a valid session and just needs to submit the form.
+      if (!user) {
+        const password = sessionStorage.getItem("pendingSalonPassword");
+        if (!emailParam || !password) {
+          navigate("/login");
+          return;
+        }
+        const loginResult = await authService.login({ email: emailParam, password });
+        setAuth({ user: loginResult.user });
       }
-      const loginResult = await authService.login({ email: emailParam, password });
-      setAuth({ user: loginResult.user });
 
       await salonService.create({
         name: data.name,

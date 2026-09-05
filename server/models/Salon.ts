@@ -39,6 +39,7 @@ export interface ISalon extends Document {
   commissionRate: number;
   status: SalonStatusType;
   verified: boolean;
+  approvedBy?: mongoose.Types.ObjectId | null;
   location: {
     city?: string;
     country?: string;
@@ -72,6 +73,7 @@ const salonSchema = new Schema<ISalon>(
     commissionRate: { type: Number, default: 10, min: 0, max: 100 },
     status: { type: String, enum: Object.values(SalonStatus), default: SalonStatus.PENDING, index: true },
     verified: { type: Boolean, default: false, index: true },
+    approvedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     location: {
       city: { type: String, index: true },
       country: { type: String, index: true },

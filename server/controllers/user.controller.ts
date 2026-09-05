@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { User } from '../models/User.js';
+import { RefreshToken } from '../models/RefreshToken.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -121,6 +122,11 @@ export const changeMyPassword = asyncHandler(async (req: AuthRequest, res: Respo
 
   user.password = newPassword;
   await user.save();
+
+  await RefreshToken.updateMany(
+    { userId: user._id, revokedAt: null },
+    { revokedAt: new Date() }
+  );
 
   res.json({ success: true, message: 'Password updated successfully' });
 });
@@ -339,17 +345,21 @@ export const listAdmins = asyncHandler(async (req: AuthRequest, res: Response) =
 });
 
 export const regenerateAdminPassword = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
-  requireSuperAdmin(req);
-
   const target = await User.findById(req.params.id);
   if (!target) return next(new ApiError(404, 'User not found'));
 
   const targetIsAdmin = target.role === Roles.ADMIN || target.role === Roles.SUPER_ADMIN;
-  if (!targetIsAdmin) {
-    return next(new ApiError(400, 'This endpoint only resets admin account passwords'));
+  const targetIsOwner = target.role === Roles.SALON_OWNER;
+  if (!targetIsAdmin && !targetIsOwner) {
+    return next(new ApiError(400, 'This endpoint only resets admin or salon owner account passwords'));
   }
 
-  const finalPassword = `Admin@${Math.random().toString(36).slice(-8)}A1`;
+  // Admin-account management stays super-admin-only; owner accounts are already
+  // gated to admin roles at the route level, same as the rest of owner management.
+  if (targetIsAdmin) requireSuperAdmin(req);
+
+  const prefix = targetIsAdmin ? 'Admin' : 'Owner';
+  const finalPassword = `${prefix}@${Math.random().toString(36).slice(-8)}A1`;
   target.password = finalPassword;
   await target.save();
 

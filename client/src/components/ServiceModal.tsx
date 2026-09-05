@@ -3,11 +3,13 @@ import { useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import Form from './form/Form';
 import FormInput from './form/FormInput';
+import SearchableSelect from './form/SearchableSelect';
 import { useApi } from '../hooks/useApi';
 import { serviceService } from '../services/serviceService';
 import { categoryService, type CategoryRecord } from '../services/categoryService';
 import GenericModal from './GenericModal';
 import { useInvalidate } from '../hooks/useInvalidate';
+import { useToastStore } from '../store/toastStore';
 
 const serviceSchema = z.object({
   name: z.string().min(2, 'Service name must be at least 2 characters'),
@@ -18,12 +20,8 @@ const serviceSchema = z.object({
   aiScanLink: z.string().optional()
 });
 
-const categorySchema = z.object({
-  name: z.string().min(2, 'Category name must be at least 2 characters')
-});
-
 // CR-24: AI Scan categories that services can be linked to
-const AI_SCAN_CATEGORIES = [
+export const AI_SCAN_CATEGORIES = [
   { value: '', label: 'Not linked to AI scan' },
   { value: 'skin-tone', label: 'Skin Tone & Tanning' },
   { value: 'eyebrows', label: 'Eyebrow Treatments' },
@@ -63,12 +61,12 @@ export const ServiceFormModal = ({
   onSaved?: () => void;
 }) => {
   const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
-  const [categoryError, setCategoryError] = useState('');
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState(resolveCategoryId(service));
   const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const invalidate = useInvalidate();
+  const { showToast } = useToastStore();
   const isEditing = !!service;
 
   const categoriesReq = useApi(() => categoryService.list(), [categoryRefreshKey]);
@@ -85,7 +83,7 @@ export const ServiceFormModal = ({
 
   const saveService = async (data) => {
     setFormError('');
-    setFormSuccess('');
+    setIsSaving(true);
     try {
       const payload = {
         name: data.name,
@@ -98,34 +96,19 @@ export const ServiceFormModal = ({
       const result = isEditing
         ? await serviceService.update(service!._id, payload)
         : await serviceService.create({ ...payload, ...(salonId ? { salonId } : {}) });
-      setFormSuccess(isEditing ? 'Service updated successfully' : 'Service created successfully');
+      showToast(isEditing ? 'Service updated successfully.' : 'Service created successfully.');
       invalidate();
       onSaved?.();
-      if (!isEditing) {
-        setSelectedCategoryId(data.categoryId);
-      } else {
-        onClose();
-      }
+      onClose();
       return { success: true, data: result.data };
     } catch (err) {
       setFormError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} service`);
       throw err;
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const createCategory = async (data) => {
-    setCategoryError('');
-    try {
-      const result = await categoryService.create({ name: data.name });
-      setSelectedCategoryId(result.data._id);
-      setCategoryRefreshKey((value) => value + 1);
-      setCategoryModalOpen(false);
-      return result;
-    } catch (err) {
-      setCategoryError(err.response?.data?.message || 'Failed to create category');
-      throw err;
-    }
-  };
 
   return (
     <>
@@ -144,8 +127,9 @@ export const ServiceFormModal = ({
               <button
                 type="submit"
                 className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900"
+                disabled={isSaving}
               >
-                Save
+                {isSaving ? 'Saving...' : 'Save'}
               </button>
             </div>
           }
@@ -188,54 +172,145 @@ export const ServiceFormModal = ({
           <AiScanLinkPicker />
 
           {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
-          {formSuccess ? <p className="text-sm text-emerald-600">{formSuccess}</p> : null}
         </GenericModal>
       </Form>
 
       {categoryModalOpen && (
-        <Form
-          schema={categorySchema}
-          defaultValues={{ name: '' }}
-          onSubmit={createCategory}
-        >
-          <GenericModal
-            title="+ Create Category"
-            onClose={() => {
-              setCategoryError('');
-              setCategoryModalOpen(false);
-            }}
-            footer={
+        <CategoryManagerModal
+          categories={categories}
+          onClose={() => setCategoryModalOpen(false)}
+          onChanged={(newCategoryId) => {
+            setCategoryRefreshKey((value) => value + 1);
+            if (newCategoryId) setSelectedCategoryId(newCategoryId);
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+const CategoryManagerModal = ({
+  categories,
+  onClose,
+  onChanged,
+}: {
+  categories: CategoryRecord[];
+  onClose: () => void;
+  onChanged: (newCategoryId?: string) => void;
+}) => {
+  const [newName, setNewName] = useState('');
+  const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setError('');
+    setBusy(true);
+    try {
+      const result = await categoryService.create({ name: newName.trim() });
+      setNewName('');
+      onChanged(result.data._id);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create category');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRename = async (id: string) => {
+    if (!editingName.trim()) return;
+    setError('');
+    setBusy(true);
+    try {
+      await categoryService.update(id, { name: editingName.trim() });
+      setEditingId(null);
+      onChanged();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update category');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async (category: CategoryRecord) => {
+    if (!window.confirm(`Delete category "${category.name}"? Existing services keep it, but it won't be selectable anymore.`)) return;
+    setError('');
+    setBusy(true);
+    try {
+      await categoryService.delete(category._id);
+      onChanged();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete category');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <GenericModal
+      title="Manage Categories"
+      onClose={onClose}
+      footer={
+        <button type="button" className="ha-btn-primary" onClick={onClose}>
+          Done
+        </button>
+      }
+    >
+      {error ? <div className="ha-error-banner">{error}</div> : null}
+      <div className="space-y-2" style={{ maxHeight: 260, overflowY: 'auto' }}>
+        {categories.length === 0 ? <p className="text-sm text-muted">No categories yet.</p> : null}
+        {categories.map((category) => (
+          <div key={category._id} className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-2">
+            {editingId === category._id ? (
               <>
+                <input
+                  className="ha-input flex-1"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  autoFocus
+                />
+                <button type="button" className="ha-btn-secondary" disabled={busy} onClick={() => handleRename(category._id)}>
+                  Save
+                </button>
+                <button type="button" className="ha-btn-secondary" onClick={() => setEditingId(null)}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="flex-1 text-sm">{category.name}</span>
                 <button
                   type="button"
                   className="ha-btn-secondary"
                   onClick={() => {
-                    setCategoryError('');
-                    setCategoryModalOpen(false);
+                    setEditingId(category._id);
+                    setEditingName(category.name);
                   }}
                 >
-                  Cancel
+                  Edit
                 </button>
-                <button
-                  type="submit"
-                  className="rounded-xl border bg-[var(--accent-2)] border-[var(--border)] px-5 py-3 text-sm font-semibold text-slate-900"
-                >
-                  Save
+                <button type="button" className="ha-btn-secondary text-rose-500" disabled={busy} onClick={() => handleDelete(category)}>
+                  Delete
                 </button>
               </>
-            }
-          >
-            {categoryError ? <div className="ha-error-banner">{categoryError}</div> : null}
-            <FormInput
-              name="name"
-              label="Category Name"
-              placeholder="e.g. Hair"
-              required
-            />
-          </GenericModal>
-        </Form>
-      )}
-    </>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex gap-2">
+        <input
+          className="ha-input flex-1"
+          placeholder="New category name"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <button type="button" className="ha-btn-primary" disabled={busy} onClick={handleCreate}>
+          Add
+        </button>
+      </div>
+    </GenericModal>
   );
 };
 
@@ -284,9 +359,11 @@ const AiScanLinkPicker = () => {
 
 const CategoryPicker = ({ categories, selectedCategoryId, onCreateClick }) => {
   const {
-    register,
+    watch,
+    setValue,
     formState: { errors }
   } = useFormContext();
+  const categoryId = watch('categoryId');
 
   return (
     <div className="ha-form-group" data-field="categoryId">
@@ -294,35 +371,28 @@ const CategoryPicker = ({ categories, selectedCategoryId, onCreateClick }) => {
         Category <span className="ha-req-mark">*</span>
       </label>
       <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
-        <select
-          id="categoryId"
-          className="ha-input"
-          style={{ flex: 1 }}
-          {...register('categoryId')}
-        >
-          <option value="">
-            {categories.length ? 'Select category' : 'No categories available'}
-          </option>
-          {categories.map((category) => (
-            <option key={category._id} value={category._id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <div style={{ flex: 1 }}>
+          <SearchableSelect
+            value={categoryId || ''}
+            onChange={(v) => setValue('categoryId', v, { shouldValidate: true })}
+            options={categories.map((category) => ({ value: category._id, label: category.name }))}
+            placeholder={categories.length ? 'Select category' : 'No categories available'}
+          />
+        </div>
         <button
           type="button"
           className="rounded-xl border bg-[var(--accent-2)] border-[var(--border)] px-5 py-3 text-sm font-semibold text-slate-900"
           style={{ minWidth: 48, paddingInline: 0, alignSelf: 'end' }}
           onClick={onCreateClick}
-          aria-label="Create category"
-          title="Create category"
+          aria-label="Manage categories"
+          title="Manage categories"
         >
           +
         </button>
       </div>
       {selectedCategoryId ? (
         <div className="ha-form-hint" style={{ marginTop: 6 }}>
-          New categories can be created inline.
+          Categories can be created, renamed, or deleted from the + button.
         </div>
       ) : null}
       {errors.categoryId ? (

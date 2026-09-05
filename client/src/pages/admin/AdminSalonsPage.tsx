@@ -13,7 +13,7 @@ import { salonsStats } from "@/components/constant";
 import TABLE from "@/components/table";
 import { SalonItem } from "../shared/SalonListPage";
 import SearchableSelect from "@/components/form/SearchableSelect";
-import { exportPageTables } from "@/utils";
+import { downloadCsv } from "@/utils";
 import { ownerService } from "@/services/ownerService";
 
 const statusClass = (status) => {
@@ -124,6 +124,44 @@ const AdminSalonsPage = () => {
     setCommissionMax("");
   };
 
+  const handleExport = async () => {
+    try {
+      const res = await salonService.list({
+        search,
+        limit: 1000,
+        ...(cityFilter !== "all" ? { city: cityFilter } : {}),
+        ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+        ...(ownerFilter !== "all" ? { ownerId: ownerFilter } : {}),
+        ...(servicesMin ? { servicesMin } : {}),
+        ...(servicesMax ? { servicesMax } : {}),
+        ...(bookingsMin ? { bookingsMin } : {}),
+        ...(bookingsMax ? { bookingsMax } : {}),
+        ...(revenueMin ? { revenueMin } : {}),
+        ...(revenueMax ? { revenueMax } : {}),
+        ...(commissionMin ? { commissionMin } : {}),
+        ...(commissionMax ? { commissionMax } : {}),
+      });
+      const items: SalonItem[] = res?.data || [];
+      const rows = [
+        ["Salon / Clinic", "Owner", "City", "Services", "Bookings", "Revenue", "Commission", "Approval", "Status"],
+        ...items.map((s) => [
+          s.name || "",
+          s.owner?.name || "Unassigned",
+          s.location?.city || "-",
+          String(s.servicesCount ?? 0),
+          String(s.bookingsCount ?? 0),
+          String(Math.round(s.revenue || 0)),
+          String(s.commissionRate ?? 10),
+          s.status || "",
+          s.active ? "Active" : "Inactive",
+        ]),
+      ];
+      downloadCsv(`hermoso-salons-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to export salons", "error");
+    }
+  };
+
   if (loading) return <AdminPageSkeleton variant="table" />;
   if (error) return <ErrorBlock text={error} />;
 
@@ -167,7 +205,7 @@ const AdminSalonsPage = () => {
                 ]}
               />
             </span>
-            <button className="ha-act-btn" onClick={() => exportPageTables("salons")}>
+            <button className="ha-act-btn" onClick={handleExport}>
               Export
             </button>
           </span>

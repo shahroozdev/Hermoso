@@ -169,8 +169,17 @@ export const getSalons = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "approvedBy",
+          foreignField: "_id",
+          as: "approvedByUser",
+        },
+      },
+      {
         $addFields: {
           owner: { $arrayElemAt: ["$owner", 0] },
+          approvedByUser: { $arrayElemAt: ["$approvedByUser", 0] },
           servicesCount: { $size: "$services" },
           bookingsCount: { $size: "$bookings" },
           reviewsCount: { $size: "$reviews" },
@@ -218,6 +227,7 @@ export const getSalons = asyncHandler(
                 address: 1,
                 description: 1,
                 workingHours: 1,
+                imageUrl: 1,
                 createdAt: 1,
                 servicesCount: 1,
                 bookingsCount: 1,
@@ -229,6 +239,10 @@ export const getSalons = asyncHandler(
                   _id: "$owner._id",
                   name: "$owner.name",
                   email: "$owner.email",
+                },
+                approvedBy: {
+                  _id: "$approvedByUser._id",
+                  name: "$approvedByUser.name",
                 },
               },
             },
@@ -376,10 +390,11 @@ export const approveOrSuspendSalon = asyncHandler(
         verified: status === SalonStatus.APPROVED,
       };
       if (commissionRate !== undefined) update.commissionRate = commissionRate;
+      if (status === SalonStatus.APPROVED) update.approvedBy = req.user?._id;
 
       const salon = await Salon.findByIdAndUpdate(req.params.id, update, {
         new: true,
-      });
+      }).populate('approvedBy', 'name');
       if (!salon) return next(new ApiError(404, "Salon not found"));
 
       res.json({ success: true, data: salon });

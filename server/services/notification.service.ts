@@ -53,9 +53,10 @@ interface BroadcastParams {
   type?: 'announcement' | 'system' | 'booking_reminder' | 'booking_update' | 'payout' | 'review';
   targetRole: string;
   salonId?: string | null;
+  campaignId?: string | null;
 }
 
-export const broadcastByRole = async ({ title, message, type = 'announcement', targetRole, salonId = null }: BroadcastParams) => {
+export const broadcastByRole = async ({ title, message, type = 'announcement', targetRole, salonId = null, campaignId = null }: BroadcastParams) => {
   const query: Record<string, unknown> = { role: targetRole };
   if (salonId) query.salonId = salonId;
 
@@ -68,7 +69,8 @@ export const broadcastByRole = async ({ title, message, type = 'announcement', t
     type,
     targetRole,
     salonId,
-    userId: u._id
+    userId: u._id,
+    campaignId
   }));
 
   return Notification.insertMany(docs);
@@ -80,7 +82,8 @@ export const deliverAnnouncement = async (notification: INotification) => {
     message: notification.message,
     type: notification.type,
     targetRole: notification.targetRole,
-    salonId: notification.salonId ? String(notification.salonId) : null
+    salonId: notification.salonId ? String(notification.salonId) : null,
+    campaignId: String(notification._id)
   });
 
   notification.status = 'sent';

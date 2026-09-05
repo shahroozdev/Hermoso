@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import StatCard from '../../components/StatCard';
 import LoadingBlock from '../../components/LoadingBlock';
 import ErrorBlock from '../../components/ErrorBlock';
@@ -11,6 +12,21 @@ const OwnerDashboardPage = () => {
 
   if (loading) return <LoadingBlock text="Loading owner dashboard..." />;
   if (error) return <ErrorBlock text={error} />;
+
+  if (data?.data?.needsSetup) {
+    return (
+      <div className="shell-panel rounded-2xl p-8 text-center">
+        <h2 className="text-xl font-semibold">Set Up Your Salon</h2>
+        <p className="mt-2 text-sm text-muted">
+          Your account isn&apos;t linked to a salon yet. Create your salon profile to start
+          accepting bookings and see your dashboard data.
+        </p>
+        <Link to="/create-salon" className="mt-4 inline-block rounded-xl bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900">
+          Create Your Salon
+        </Link>
+      </div>
+    );
+  }
 
   // CR-26: AI Scan referral bookings
   const aiScanBookings = data?.data?.totals?.aiScanBookings || 0;

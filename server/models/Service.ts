@@ -10,7 +10,7 @@ export interface IService extends Document {
   category: string;
   active: boolean;
   // CR-24: Link service to AI scan recommendation
-  aiScanLink?: 'dehydration' | 'pigmentation' | 'tanning' | 'darkCircles' | 'acne' | 'lipPigmentation' | 'allConcerns' | 'notLinked';
+  aiScanLink?: '' | 'skin-tone' | 'eyebrows' | 'hydration' | 'dark-circles' | 'acne' | 'lip-pigmentation' | 'general-facial';
 }
 
 const serviceSchema = new Schema<IService>(
@@ -26,8 +26,8 @@ const serviceSchema = new Schema<IService>(
     // CR-24: Link service to AI scan recommendation
     aiScanLink: {
       type: String,
-      enum: ['dehydration', 'pigmentation', 'tanning', 'darkCircles', 'acne', 'lipPigmentation', 'allConcerns', 'notLinked'],
-      default: 'notLinked',
+      enum: ['', 'skin-tone', 'eyebrows', 'hydration', 'dark-circles', 'acne', 'lip-pigmentation', 'general-facial'],
+      default: '',
       index: true
     }
   },

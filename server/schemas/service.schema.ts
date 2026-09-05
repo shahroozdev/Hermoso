@@ -8,7 +8,8 @@ export const createServiceSchema = z.object({
     price: z.number().min(0, 'Price must be greater than or equal to 0'),
     duration: z.number().min(5, 'Duration must be at least 5 minutes'),
     categoryId: z.string().min(1, 'Category ID is required'),
-    salonId: z.string().optional()
+    salonId: z.string().optional(),
+    aiScanLink: z.string().optional()
   })
 });
 
@@ -20,7 +21,8 @@ export const updateServiceSchema = z.object({
     price: z.number().min(0, 'Price must be greater than or equal to 0').optional(),
     duration: z.number().min(5, 'Duration must be at least 5 minutes').optional(),
     categoryId: z.string().optional(),
-    active: z.boolean().optional()
+    active: z.boolean().optional(),
+    aiScanLink: z.string().optional()
   }),
   params: z.object({
     id: z.string().min(1, 'Service ID is required')

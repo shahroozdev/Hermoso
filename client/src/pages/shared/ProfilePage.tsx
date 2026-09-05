@@ -1,4 +1,5 @@
 import {  useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import Form from '../../components/form/Form';
 import FormInput from '../../components/form/FormInput';
@@ -39,7 +40,8 @@ const emptyPasswordDefaults = {
 };
 
 const ProfilePage = () => {
-  const { user, updateUser } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, updateUser, logout } = useAuthStore();
   const [profileDefaults, setProfileDefaults] = useState({
   name: user?.name || '',
   phone: user?.phone || '',
@@ -103,8 +105,12 @@ const ProfilePage = () => {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword
       });
-      setPasswordSuccess('Password changed successfully');
+      setPasswordSuccess('Password changed successfully. Please log in again with your new password.');
       setPasswordFormKey((value) => value + 1);
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 1500);
       return result;
     } catch (err: unknown) {
       setPasswordError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to change password');
