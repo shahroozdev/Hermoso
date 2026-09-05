@@ -11,7 +11,7 @@ const LegalLayout = () => (
   <div className="flex min-h-screen flex-col bg-[var(--bg)]">
     <header className="border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
       <Link to="/login" className="text-lg font-semibold text-[var(--text)]">
-        Hermoso
+        Hermoso App
       </Link>
     </header>
 

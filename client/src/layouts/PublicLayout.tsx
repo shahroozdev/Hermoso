@@ -67,12 +67,18 @@ const PublicLayout = () => {
           </svg>
         )}
       </button>
-      <header className="flex items-center justify-center gap-2 px-6 py-8">
+      <span className="fixed left-4 top-4 z-50 flex items-center justify-center gap-2 px-6 py-8">
         <Link to="/login" className="flex items-center gap-2">
-          <img src="/assets/icons/HermosoLogo.svg" alt="Hermoso" className="h-9 w-9" />
-          <span className="text-lg font-semibold text-[var(--text)]">Hermoso</span>
+          <img
+            src="/assets/icons/HermosoLogo.svg"
+            alt="Hermoso"
+            className="h-9 w-9"
+          />
+          <span className="text-lg font-semibold text-[var(--text)]">
+            Hermoso App
+          </span>
         </Link>
-      </header>
+      </span>
       <Outlet />
       <footer className="border-t border-[var(--border)] bg-[var(--surface)] px-6 py-6">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 text-sm">
