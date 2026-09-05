@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /login
+Allow: /register
+Allow: /privacy-policy
+Allow: /terms-and-conditions
+Allow: /refund-policy
+Allow: /ownership-statement
+Disallow: /admin
+Disallow: /owner
+Disallow: /customer
+
+Sitemap: https://REPLACE-WITH-YOUR-DOMAIN/sitemap.xml
