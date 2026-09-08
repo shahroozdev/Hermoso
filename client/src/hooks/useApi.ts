@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 interface UseApiResult<T> {
   data: T | null;
@@ -15,6 +15,7 @@ export const useApi = <T>(fetcher: () => Promise<T>, deps: React.DependencyList 
   const { data, isLoading, error } = useQuery<T, ApiError>({
     queryKey,
     queryFn: fetcher,
+    placeholderData: keepPreviousData,
   });
 
   return {

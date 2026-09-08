@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createReview, getReviews, getReviewStats, moderateReview, replyReview } from '../controllers/review.controller.js';
+import { createReview, getReviews, getReviewStats, moderateReview, moderateAllReviews, replyReview } from '../controllers/review.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -128,6 +128,7 @@ router.use(authenticate);
 router.post('/', authorize(Roles.CUSTOMER), createReview);
 router.get('/analytics/stats', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getReviewStats);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getReviews);
+router.patch('/moderate-all', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), moderateAllReviews);
 router.patch('/:id/moderate', authorize(Roles.SUPER_ADMIN), moderateReview);
 router.patch('/:id/reply', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), replyReview);
 

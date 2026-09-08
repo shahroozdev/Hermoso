@@ -33,6 +33,11 @@ const clickFirstButtonMatchingText = (texts: string[]) => {
   target.click();
   return true;
 };
+// These pages already render their own primary action button in-page
+// (Save Profile / Moderate All) — showing it again in the topbar would be
+// a confusing duplicate control doing the same thing.
+const PAGES_WITHOUT_TOPBAR_ACTION = ["profile", "reviews"];
+
 const TopBarBtn = () => {
   const location = useLocation();
   const key = resolvePageKey(location.pathname);
@@ -61,16 +66,6 @@ const TopBarBtn = () => {
       if (clickFirstButtonMatchingText(["invite admin", "save"])) return;
     }
 
-    if (key === "profile") {
-      const submitButton = document.querySelector(
-        '.ha-content button[type="submit"]',
-      ) as HTMLButtonElement | null;
-      if (submitButton) {
-        submitButton.click();
-        return;
-      }
-    }
-
     if (key === "notifications") {
       const field = document.querySelector(
         ".ha-content input, .ha-content textarea",
@@ -82,20 +77,15 @@ const TopBarBtn = () => {
       }
     }
 
-    if (key === "reviews") {
-      const reviewQueue = document.querySelector(".ha-content .ha-card");
-      if (reviewQueue) {
-        reviewQueue.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-    }
-
     window.dispatchEvent(
       new CustomEvent(ADMIN_TOPBAR_ACTION_EVENT, {
         detail: { key },
       }),
     );
   };
+
+  if (PAGES_WITHOUT_TOPBAR_ACTION.includes(key)) return null;
+
   return (
     <button
       className="ha-topbar-btn primary"

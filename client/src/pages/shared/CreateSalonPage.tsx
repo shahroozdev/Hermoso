@@ -261,6 +261,8 @@ const WorkingHoursControl = () => {
               <div className="ha-hours-time">
                 <input
                   type="time"
+                  min="00:00"
+                  max="23:59"
                   className="ha-input ha-input-sm"
                   value={h.breakStart}
                   onChange={(e) => setValue(`workingHours.${day}.breakStart`, e.target.value)}
@@ -268,6 +270,8 @@ const WorkingHoursControl = () => {
                 <span>break to</span>
                 <input
                   type="time"
+                  min="00:00"
+                  max="23:59"
                   className="ha-input ha-input-sm"
                   value={h.breakEnd}
                   onChange={(e) => setValue(`workingHours.${day}.breakEnd`, e.target.value)}

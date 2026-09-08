@@ -11,6 +11,7 @@ import type { AuthRequest } from "../middleware/auth.middleware.js";
 import { Service } from "../models/Service.js";
 import mongoose from "mongoose";
 import { uploadToCloudinary } from "../config/cloudinary.js";
+import { numericRange } from "../utils/numericRange.js";
 
 const isSuperAdminLike = (role?: string) =>
   role === Roles.SUPER_ADMIN || role === "admin";
@@ -71,13 +72,6 @@ export const createSalon = asyncHandler(
   },
 );
 
-const numericRange = (min: unknown, max: unknown): Record<string, number> | undefined => {
-  const range: Record<string, number> = {};
-  if (min !== undefined && min !== "") range.$gte = Number(min);
-  if (max !== undefined && max !== "") range.$lte = Number(max);
-  return Object.keys(range).length ? range : undefined;
-};
-
 export const getSalons = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const {
@@ -85,6 +79,7 @@ export const getSalons = asyncHandler(
       limit = 10,
       search = "",
       status,
+      active,
       city,
       ownerId,
       commissionMin,
@@ -125,6 +120,8 @@ export const getSalons = asyncHandler(
     if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
     const revenueRange = numericRange(revenueMin, revenueMax);
     if (revenueRange) computedMatch.revenueInPaisa = revenueRange;
+    if (active === "active") computedMatch.active = true;
+    else if (active === "inactive") computedMatch.active = false;
 
     const pipeline: mongoose.PipelineStage[] = [
       { $match: query },
@@ -460,11 +457,41 @@ export const getSalonCities = asyncHandler(
 
 export const getSalonRevenue = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
-    const skip = (Number(page) - 1) * Number(limit);
-    const limitNum = Number(limit);
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      bookingsMin,
+      bookingsMax,
+      grossMin,
+      grossMax,
+      commissionMin,
+      commissionMax,
+      platformMin,
+      platformMax,
+    } = req.query;
 
-    const salons = await Salon.aggregate([
+    const initialMatch: Record<string, unknown> = {};
+    if (search) initialMatch.name = new RegExp(search as string, "i");
+
+    // bookingsCount/grossRevenueInPaisa/platformRevenueInPaisa only exist after
+    // the $project below, so they're filtered in a second $match afterward
+    // (same pattern as getSalons's computedMatch), with a $facet to compute the
+    // total alongside the paginated page.
+    const computedMatch: Record<string, unknown> = {};
+    const bookingsRange = numericRange(bookingsMin, bookingsMax);
+    if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
+    const grossRange = numericRange(grossMin, grossMax);
+    if (grossRange) computedMatch.grossRevenueInPaisa = grossRange;
+    const commissionRange = numericRange(commissionMin, commissionMax);
+    if (commissionRange) computedMatch.commissionRate = commissionRange;
+    const platformRange = numericRange(platformMin, platformMax);
+    if (platformRange) computedMatch.platformRevenueInPaisa = platformRange;
+
+    const pipeline: mongoose.PipelineStage[] = [];
+    if (Object.keys(initialMatch).length) pipeline.push({ $match: initialMatch });
+
+    pipeline.push(
       {
         $lookup: {
           from: "payments",
@@ -492,44 +519,26 @@ export const getSalonRevenue = asyncHandler(
           salonNetRevenueInPaisa: { $sum: "$payments.salonAmountInPaisa" },
         },
       },
-      { $sort: { grossRevenueInPaisa: -1 } as const },
-      { $skip: skip },
-      { $limit: limitNum },
-    ] as mongoose.PipelineStage[]);
+    );
 
-    const countResult = await Salon.aggregate([
-      {
-        $lookup: {
-          from: "payments",
-          localField: "_id",
-          foreignField: "salonId",
-          as: "payments",
-        },
-      },
-      {
-        $lookup: {
-          from: "bookings",
-          localField: "_id",
-          foreignField: "salonId",
-          as: "bookings",
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          status: 1,
-          commissionRate: 1,
-          bookingsCount: { $size: "$bookings" },
-          grossRevenueInPaisa: { $sum: "$payments.amountInPaisa" },
-          platformRevenueInPaisa: { $sum: "$payments.platformCommissionInPaisa" },
-          salonNetRevenueInPaisa: { $sum: "$payments.salonAmountInPaisa" },
-        },
-      },
-      { $sort: { grossRevenueInPaisa: -1 } as const },
-      { $count: "total" },
-    ] as mongoose.PipelineStage[]);
+    if (Object.keys(computedMatch).length) pipeline.push({ $match: computedMatch });
 
-    const total = (countResult[0] as { total?: number } | undefined)?.total || 0;
+    pipeline.push(
+      { $sort: { grossRevenueInPaisa: -1 } },
+      {
+        $facet: {
+          data: [
+            { $skip: (Number(page) - 1) * Number(limit) },
+            { $limit: Number(limit) },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    );
+
+    const [result] = await Salon.aggregate(pipeline);
+    const salons = result?.data || [];
+    const total = result?.totalCount?.[0]?.count || 0;
 
     res.json({
       success: true,

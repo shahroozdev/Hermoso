@@ -5,6 +5,15 @@ interface EventParams {
   limit?: number;
   search?: string;
   category?: string;
+  servicesSearch?: string;
+  durationMin?: number | string;
+  durationMax?: number | string;
+  priceMin?: number | string;
+  priceMax?: number | string;
+  discountMin?: number | string;
+  discountMax?: number | string;
+  finalPriceMin?: number | string;
+  finalPriceMax?: number | string;
 }
 
 export const eventService = {

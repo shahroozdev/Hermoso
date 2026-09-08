@@ -17,6 +17,20 @@ interface SalonParams {
   revenueMax?: number | string;
 }
 
+interface RevenueParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  bookingsMin?: number | string;
+  bookingsMax?: number | string;
+  grossMin?: number | string;
+  grossMax?: number | string;
+  commissionMin?: number | string;
+  commissionMax?: number | string;
+  platformMin?: number | string;
+  platformMax?: number | string;
+}
+
 export interface CreateSalonPayload {
   name: string;
   description?: string;
@@ -52,8 +66,8 @@ export const salonService = {
     const { data } = await api.get(`/salons/${id}`);
     return data;
   },
-  revenue: async () => {
-    const { data } = await api.get('/salons/analytics/revenue');
+  revenue: async (params: RevenueParams = {}) => {
+    const { data } = await api.get('/salons/analytics/revenue', { params });
     return data;
   },
   updateStatus: async (id: string, payload: { status: string; commissionRate?: number }) => {

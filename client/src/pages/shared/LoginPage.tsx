@@ -88,6 +88,9 @@ const LoginPage = () => {
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
         <p className="mt-4 text-sm text-slate-500">No account? <Link to="/register" className="text-primary">Register</Link></p>
+        <p className="mt-1 text-sm text-slate-500">
+          Registered but not verified? <Link to="/verify-otp" className="text-primary">Resume OTP verification</Link>
+        </p>
       </Form>
     </div>
   );

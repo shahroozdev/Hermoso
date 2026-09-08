@@ -507,6 +507,8 @@ const WorkingHours = () => {
               <div className="ha-hours-time">
                 <input
                   type="time"
+                  min="00:00"
+                  max="23:59"
                   className="ha-input ha-input-sm"
                   value={h.breakStart}
                   onChange={(e) =>
@@ -516,6 +518,8 @@ const WorkingHours = () => {
                 <span>break to</span>
                 <input
                   type="time"
+                  min="00:00"
+                  max="23:59"
                   className="ha-input ha-input-sm"
                   value={h.breakEnd}
                   onChange={(e) =>

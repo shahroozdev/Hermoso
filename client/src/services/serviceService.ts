@@ -7,6 +7,11 @@ interface ServiceParams {
   category?: string;
   categoryId?: string;
   salonId?: string;
+  durationMin?: string | number;
+  durationMax?: string | number;
+  priceMin?: string | number;
+  priceMax?: string | number;
+  aiScanLink?: string;
 }
 
 export const serviceService = {

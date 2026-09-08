@@ -23,7 +23,10 @@ export const createEventSchema = z.object({
         serviceId: z.string().min(1, 'Service ID is required')
       })
     ).min(1, 'At least one service is required'),
-    discount: z.number().min(0, 'Discount must be >= 0').max(100, 'Discount must be <= 100').optional().default(0),
+    // Coerced defensively (BUG-144): the client already sends a number, but a string
+    // slipping through the JSON boundary must not silently poison the NaN-prone
+    // totalPriceInPaisa/finalPriceInPaisa arithmetic in the controller.
+    discount: z.coerce.number().min(0, 'Discount must be >= 0').max(100, 'Discount must be <= 100').optional().default(0),
     images: z.array(z.string().url('Invalid image URL')).optional().default([]),
     salonId: z.string().optional()
   })
@@ -51,7 +54,7 @@ export const updateEventSchema = z.object({
         serviceId: z.string().min(1, 'Service ID is required')
       })
     ).min(1, 'At least one service is required').optional(),
-    discount: z.number().min(0, 'Discount must be >= 0').max(100, 'Discount must be <= 100').optional(),
+    discount: z.coerce.number().min(0, 'Discount must be >= 0').max(100, 'Discount must be <= 100').optional(),
     images: z.array(z.string().url('Invalid image URL')).optional(),
     active: z.boolean().optional()
   }),
@@ -78,7 +81,17 @@ export const getEventsSchema = z.object({
       EventCategory.WEDDING,
       EventCategory.OTHER
     ]).optional(),
-    salonId: z.string().optional()
+    salonId: z.string().optional(),
+    // BUG-139: additional filters for the owner Events table
+    servicesSearch: z.string().optional(),
+    durationMin: z.string().regex(/^\d+$/, 'durationMin must be a number').optional(),
+    durationMax: z.string().regex(/^\d+$/, 'durationMax must be a number').optional(),
+    priceMin: z.string().regex(/^\d+$/, 'priceMin must be a number').optional(),
+    priceMax: z.string().regex(/^\d+$/, 'priceMax must be a number').optional(),
+    discountMin: z.string().regex(/^\d+$/, 'discountMin must be a number').optional(),
+    discountMax: z.string().regex(/^\d+$/, 'discountMax must be a number').optional(),
+    finalPriceMin: z.string().regex(/^\d+$/, 'finalPriceMin must be a number').optional(),
+    finalPriceMax: z.string().regex(/^\d+$/, 'finalPriceMax must be a number').optional()
   })
 });
 

@@ -6,6 +6,14 @@ interface BookingParams {
   salonId?: string;
   status?: string;
   date?: string;
+  fromDate?: string;
+  toDate?: string;
+  bookingId?: string;
+  customer?: string;
+  salon?: string;
+  service?: string;
+  amountMin?: number | string;
+  amountMax?: number | string;
 }
 
 interface CreateBookingPayload {

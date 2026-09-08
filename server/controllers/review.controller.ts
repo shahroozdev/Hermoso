@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { Review } from '../models/Review.js';
 import { Roles, ReviewStatus, type ReviewStatusType } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -59,28 +60,70 @@ export const getReviewStats = asyncHandler(async (req: AuthRequest, res: Respons
 });
 
 export const getReviews = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, salonId, status } = req.query;
-  const query: Record<string, unknown> = {};
+  const { page = 1, limit = 10, salonId, status, customer, salon, rating, search } = req.query;
+  const match: Record<string, unknown> = {};
 
-  if (status) query.status = status;
+  if (status) match.status = status;
+  if (rating) match.rating = Number(rating);
+  if (search) match.comment = new RegExp(search as string, 'i');
 
   if (req.user?.role === Roles.SUPER_ADMIN) {
-    if (salonId) query.salonId = salonId;
+    if (salonId) match.salonId = new mongoose.Types.ObjectId(salonId as string);
   } else if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
-    query.salonId = req.user?.salonId;
+    match.salonId = req.user?.salonId;
   } else {
-    query.customerId = req.user?._id;
+    match.customerId = req.user?._id;
   }
 
-  const data = await Review.find(query)
-    .populate('customerId', 'name')
-    .populate('salonId', 'name location')
-    .sort({ createdAt: -1 })
-    .skip((Number(page) - 1) * Number(limit))
-    .limit(Number(limit));
+  const pipeline: mongoose.PipelineStage[] = [
+    { $match: match },
+    { $lookup: { from: 'users', localField: 'customerId', foreignField: '_id', as: 'customerId' } },
+    { $unwind: { path: '$customerId', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'salons', localField: 'salonId', foreignField: '_id', as: 'salonId' } },
+    { $unwind: { path: '$salonId', preserveNullAndEmptyArrays: true } },
+  ];
 
-  const total = await Review.countDocuments(query);
+  if (customer) pipeline.push({ $match: { 'customerId.name': new RegExp(customer as string, 'i') } });
+  if (salon) pipeline.push({ $match: { 'salonId.name': new RegExp(salon as string, 'i') } });
+
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    {
+      $facet: {
+        data: [
+          { $skip: (Number(page) - 1) * Number(limit) },
+          { $limit: Number(limit) },
+          {
+            $project: {
+              rating: 1,
+              comment: 1,
+              reply: 1,
+              status: 1,
+              createdAt: 1,
+              customerId: { _id: '$customerId._id', name: '$customerId.name' },
+              salonId: { _id: '$salonId._id', name: '$salonId.name', location: '$salonId.location' },
+            },
+          },
+        ],
+        totalCount: [{ $count: 'count' }],
+      },
+    },
+  );
+
+  const [result] = await Review.aggregate(pipeline);
+  const data = result?.data || [];
+  const total = result?.totalCount?.[0]?.count || 0;
+
   res.json({ success: true, data, meta: { page: Number(page), limit: Number(limit), total } });
+});
+
+export const moderateAllReviews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const query: Record<string, unknown> = { status: ReviewStatus.PENDING };
+  if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
+    query.salonId = req.user?.salonId;
+  }
+  const result = await Review.updateMany(query, { status: ReviewStatus.APPROVED });
+  res.json({ success: true, data: { modifiedCount: result.modifiedCount } });
 });
 
 interface ModerateBody {

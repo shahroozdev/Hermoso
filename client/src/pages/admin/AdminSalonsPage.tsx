@@ -13,6 +13,7 @@ import { salonsStats } from "@/components/constant";
 import TABLE from "@/components/table";
 import { SalonItem } from "../shared/SalonListPage";
 import SearchableSelect from "@/components/form/SearchableSelect";
+import RangeFilter from "@/components/form/RangeFilter";
 import { downloadCsv } from "@/utils";
 import { ownerService } from "@/services/ownerService";
 import { formatMoney, rupeesToPaisa } from "@/utils/money";
@@ -26,6 +27,7 @@ const statusClass = (status) => {
 const AdminSalonsPage = () => {
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [showMoreFilters, setShowMoreFilters] = useState(false);
@@ -105,6 +107,7 @@ const AdminSalonsPage = () => {
     search ||
       cityFilter !== "all" ||
       statusFilter !== "all" ||
+      activeFilter !== "all" ||
       ownerFilter !== "all" ||
       servicesMin || servicesMax || bookingsMin || bookingsMax ||
       revenueMin || revenueMax || commissionMin || commissionMax,
@@ -114,6 +117,7 @@ const AdminSalonsPage = () => {
     setSearch("");
     setCityFilter("all");
     setStatusFilter("all");
+    setActiveFilter("all");
     setOwnerFilter("all");
     setServicesMin("");
     setServicesMax("");
@@ -132,6 +136,7 @@ const AdminSalonsPage = () => {
         limit: 1000,
         ...(cityFilter !== "all" ? { city: cityFilter } : {}),
         ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+        ...(activeFilter !== "all" ? { active: activeFilter } : {}),
         ...(ownerFilter !== "all" ? { ownerId: ownerFilter } : {}),
         ...(servicesMin ? { servicesMin } : {}),
         ...(servicesMax ? { servicesMax } : {}),
@@ -203,6 +208,17 @@ const AdminSalonsPage = () => {
                   { value: "pending", label: "Pending" },
                   { value: "approved", label: "Approved" },
                   { value: "suspended", label: "Suspended" },
+                ]}
+              />
+            </span>
+            <span style={{ minWidth: 150, display: "inline-block" }}>
+              <SearchableSelect
+                value={activeFilter}
+                onChange={setActiveFilter}
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "active", label: "Active" },
+                  { value: "inactive", label: "Inactive" },
                 ]}
               />
             </span>
@@ -356,39 +372,5 @@ const AdminSalonsPage = () => {
     </>
   );
 };
-
-const RangeFilter = ({
-  label,
-  min,
-  max,
-  onMin,
-  onMax,
-}: {
-  label: string;
-  min: string;
-  max: string;
-  onMin: (v: string) => void;
-  onMax: (v: string) => void;
-}) => (
-  <div>
-    <label className="mb-1 block text-xs font-semibold uppercase text-muted">{label}</label>
-    <div style={{ display: "flex", gap: 6 }}>
-      <input
-        type="number"
-        className="ha-input"
-        placeholder="Min"
-        value={min}
-        onChange={(e) => onMin(e.target.value)}
-      />
-      <input
-        type="number"
-        className="ha-input"
-        placeholder="Max"
-        value={max}
-        onChange={(e) => onMax(e.target.value)}
-      />
-    </div>
-  </div>
-);
 
 export default AdminSalonsPage;

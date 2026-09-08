@@ -1,5 +1,6 @@
 import GenericModal from './GenericModal';
-import { formatMoney } from '../utils/money';
+import { downloadCsv } from '../utils';
+import { formatMoney, paisaToRupees } from '../utils/money';
 
 interface PayoutDetailModalProps {
   payout: {
@@ -9,6 +10,7 @@ interface PayoutDetailModalProps {
     status?: string;
     payoutDate?: string;
     createdAt?: string;
+    bankAccount?: string;
   };
   onClose: () => void;
 }
@@ -23,17 +25,42 @@ const periodLabel = (dateLike?: string) => {
   return `${month} 21–${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`;
 };
 
-const fakeAccount = (name: string) => {
-  const digits = String((name || '0000').split('').reduce((s, ch) => s + ch.charCodeAt(0), 0)).slice(-4);
-  return `HBL ****${digits.padStart(4, '0')}`;
-};
-
 const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
   const p = payout;
   const isCompleted = p.status === 'completed';
+  const bankAccount = p.bankAccount || 'Not on file';
+
+  const handleDownloadReceipt = () => {
+    const rows = [
+      ['Payout ID', 'Salon', 'Period', 'Amount (PKR)', 'Status', 'Paid Date', 'Bank Account'],
+      [
+        String(p._id),
+        p.salonId?.name || 'Unknown',
+        periodLabel(p.createdAt),
+        String(paisaToRupees(p.amountInPaisa || 0)),
+        p.status || '',
+        isCompleted && p.payoutDate ? new Date(p.payoutDate).toLocaleDateString() : '-',
+        bankAccount,
+      ],
+    ];
+    downloadCsv(`payout-receipt-${String(p._id).slice(-8).toUpperCase()}.csv`, rows);
+  };
 
   return (
-    <GenericModal title="Payout Receipt" onClose={onClose}>
+    <GenericModal
+      title="Payout Receipt"
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className="ha-btn-secondary" onClick={onClose}>
+            Close
+          </button>
+          <button type="button" className="ha-btn-primary" onClick={handleDownloadReceipt}>
+            Download Receipt
+          </button>
+        </>
+      }
+    >
       <div className="space-y-5">
         <div className="rounded-lg border border-[var(--border)] p-4 text-center">
           <div className="text-xs font-semibold uppercase text-muted">Net Amount</div>
@@ -67,7 +94,7 @@ const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
           )}
           <div>
             <label className="text-xs font-semibold uppercase text-muted">Bank Account</label>
-            <p className="text-sm font-medium">{fakeAccount(p.salonId?.name || '')}</p>
+            <p className="text-sm font-medium">{bankAccount}</p>
           </div>
           <div>
             <label className="text-xs font-semibold uppercase text-muted">Payout ID</label>

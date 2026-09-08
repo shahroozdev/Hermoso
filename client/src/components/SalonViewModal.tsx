@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GenericModal from "./GenericModal";
+import ConfirmModal from "./ConfirmModal";
 import ServiceModal, { ServiceFormModal, AI_SCAN_CATEGORIES, type ServiceRecord } from "./ServiceModal";
 import TABLE from "./table";
 import ActionsMenu from "./ActionsMenu";
@@ -7,6 +8,7 @@ import { serviceService } from "@/services/serviceService";
 import { useInvalidate } from "@/hooks/useInvalidate";
 import { useToastStore } from "@/store/toastStore";
 import { formatMoney } from "@/utils/money";
+import { truncateWords } from "@/utils";
 
 const aiScanLabel = (value?: string) => AI_SCAN_CATEGORIES.find((c) => c.value === value)?.label || "-";
 
@@ -49,18 +51,21 @@ const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
 const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [serviceSearch, setServiceSearch] = useState("");
+  const [deletingService, setDeletingService] = useState<ServiceItem | null>(null);
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
   const isSuspended = salon.status === "suspended";
 
-  const handleDeleteService = async (service: ServiceItem) => {
-    if (!window.confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
+  const handleDeleteService = async () => {
+    if (!deletingService) return;
     try {
-      await serviceService.delete(service._id);
+      await serviceService.delete(deletingService._id);
       showToast("Service deleted successfully.");
       invalidate(["salon-services"]);
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to delete service", "error");
+    } finally {
+      setDeletingService(null);
     }
   };
 
@@ -100,8 +105,8 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
         </div>
 
         {salon._id && (
-          <div style={{ marginTop: 20 }}>
-            <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+          <div className="ha-modal-scroll-section" style={{ marginTop: 20 }}>
+            <div className="flex items-center justify-between" style={{ marginBottom: 10, flexShrink: 0 }}>
               <h4 className="text-sm font-semibold">Services</h4>
               {isSuspended ? (
                 <span className="text-xs text-muted">Suspended salons cannot add services</span>
@@ -112,7 +117,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
             <input
               type="text"
               className="ha-input"
-              style={{ marginBottom: 10, maxWidth: 280 }}
+              style={{ marginBottom: 10, maxWidth: 280, flexShrink: 0 }}
               placeholder="Search services by name..."
               value={serviceSearch}
               onChange={(e) => setServiceSearch(e.target.value)}
@@ -137,7 +142,11 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                   item.category || item.categoryId?.name || "-",
                   item.duration ? `${item.duration} min` : "-",
                   item.priceInPaisa != null ? formatMoney(item.priceInPaisa) : "-",
-                  item.description || "-",
+                  item.description ? (
+                    <span title={item.description}>{truncateWords(item.description, 12)}</span>
+                  ) : (
+                    "-"
+                  ),
                   aiScanLabel(item.aiScanLink),
                   <ActionsMenu
                     items={[
@@ -148,7 +157,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                       {
                         label: "Delete",
                         danger: true,
-                        onClick: () => handleDeleteService(item),
+                        onClick: () => setDeletingService(item),
                       },
                     ]}
                   />,
@@ -165,6 +174,17 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
           service={editingService}
           onClose={() => setEditingService(null)}
           onSaved={() => invalidate(["salon-services"])}
+        />
+      )}
+
+      {deletingService && (
+        <ConfirmModal
+          title="Delete Service"
+          message={`Delete "${deletingService.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={handleDeleteService}
+          onCancel={() => setDeletingService(null)}
         />
       )}
     </>

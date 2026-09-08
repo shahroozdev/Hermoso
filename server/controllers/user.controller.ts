@@ -120,6 +120,11 @@ export const changeMyPassword = asyncHandler(async (req: AuthRequest, res: Respo
     throw new ApiError(400, 'Current password is incorrect');
   }
 
+  const isSameAsCurrent = await user.comparePassword(newPassword);
+  if (isSameAsCurrent) {
+    throw new ApiError(400, 'New password cannot be the same as the current password');
+  }
+
   user.password = newPassword;
   await user.save();
 
@@ -189,7 +194,7 @@ export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, search = '', status, phone, location, hasSalon } = req.query;
+  const { page = 1, limit = 10, search = '', status, phone, location, hasSalon, salonsOp, salonsValue } = req.query;
   const match: Record<string, unknown> = { role: Roles.SALON_OWNER };
   if (search) {
     match.$or = [{ name: new RegExp(search as string, 'i') }, { email: new RegExp(search as string, 'i') }];
@@ -213,6 +218,14 @@ export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) =
   const computedMatch: Record<string, unknown> = {};
   if (hasSalon === 'yes') computedMatch.salonsCount = { $gt: 0 };
   if (hasSalon === 'no') computedMatch.salonsCount = 0;
+  if (salonsValue !== undefined && salonsValue !== '') {
+    const numericValue = Number(salonsValue);
+    if (!Number.isNaN(numericValue)) {
+      const operatorMap: Record<string, string> = { '>': '$gt', '<': '$lt', '>=': '$gte', '<=': '$lte', '=': '$eq' };
+      const mongoOperator = operatorMap[salonsOp as string] || '$eq';
+      computedMatch.salonsCount = { [mongoOperator]: numericValue };
+    }
+  }
 
   const pipeline: mongoose.PipelineStage[] = [
     { $match: match },
@@ -250,6 +263,7 @@ export const listOwners = asyncHandler(async (req: AuthRequest, res: Response) =
               location: 1,
               bankAccount: 1,
               status: 1,
+              isVerified: 1,
               createdAt: 1,
               salonsCount: 1
             }

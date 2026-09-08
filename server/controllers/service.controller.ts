@@ -5,6 +5,7 @@ import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
+import { numericRange } from '../utils/numericRange.js';
 import {
   createServiceSchema,
   updateServiceSchema,
@@ -38,7 +39,7 @@ export const createService = asyncHandler(
 
 export const getServices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { page = 1, limit = 10, search = '', category, categoryId, salonId } = req.query;
+    const { page = 1, limit = 10, search = '', category, categoryId, salonId, durationMin, durationMax, priceMin, priceMax, aiScanLink } = req.query;
     const query: Record<string, unknown> = { active: true };
 
     if (req.user?.role === Roles.SUPER_ADMIN) {
@@ -52,6 +53,13 @@ export const getServices = asyncHandler(
     if (category) query.category = new RegExp(category as string, 'i');
     if (categoryId) query.categoryId = categoryId;
     if (search) query.name = new RegExp(search as string, 'i');
+    if (aiScanLink) query.aiScanLink = aiScanLink;
+
+    const durationRange = numericRange(durationMin, durationMax);
+    if (durationRange) query.duration = durationRange;
+
+    const priceRange = numericRange(priceMin, priceMax);
+    if (priceRange) query.priceInPaisa = priceRange;
 
     const data = await Service.find(query)
       .populate('categoryId', 'name')

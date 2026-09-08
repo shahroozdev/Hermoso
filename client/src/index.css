@@ -31,6 +31,12 @@
   border-color: var(--border);
 }
 
+html {
+  /* Reserve the scrollbar's width permanently so toggling body overflow
+     (e.g. when a modal opens and locks scroll) never reflows/shifts layout. */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background:
@@ -195,11 +201,26 @@ textarea::placeholder {
   scrollbar-color: #888 transparent;
 }
 
-/* Inside a modal, .ha-modal-body already scrolls the whole dialog — letting a
-   nested table also scroll at its full-page height produces two visible
-   scrollbars stacked on top of each other. Cap it lower so only one applies. */
-.ha-modal-body .ha-table-scroll {
-  max-height: 280px;
+/* Inside a modal, .ha-modal-body scrolling AND a nested table scrolling at the
+   same time produces two visible scrollbars stacked on top of each other.
+   When a modal body contains a scrollable table, let the table be the only
+   scroll region — the header/description content above it stays fixed and
+   the table area grows to fill the remaining space. */
+.ha-modal-body:has(.ha-table-scroll) {
+  overflow-y: hidden;
+}
+
+.ha-modal-scroll-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ha-modal-scroll-section .ha-table-scroll {
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: none;
 }
 
 .ha-table-scroll::-webkit-scrollbar {
@@ -1386,6 +1407,52 @@ textarea::placeholder {
 .ha-btn-secondary:hover {
   background: var(--surface-soft);
   color: var(--text);
+}
+
+.ha-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ha-icon-btn:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.ha-icon-btn.danger:hover {
+  color: var(--rose);
+  border-color: var(--rose);
+}
+
+.ha-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ha-btn-danger {
+  background: var(--rose);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ha-btn-danger:hover {
+  opacity: 0.88;
 }
 
 .ha-error-banner {

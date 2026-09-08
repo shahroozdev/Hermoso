@@ -8,6 +8,7 @@ import { useApi } from '../hooks/useApi';
 import { serviceService } from '../services/serviceService';
 import { categoryService, type CategoryRecord } from '../services/categoryService';
 import GenericModal from './GenericModal';
+import ConfirmModal from './ConfirmModal';
 import { useInvalidate } from '../hooks/useInvalidate';
 import { useToastStore } from '../store/toastStore';
 import { paisaToRupees, rupeesToPaisa } from '../utils/money';
@@ -204,6 +205,7 @@ const CategoryManagerModal = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<CategoryRecord | null>(null);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -235,17 +237,18 @@ const CategoryManagerModal = ({
     }
   };
 
-  const handleDelete = async (category: CategoryRecord) => {
-    if (!window.confirm(`Delete category "${category.name}"? Existing services keep it, but it won't be selectable anymore.`)) return;
+  const handleDelete = async () => {
+    if (!deletingCategory) return;
     setError('');
     setBusy(true);
     try {
-      await categoryService.delete(category._id);
+      await categoryService.delete(deletingCategory._id);
       onChanged();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete category');
     } finally {
       setBusy(false);
+      setDeletingCategory(null);
     }
   };
 
@@ -284,16 +287,25 @@ const CategoryManagerModal = ({
                 <span className="flex-1 text-sm">{category.name}</span>
                 <button
                   type="button"
-                  className="ha-btn-secondary"
+                  className="ha-icon-btn"
+                  title="Edit category"
+                  aria-label="Edit category"
                   onClick={() => {
                     setEditingId(category._id);
                     setEditingName(category.name);
                   }}
                 >
-                  Edit
+                  ✎
                 </button>
-                <button type="button" className="ha-btn-secondary text-rose-500" disabled={busy} onClick={() => handleDelete(category)}>
-                  Delete
+                <button
+                  type="button"
+                  className="ha-icon-btn danger"
+                  title="Delete category"
+                  aria-label="Delete category"
+                  disabled={busy}
+                  onClick={() => setDeletingCategory(category)}
+                >
+                  🗑
                 </button>
               </>
             )}
@@ -311,6 +323,17 @@ const CategoryManagerModal = ({
           Add
         </button>
       </div>
+
+      {deletingCategory && (
+        <ConfirmModal
+          title="Delete Category"
+          message={`Delete category "${deletingCategory.name}"? Existing services keep it, but it won't be selectable anymore.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingCategory(null)}
+        />
+      )}
     </GenericModal>
   );
 };

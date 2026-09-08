@@ -37,7 +37,12 @@ export const getServicesSchema = z.object({
     search: z.string().optional().default(''),
     category: z.string().optional(),
     categoryId: z.string().optional(),
-    salonId: z.string().optional()
+    salonId: z.string().optional(),
+    durationMin: z.string().optional(),
+    durationMax: z.string().optional(),
+    priceMin: z.string().optional(),
+    priceMax: z.string().optional(),
+    aiScanLink: z.string().optional()
   })
 });
 

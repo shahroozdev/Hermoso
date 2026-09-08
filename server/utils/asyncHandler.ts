@@ -75,12 +75,15 @@ export const asyncHandler = (
       }
 
       if (isMongooseDuplicateKeyError(error)) {
-        const field = Object.keys(error.keyValue).join(', ');
+        const fields = Object.keys(error.keyValue);
+        const collectionMatch = /collection:\s*[^.\s]+\.(\w+)/.exec((error as { message?: string }).message || '');
+        const entity = ENTITY_LABELS[collectionMatch?.[1] || ''] || 'record';
+        const fieldLabel = fields.includes('name') ? 'name' : fields.join(', ');
 
         next(
           new ApiError(
             409,
-            `Duplicate value for field: ${field}`
+            `This ${entity} already exists. Please use a different ${fieldLabel} or edit the existing ${entity}.`
           )
         );
         return;
@@ -126,6 +129,15 @@ export const asyncHandler = (
       next(new ApiError(500, 'An unexpected error occurred'));
     }
   };
+};
+
+const ENTITY_LABELS: Record<string, string> = {
+  services: 'service',
+  categories: 'category',
+  salons: 'salon',
+  users: 'account',
+  events: 'event',
+  notifications: 'notification',
 };
 
 // ── Type guards ─────────────────────────────────────────────

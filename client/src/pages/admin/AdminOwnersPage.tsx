@@ -9,11 +9,14 @@ import { ownerService, type OwnerRecord } from "@/services/ownerService";
 import { useUIStore } from "@/store/uiStore";
 import { useToastStore } from "@/store/toastStore";
 import SearchableSelect from "@/components/form/SearchableSelect";
+import ComparisonFilter from "@/components/form/ComparisonFilter";
 import { downloadCsv } from "@/utils";
 
-const statusClass = (status?: string) => {
-  if (status === "suspended" || status === "inactive") return "ha-pill ha-pill-suspended";
-  return "ha-pill ha-pill-active";
+const ownerStatusLabel = (owner: OwnerRecord) => {
+  const isSuspended = owner.status === "suspended" || owner.status === "inactive";
+  if (isSuspended) return { label: "suspended", className: "ha-pill ha-pill-suspended" };
+  if (owner.isVerified === false) return { label: "pending verification", className: "ha-pill ha-pill-pending" };
+  return { label: "active", className: "ha-pill ha-pill-active" };
 };
 
 const AdminOwnersPage = () => {
@@ -24,7 +27,8 @@ const AdminOwnersPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [phoneFilter, setPhoneFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-  const [salonsFilter, setSalonsFilter] = useState("all");
+  const [salonsOp, setSalonsOp] = useState(">");
+  const [salonsValue, setSalonsValue] = useState("");
   const [editOwner, setEditOwner] = useState<OwnerRecord | null>(null);
   const [newOwnerCredentials, setNewOwnerCredentials] = useState<{
     email?: string;
@@ -41,22 +45,19 @@ const AdminOwnersPage = () => {
         ...(statusFilter !== "all" ? { status: statusFilter } : {}),
         ...(phoneFilter ? { phone: phoneFilter } : {}),
         ...(locationFilter ? { location: locationFilter } : {}),
-        ...(salonsFilter !== "all" ? { hasSalon: salonsFilter as "yes" | "no" } : {}),
+        ...(salonsValue ? { salonsOp, salonsValue } : {}),
       });
       const items: OwnerRecord[] = res?.data || [];
       const rows = [
         ["Owner", "Email", "Phone", "Location", "Salons", "Status"],
-        ...items.map((owner) => {
-          const isSuspended = owner.status === "suspended" || owner.status === "inactive";
-          return [
-            owner.name || "",
-            owner.email || "",
-            owner.phone || "-",
-            [owner.location?.city, owner.location?.country].filter(Boolean).join(", ") || "-",
-            String(owner.salonsCount ?? 0),
-            isSuspended ? "suspended" : "active",
-          ];
-        }),
+        ...items.map((owner) => [
+          owner.name || "",
+          owner.email || "",
+          owner.phone || "-",
+          [owner.location?.city, owner.location?.country].filter(Boolean).join(", ") || "-",
+          String(owner.salonsCount ?? 0),
+          ownerStatusLabel(owner).label,
+        ]),
       ];
       downloadCsv(`hermoso-owners-${new Date().toISOString().slice(0, 10)}.csv`, rows);
     } catch (err) {
@@ -116,16 +117,8 @@ const AdminOwnersPage = () => {
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
           />
-          <span style={{ minWidth: 150, display: "inline-block" }}>
-            <SearchableSelect
-              value={salonsFilter}
-              onChange={setSalonsFilter}
-              options={[
-                { value: "all", label: "All Owners" },
-                { value: "yes", label: "Has Salon" },
-                { value: "no", label: "No Salon" },
-              ]}
-            />
+          <span style={{ minWidth: 160, display: "inline-block" }}>
+            <ComparisonFilter label="Salons" operator={salonsOp} value={salonsValue} onOperatorChange={setSalonsOp} onValueChange={setSalonsValue} />
           </span>
           <span style={{ minWidth: 160, display: "inline-block" }}>
             <SearchableSelect
@@ -138,7 +131,7 @@ const AdminOwnersPage = () => {
               ]}
             />
           </span>
-          {(search || statusFilter !== "all" || phoneFilter || locationFilter || salonsFilter !== "all") && (
+          {(search || statusFilter !== "all" || phoneFilter || locationFilter || salonsValue) && (
             <button
               type="button"
               className="ha-btn-secondary"
@@ -147,7 +140,8 @@ const AdminOwnersPage = () => {
                 setStatusFilter("all");
                 setPhoneFilter("");
                 setLocationFilter("");
-                setSalonsFilter("all");
+                setSalonsOp(">");
+                setSalonsValue("");
               }}
             >
               Clear Filters
@@ -171,7 +165,7 @@ const AdminOwnersPage = () => {
             ...(statusFilter !== "all" ? { status: statusFilter } : {}),
             ...(phoneFilter ? { phone: phoneFilter } : {}),
             ...(locationFilter ? { location: locationFilter } : {}),
-            ...(salonsFilter !== "all" ? { hasSalon: salonsFilter } : {}),
+            ...(salonsValue ? { salonsOp, salonsValue } : {}),
           }}
           columns={[
             { title: "Owner", size: "220px" },
@@ -186,6 +180,7 @@ const AdminOwnersPage = () => {
               .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
               .map((owner) => {
               const isSuspended = owner.status === "suspended" || owner.status === "inactive";
+              const statusInfo = ownerStatusLabel(owner);
               return [
                 <div className="ha-salon-cell">
                   <div className="ha-salon-av">{(owner.name || "O").slice(0, 1).toUpperCase()}</div>
@@ -197,7 +192,7 @@ const AdminOwnersPage = () => {
                 owner.phone || "-",
                 [owner.location?.city, owner.location?.country].filter(Boolean).join(", ") || "-",
                 owner.salonsCount ?? 0,
-                <span className={statusClass(owner.status)}>{isSuspended ? "suspended" : "active"}</span>,
+                <span className={statusInfo.className}>{statusInfo.label}</span>,
                 <ActionsMenu
                   items={[
                     { label: "Edit", onClick: () => setEditOwner(owner) },

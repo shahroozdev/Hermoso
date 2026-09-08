@@ -4,12 +4,20 @@ interface NotificationParams {
   page?: number;
   limit?: number;
   unreadOnly?: string;
+  search?: string;
+  targetRole?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  recipientsMin?: string | number;
+  recipientsMax?: string | number;
 }
 
 interface AnnounceParams {
   title: string;
   message: string;
   targetRole: string;
+  type: string;
 }
 
 export const notificationService = {
@@ -39,6 +47,10 @@ export const notificationService = {
   },
   getRecipients: async (id: string) => {
     const { data } = await api.get(`/notifications/${id}/recipients`);
+    return data;
+  },
+  getSentSummary: async () => {
+    const { data } = await api.get('/notifications/reports/summary');
     return data;
   }
 };

@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { Booking, type IBooking } from '../models/Booking.js';
 import { Payment } from '../models/Payment.js';
 import { Salon } from '../models/Salon.js';
@@ -11,6 +12,7 @@ import { createNotification } from '../services/notification.service.js';
 import { sendEmail } from '../services/email.service.js';
 import * as refundService from '../services/refund.service.js';
 import { calculateCommission } from '../utils/money.js';
+import { numericRange } from '../utils/numericRange.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
 interface CreateBookingBody {
@@ -384,34 +386,116 @@ export const getBookingStats = asyncHandler(async (req: AuthRequest, res: Respon
   });
 });
 
-export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, salonId, status, date } = req.query;
-  const query: Record<string, unknown> = {};
+// A booking's user-facing ID is the last 4 hex chars of its Mongo _id, upper-cased
+// and prefixed "#HRM-" (see AdminBookingsPage). Searching by that ID means matching
+// against the stringified _id, so strip any "#"/"HRM-" decoration the user typed.
+const sanitizeBookingIdSearch = (value: string) => value.replace(/[^a-zA-Z0-9]/g, '').replace(/^HRM/i, '');
 
-  if (status) query.status = status;
+export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const {
+    page = 1,
+    limit = 10,
+    salonId,
+    status,
+    date,
+    fromDate,
+    toDate,
+    bookingId,
+    customer,
+    salon,
+    service,
+    amountMin,
+    amountMax,
+  } = req.query;
+  const match: Record<string, unknown> = {};
+
+  if (status) match.status = status;
   if (date) {
     const normalizedDate = normalizeDate(date as string);
-    if (normalizedDate) query.bookingDate = normalizedDate;
+    if (normalizedDate) match.bookingDate = normalizedDate;
   }
+  if (fromDate || toDate) {
+    const range: Record<string, Date> = {};
+    if (fromDate) {
+      const normalizedFrom = normalizeDate(fromDate as string);
+      if (normalizedFrom) range.$gte = normalizedFrom;
+    }
+    if (toDate) {
+      const normalizedTo = normalizeDate(toDate as string);
+      if (normalizedTo) range.$lte = normalizedTo;
+    }
+    if (Object.keys(range).length) match.bookingDate = range;
+  }
+
+  const amountRange = numericRange(amountMin, amountMax);
+  if (amountRange) match.priceInPaisa = amountRange;
 
   if (req.user?.role === Roles.SUPER_ADMIN) {
-    if (salonId) query.salonId = salonId;
+    if (salonId) match.salonId = new mongoose.Types.ObjectId(salonId as string);
   } else if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
-    query.salonId = req.user?.salonId;
+    match.salonId = req.user?.salonId;
   } else {
-    query.customerId = req.user?._id;
+    match.customerId = req.user?._id;
   }
 
-  const data = await Booking.find(query)
-    .populate('customerId', 'name email')
-    .populate('salonId', 'name location')
-    .populate('serviceId', 'name priceInPaisa duration')
-    .populate('staffId', 'name role')
-    .sort({ createdAt: -1 })
-    .skip((Number(page) - 1) * Number(limit))
-    .limit(Number(limit));
+  const pipeline: mongoose.PipelineStage[] = [
+    { $match: match },
+    { $lookup: { from: 'users', localField: 'customerId', foreignField: '_id', as: 'customerId' } },
+    { $unwind: { path: '$customerId', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'salons', localField: 'salonId', foreignField: '_id', as: 'salonId' } },
+    { $unwind: { path: '$salonId', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'services', localField: 'serviceId', foreignField: '_id', as: 'serviceId' } },
+    { $unwind: { path: '$serviceId', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'users', localField: 'staffId', foreignField: '_id', as: 'staffId' } },
+    { $unwind: { path: '$staffId', preserveNullAndEmptyArrays: true } },
+  ];
 
-  const total = await Booking.countDocuments(query);
+  if (customer) pipeline.push({ $match: { 'customerId.name': new RegExp(customer as string, 'i') } });
+  if (salon) pipeline.push({ $match: { 'salonId.name': new RegExp(salon as string, 'i') } });
+  if (service) pipeline.push({ $match: { 'serviceId.name': new RegExp(service as string, 'i') } });
+  if (bookingId) {
+    const sanitized = sanitizeBookingIdSearch(bookingId as string);
+    if (sanitized) {
+      pipeline.push({
+        $match: {
+          $expr: {
+            $regexMatch: { input: { $toString: '$_id' }, regex: sanitized, options: 'i' },
+          },
+        },
+      });
+    }
+  }
+
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    {
+      $facet: {
+        data: [
+          { $skip: (Number(page) - 1) * Number(limit) },
+          { $limit: Number(limit) },
+          {
+            $project: {
+              bookingDate: 1,
+              bookingTime: 1,
+              priceInPaisa: 1,
+              status: 1,
+              createdAt: 1,
+              customerId: { _id: '$customerId._id', name: '$customerId.name', email: '$customerId.email' },
+              salonId: { _id: '$salonId._id', name: '$salonId.name', location: '$salonId.location' },
+              serviceId: { _id: '$serviceId._id', name: '$serviceId.name', priceInPaisa: '$serviceId.priceInPaisa', duration: '$serviceId.duration' },
+              staffId: { _id: '$staffId._id', name: '$staffId.name', role: '$staffId.role' },
+            },
+          },
+        ],
+        totalCount: [{ $count: 'count' }],
+      },
+    },
+  );
+
+  const [result] = await Booking.aggregate(pipeline);
+  const data = result?.data || [];
+  const total = result?.totalCount?.[0]?.count || 0;
+
   res.json({ success: true, data, meta: { page: Number(page), limit: Number(limit), total } });
 });
 

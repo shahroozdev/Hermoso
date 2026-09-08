@@ -1,8 +1,10 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import { Booking } from '../models/Booking.js';
 import { User } from '../models/User.js';
 import { Roles } from '../utils/constants.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { numericRange } from '../utils/numericRange.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
 export const getCustomers = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -32,7 +34,18 @@ export const getCustomers = asyncHandler(async (req: AuthRequest, res: Response)
 });
 
 export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, search = '' } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    search = '',
+    status,
+    bookingsMin,
+    bookingsMax,
+    spentMin,
+    spentMax,
+    fromDate,
+    toDate,
+  } = req.query;
   const query: Record<string, unknown> = { role: Roles.CUSTOMER };
 
   if (search) {
@@ -42,12 +55,30 @@ export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: R
     ];
   }
 
+  if (status) query.status = status;
+
+  if (fromDate || toDate) {
+    const createdAtRange: Record<string, Date> = {};
+    if (fromDate) createdAtRange.$gte = new Date(fromDate as string);
+    if (toDate) createdAtRange.$lte = new Date(toDate as string);
+    if (Object.keys(createdAtRange).length) query.createdAt = createdAtRange;
+  }
+
   if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
     const customerIds = await Booking.distinct('customerId', { salonId: req.user.salonId });
     query._id = { $in: customerIds };
   }
 
-  const customers = await User.aggregate([
+  // bookingsCount/totalSpentInPaisa only exist after the lookup below, so filtering
+  // on them (and paginating correctly afterward) needs a second $match post-lookup,
+  // with a $facet to get the total alongside the paginated page.
+  const computedMatch: Record<string, unknown> = {};
+  const bookingsRange = numericRange(bookingsMin, bookingsMax);
+  if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
+  const spentRange = numericRange(spentMin, spentMax);
+  if (spentRange) computedMatch.totalSpentInPaisa = spentRange;
+
+  const pipeline: mongoose.PipelineStage[] = [
     { $match: query },
     {
       $lookup: {
@@ -78,13 +109,30 @@ export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: R
         },
       },
     },
+  ];
+
+  if (Object.keys(computedMatch).length) {
+    pipeline.push({ $match: computedMatch });
+  }
+
+  pipeline.push(
     { $project: { password: 0, bookings: 0 } },
     { $sort: { createdAt: -1 } },
-    { $skip: (Number(page) - 1) * Number(limit) },
-    { $limit: Number(limit) },
-  ]);
+    {
+      $facet: {
+        data: [
+          { $skip: (Number(page) - 1) * Number(limit) },
+          { $limit: Number(limit) },
+        ],
+        totalCount: [{ $count: 'count' }],
+      },
+    },
+  );
 
-  const total = await User.countDocuments(query);
+  const [result] = await User.aggregate(pipeline);
+  const customers = result?.data || [];
+  const total = result?.totalCount?.[0]?.count || 0;
+
   const stats = await User.aggregate([
     { $match: query },
     {

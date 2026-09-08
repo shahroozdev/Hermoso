@@ -4,6 +4,13 @@ interface CustomerParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
+  bookingsMin?: number | string;
+  bookingsMax?: number | string;
+  spentMin?: number | string;
+  spentMax?: number | string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 export const customerService = {

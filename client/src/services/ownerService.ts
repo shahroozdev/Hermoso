@@ -7,6 +7,7 @@ export interface OwnerRecord {
   phone?: string;
   bankAccount?: string;
   status?: string;
+  isVerified?: boolean;
   createdAt?: string;
   location?: {
     city?: string;
@@ -33,6 +34,8 @@ interface ListOwnersParams {
   phone?: string;
   location?: string;
   hasSalon?: 'yes' | 'no';
+  salonsOp?: string;
+  salonsValue?: string;
 }
 
 export const ownerService = {

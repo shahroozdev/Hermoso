@@ -9,6 +9,12 @@ interface UpdateSettingsBody {
   pushNotifications?: boolean;
   selfRegistration?: boolean;
   maintenanceMode?: boolean;
+  commissionRules?: {
+    defaultRate?: number;
+    vipRate?: number;
+    eventRate?: number;
+    promoRate?: number;
+  };
 }
 
 export const getPlatformSettings = asyncHandler(async (_req: AuthRequest, res: Response) => {

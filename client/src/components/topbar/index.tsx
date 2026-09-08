@@ -1,4 +1,3 @@
-import { useAuthStore } from "../../store/authStore";
 import NotificationWidget from "./notificationWidget";
 import Searchbar from "@/pages/shared/Searchbar";
 import ThemeToggleBtn from "./ThemeToggleBtn";
@@ -12,7 +11,6 @@ interface TopbarProps {
 }
 
 const Topbar = ({ onMenuClick, isAdmin }: TopbarProps) => {
-  const { logout } = useAuthStore();
   const key = resolvePageKey(location.pathname);
   const meta = pageMeta[key] || pageMeta.overview;
   return (
@@ -36,15 +34,6 @@ const Topbar = ({ onMenuClick, isAdmin }: TopbarProps) => {
         <ThemeToggleBtn />
 
         <NotificationWidget />
-
-        {!isAdmin && (
-          <button
-            onClick={logout}
-            className="rounded-xl bg-[var(--accent-2)] px-3 py-2 text-xs font-semibold text-slate-900 md:px-4"
-          >
-            Logout
-          </button>
-        )}
       </div>
     </header>
   );

@@ -99,45 +99,59 @@ export const MultiSelectInput = ({
       {/* TRIGGER */}
       <div
         ref={triggerRef}
-        className={`ha-input min-h-[46px] cursor-pointer flex flex-wrap items-center gap-2 px-3 py-2 ${className}`}
+        className={`ha-input min-h-[46px] cursor-pointer flex items-start gap-2 px-3 py-2 ${className}`}
         onClick={handleToggle}
       >
         {selectedValues.length > 0 ? (
-          selectedValues.map((val) => {
-            const option = options?.find((o) => o.value === val);
-            return (
-              <div
-                key={val}
-                className="flex items-center gap-1 rounded-lg bg-[var(--accent-2)] px-2 py-1 text-sm"
-              >
-                <span>{option?.label}</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeValue(val);
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
+          // Chip list is capped and scrolls internally so a large selection can never
+          // grow the trigger (and therefore the surrounding modal layout) unbounded — BUG-142.
+          <div className="flex max-h-24 flex-1 flex-wrap gap-2 overflow-y-auto
+                         [&::-webkit-scrollbar]:w-1.5
+                         [&::-webkit-scrollbar-track]:bg-transparent
+                         [&::-webkit-scrollbar-thumb]:bg-gray-400
+                         [&::-webkit-scrollbar-thumb]:rounded-full">
+            {selectedValues.length > 4 ? (
+              <div className="flex items-center gap-1 rounded-lg bg-[var(--accent-2)] px-2 py-1 text-sm">
+                <span>{selectedValues.length} selected</span>
               </div>
-            );
-          })
+            ) : (
+              selectedValues.map((val) => {
+                const option = options?.find((o) => o.value === val);
+                return (
+                  <div
+                    key={val}
+                    className="flex items-center gap-1 rounded-lg bg-[var(--accent-2)] px-2 py-1 text-sm"
+                  >
+                    <span>{option?.label}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeValue(val);
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
         ) : (
-          <span className="text-sm text-gray-400">
+          <span className="flex-1 self-center text-sm text-gray-400">
             {placeholder || "Select options"}
           </span>
         )}
@@ -151,7 +165,7 @@ export const MultiSelectInput = ({
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="ml-auto"
+          className="ml-auto mt-1 shrink-0"
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -176,12 +190,20 @@ export const MultiSelectInput = ({
                   key={option.value}
                   type="button"
                   onClick={() => toggleOption(option.value)}
-                  className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-[var(--accent-2)] ${
+                  className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition hover:bg-[var(--accent-2)] ${
                     selected ? "bg-[var(--accent-2)]" : ""
                   }`}
                 >
-                  <span>{option.label}</span>
-                  {selected && <span className="text-xs font-semibold">✓</span>}
+                  {/* BUG-143: explicit checkbox so selection state is visible while the dropdown is open */}
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    readOnly
+                    className="pointer-events-none h-4 w-4 shrink-0 accent-[var(--accent-2)]"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                  <span className="flex-1">{option.label}</span>
                 </button>
               );
             })}

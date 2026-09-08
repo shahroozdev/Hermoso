@@ -1,10 +1,14 @@
-﻿import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
 import TABLE from '@/components/table';
+import RangeFilter from '@/components/form/RangeFilter';
 import { useApi } from '../../hooks/useApi';
+import { useInvalidate } from '../../hooks/useInvalidate';
 import { salonService } from '../../services/salonService';
-import { paisaToRupees } from '../../utils/money';
+import { settingsService } from '../../services/settingsService';
+import { useToastStore } from '../../store/toastStore';
+import { paisaToRupees, rupeesToPaisa } from '../../utils/money';
 
 interface RevenueItem {
   name: string;
@@ -15,6 +19,8 @@ interface RevenueItem {
   salonNetRevenueInPaisa?: number;
 }
 
+const DEFAULT_RATES = { defaultRate: 10, vipRate: 8, eventRate: 12, promoRate: 0 };
+
 // Value is expected in paisa; formats the rupee amount compactly (1.2M, 45K).
 const compactMoney = (valueInPaisa: number) => {
   const n = paisaToRupees(valueInPaisa);
@@ -24,10 +30,40 @@ const compactMoney = (valueInPaisa: number) => {
 };
 
 const AdminRevenuePage = () => {
-  const [rates, setRates] = useState({ defaultRate: 10, vipRate: 8, eventRate: 12, promoRate: 0 });
-  const [status, setStatus] = useState('');
+  // `ratesOverride` holds the user's in-progress edits; until they touch a field,
+  // the displayed rates are derived straight from the loaded settings (no effect
+  // needed to sync state — see `rates` below).
+  const [ratesOverride, setRatesOverride] = useState<typeof DEFAULT_RATES | null>(null);
+  const [saving, setSaving] = useState(false);
+  const { showToast } = useToastStore();
+  const invalidate = useInvalidate();
+
+  const [search, setSearch] = useState('');
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [bookingsMin, setBookingsMin] = useState('');
+  const [bookingsMax, setBookingsMax] = useState('');
+  const [grossMin, setGrossMin] = useState('');
+  const [grossMax, setGrossMax] = useState('');
+  const [commissionMin, setCommissionMin] = useState('');
+  const [commissionMax, setCommissionMax] = useState('');
+  const [platformMin, setPlatformMin] = useState('');
+  const [platformMax, setPlatformMax] = useState('');
 
   const statsReq = useApi(() => salonService.getRevenueStats(), ["revenue-stats"]);
+  const settingsReq = useApi(() => settingsService.get(), ["platform-settings"]);
+
+  const loadedRates = useMemo(() => {
+    const commissionRules = settingsReq.data?.data?.commissionRules;
+    if (!commissionRules) return DEFAULT_RATES;
+    return {
+      defaultRate: commissionRules.defaultRate ?? DEFAULT_RATES.defaultRate,
+      vipRate: commissionRules.vipRate ?? DEFAULT_RATES.vipRate,
+      eventRate: commissionRules.eventRate ?? DEFAULT_RATES.eventRate,
+      promoRate: commissionRules.promoRate ?? DEFAULT_RATES.promoRate,
+    };
+  }, [settingsReq.data]);
+
+  const rates = ratesOverride ?? loadedRates;
 
   const kpi = useMemo(() => ({
     totalGMVInPaisa: statsReq.data?.data?.totalGMVInPaisa ?? 0,
@@ -37,12 +73,41 @@ const AdminRevenuePage = () => {
     avgBookingValueInPaisa: statsReq.data?.data?.avgBookingValueInPaisa ?? 0,
   }), [statsReq.data]);
 
-  const saveRules = () => {
-    setStatus('Commission rules saved locally for UI. Connect this to your settings API when ready.');
+  const hasActiveFilters = Boolean(
+    search || bookingsMin || bookingsMax || grossMin || grossMax ||
+      commissionMin || commissionMax || platformMin || platformMax,
+  );
+
+  const clearFilters = () => {
+    setSearch('');
+    setBookingsMin('');
+    setBookingsMax('');
+    setGrossMin('');
+    setGrossMax('');
+    setCommissionMin('');
+    setCommissionMax('');
+    setPlatformMin('');
+    setPlatformMax('');
   };
 
-  if (statsReq.loading) return <AdminPageSkeleton variant="split" />;
+  const saveRules = async () => {
+    setSaving(true);
+    try {
+      await settingsService.update({ commissionRules: rates });
+      invalidate(["platform-settings"]);
+      setRatesOverride(null);
+      showToast('Commission rules saved successfully.');
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to save commission rules';
+      showToast(message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (statsReq.loading || settingsReq.loading) return <AdminPageSkeleton variant="split" />;
   if (statsReq.error) return <ErrorBlock text={statsReq.error} />;
+  if (settingsReq.error) return <ErrorBlock text={settingsReq.error} />;
 
   return (
     <>
@@ -70,11 +135,60 @@ const AdminRevenuePage = () => {
       </div>
 
       <div className="space-y-2">
+        <div className="ha-card" style={{ paddingBottom: 0 }}>
+          <div className="ha-card-title">Revenue by Salon This Month</div>
+
+          <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="ha-input"
+              style={{ maxWidth: 320 }}
+              placeholder="Search salons by name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <button
+              type="button"
+              className="ha-btn-secondary"
+              onClick={() => setShowMoreFilters((v) => !v)}
+            >
+              {showMoreFilters ? 'Hide Filters' : 'More Filters'}
+            </button>
+            {hasActiveFilters && (
+              <button type="button" className="ha-btn-secondary" onClick={clearFilters}>
+                Clear Filters
+              </button>
+            )}
+          </div>
+
+          {showMoreFilters && (
+            <div className="ha-card" style={{ marginBottom: 12, background: 'var(--surface-soft)' }}>
+              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                <RangeFilter label="Bookings" min={bookingsMin} max={bookingsMax} onMin={setBookingsMin} onMax={setBookingsMax} />
+                <RangeFilter label="Gross PKR" min={grossMin} max={grossMax} onMin={setGrossMin} onMax={setGrossMax} />
+                <RangeFilter label="Commission %" min={commissionMin} max={commissionMax} onMin={setCommissionMin} onMax={setCommissionMax} />
+                <RangeFilter label="Platform Earned" min={platformMin} max={platformMax} onMin={setPlatformMin} onMax={setPlatformMax} />
+              </div>
+            </div>
+          )}
+        </div>
+
         <TABLE<RevenueItem>
+          noBorder
           showPagination
           queryKey={["admin-revenue"]}
-          title="Revenue by Salon This Month"
           service={salonService.revenue}
+          serviceParams={{
+            search,
+            ...(bookingsMin ? { bookingsMin } : {}),
+            ...(bookingsMax ? { bookingsMax } : {}),
+            ...(grossMin ? { grossMin: rupeesToPaisa(Number(grossMin)) } : {}),
+            ...(grossMax ? { grossMax: rupeesToPaisa(Number(grossMax)) } : {}),
+            ...(commissionMin ? { commissionMin } : {}),
+            ...(commissionMax ? { commissionMax } : {}),
+            ...(platformMin ? { platformMin: rupeesToPaisa(Number(platformMin)) } : {}),
+            ...(platformMax ? { platformMax: rupeesToPaisa(Number(platformMax)) } : {}),
+          }}
           columns={[
             { title: 'Salon' },
             { title: 'Bookings' },
@@ -112,7 +226,7 @@ const AdminRevenuePage = () => {
                     className="ha-input"
                     style={{ width: 64, textAlign: 'center', padding: '6px 8px', fontWeight: 700 }}
                     value={rates[row.key as keyof typeof rates]}
-                    onChange={(e) => setRates((prev) => ({ ...prev, [row.key]: Number(e.target.value || 0) }))}
+                    onChange={(e) => setRatesOverride((prev) => ({ ...(prev ?? loadedRates), [row.key]: Number(e.target.value || 0) }))}
                   />
                   <span style={{ color: 'var(--text-muted)' }}>%</span>
                 </div>
@@ -120,10 +234,14 @@ const AdminRevenuePage = () => {
             ))}
           </div>
 
-          <button className="ha-topbar-btn primary" style={{ width: '100%', marginTop: 16, paddingTop: 10, paddingBottom: 10 }} onClick={saveRules}>
-            Save Commission Rules
+          <button
+            className="ha-topbar-btn primary"
+            style={{ width: '100%', marginTop: 16, paddingTop: 10, paddingBottom: 10 }}
+            onClick={saveRules}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : 'Save Commission Rules'}
           </button>
-          {status ? <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>{status}</p> : null}
         </div>
       </div>
     </>
@@ -131,5 +249,3 @@ const AdminRevenuePage = () => {
 };
 
 export default AdminRevenuePage;
-
-

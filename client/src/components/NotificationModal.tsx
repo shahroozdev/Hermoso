@@ -10,11 +10,22 @@ const RECIPIENT_TYPES = [
   { value: 'staff', label: 'All Staff' },
 ];
 
+// Mirrors the `type` enum on server/models/Notification.ts.
+const TYPE_OPTIONS = [
+  { value: 'announcement', label: 'Announcement' },
+  { value: 'system', label: 'System' },
+  { value: 'booking_reminder', label: 'Booking Reminder' },
+  { value: 'booking_update', label: 'Booking Update' },
+  { value: 'payout', label: 'Payout' },
+  { value: 'review', label: 'Review' },
+];
+
 export interface NotificationRecord {
   _id: string;
   title: string;
   message: string;
   targetRole: string;
+  type?: string;
   status?: 'draft' | 'sent';
 }
 
@@ -32,6 +43,7 @@ export const NotificationFormModal = ({
   const [title, setTitle] = useState(notification?.title || '');
   const [message, setMessage] = useState(notification?.message || '');
   const [targetRole, setTargetRole] = useState(notification?.targetRole || 'customer');
+  const [type, setType] = useState(notification?.type || '');
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -40,13 +52,17 @@ export const NotificationFormModal = ({
       setStatus('Title and message are required');
       return;
     }
+    if (!type) {
+      setStatus('Notification type is required');
+      return;
+    }
     setStatus('');
     setIsSaving(true);
     try {
       if (isEditing) {
-        await notificationService.update(notification!._id, { title, message, targetRole });
+        await notificationService.update(notification!._id, { title, message, targetRole, type });
       } else {
-        await notificationService.create({ title, message, targetRole });
+        await notificationService.create({ title, message, targetRole, type });
       }
       invalidate(['notifications']);
       onSaved?.();
@@ -96,6 +112,10 @@ export const NotificationFormModal = ({
         <div>
           <label className="mb-2 block text-xs font-semibold uppercase text-muted">Recipient Type</label>
           <SearchableSelect value={targetRole} onChange={setTargetRole} options={RECIPIENT_TYPES} />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase text-muted">Type</label>
+          <SearchableSelect value={type} onChange={setType} options={TYPE_OPTIONS} placeholder="Select Type..." />
         </div>
         {!isEditing && (
           <p className="text-sm text-muted">

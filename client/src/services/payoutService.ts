@@ -5,6 +5,12 @@ interface PayoutParams {
   limit?: number;
   salonId?: string;
   status?: string;
+  search?: string;
+  bankAccount?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  netMin?: number | string;
+  netMax?: number | string;
 }
 
 export const payoutService = {
