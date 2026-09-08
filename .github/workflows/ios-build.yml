@@ -72,4 +72,21 @@ jobs:
             -scheme ${{ matrix.scheme }} \
             -destination "generic/platform=iOS Simulator" \
             -sdk iphonesimulator \
+            -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO
+
+      # Zip the .app for Appetize.io (or any simulator-based test service) —
+      # no Apple Developer account or code signing required for simulator
+      # testing. Drag the resulting .zip onto appetize.io to get a shareable
+      # browser-streamed device link.
+      - name: Zip simulator build
+        run: |
+          cd DerivedData/Build/Products/Debug-iphonesimulator
+          zip -r "${{ matrix.scheme }}.zip" "${{ matrix.scheme }}.app"
+
+      - name: Upload simulator build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.dir }}-simulator-build
+          path: ${{ matrix.dir }}/DerivedData/Build/Products/Debug-iphonesimulator/${{ matrix.scheme }}.zip
+          retention-days: 14
