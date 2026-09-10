@@ -24,7 +24,7 @@ interface BookingItem {
 
 type DatePreset = 'all' | 'current_month' | 'last_month' | 'current_year' | 'last_year' | 'custom';
 
-const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
+const toIsoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const computePresetRange = (preset: DatePreset): { from: string; to: string } => {
   const now = new Date();
@@ -246,7 +246,7 @@ const AdminBookingsPage = () => {
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
               <RangeFilter label="Amount" min={amountMin} max={amountMax} onMin={setAmountMin} onMax={setAmountMax} />
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase text-muted">Date Preset</label>
+                <label className="mb-1 block text-xs font-semibold uppercase text-muted">Select Period</label>
                 <SearchableSelect
                   value={datePreset}
                   onChange={(v) => handleDatePresetChange(v as DatePreset)}
@@ -263,7 +263,7 @@ const AdminBookingsPage = () => {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted">From Date</label>
                 <input
-                  type="date"
+                  type="date" disabled={datePreset !== 'custom'}
                   className="ha-input"
                   value={fromDate}
                   onChange={(e) => { setFromDate(e.target.value); setDatePreset('custom'); }}
@@ -272,7 +272,7 @@ const AdminBookingsPage = () => {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted">To Date</label>
                 <input
-                  type="date"
+                  type="date" disabled={datePreset !== 'custom'}
                   className="ha-input"
                   value={toDate}
                   onChange={(e) => { setToDate(e.target.value); setDatePreset('custom'); }}

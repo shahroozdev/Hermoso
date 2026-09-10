@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { legacyMoneyPlugin } from '../utils/legacyMoney.js';
 import { PaymentStatus, FraudFlag, type PaymentStatusType, type FraudFlagType } from '../utils/constants.js';
 import { integerPaisaValidator } from '../utils/money.js';
 
@@ -58,4 +59,5 @@ const paymentSchema = new Schema<IPayment>(
 paymentSchema.index({ createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 
+paymentSchema.plugin(legacyMoneyPlugin, { amountInPaisa: 'amount', platformCommissionInPaisa: 'platformCommission', salonAmountInPaisa: 'salonAmount', refundAmountInPaisa: 'refundAmount' });
 export const Payment = mongoose.model<IPayment>('Payment', paymentSchema);

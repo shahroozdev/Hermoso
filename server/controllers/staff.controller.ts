@@ -1,5 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { User } from '../models/User.js';
+import { Service } from '../models/Service.js';
+import { numericRange } from '../utils/numericRange.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -69,6 +71,25 @@ export const getStaff = asyncHandler(async (req: AuthRequest, res: Response) => 
 
   if (search) query.name = new RegExp(search as string, 'i');
   if (designation) query['staffDetails.designation'] = new RegExp(designation as string, 'i');
+  const literal = (value: unknown) => new RegExp(String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  if (req.query.employeeId) query['staffDetails.employeeId'] = literal(req.query.employeeId);
+  if (req.query.status && req.user?.role !== Roles.CUSTOMER) query.status = req.query.status;
+  if (req.query.servicesSearch) {
+    const services = await Service.find({ name: literal(req.query.servicesSearch), ...(query.salonId ? { salonId: query.salonId } : {}) }).select('_id');
+    query['staffDetails.services'] = { $in: services.map((service) => service._id) };
+  }
+  const salaryRange = numericRange(req.query.salaryMin, req.query.salaryMax);
+  if (salaryRange) query['staffDetails.salary'] = salaryRange;
+  const joined: Record<string, Date> = {};
+  if (req.query.joinedFrom) joined.$gte = new Date(String(req.query.joinedFrom));
+  if (req.query.joinedTo) joined.$lte = new Date(`${req.query.joinedTo}T23:59:59.999Z`);
+  if (Object.keys(joined).length) query['staffDetails.joiningDate'] = joined;
+  for (const field of ['shiftStartTime', 'shiftEndTime']) {
+    const range: Record<string, string> = {};
+    if (req.query[`${field}From`]) range.$gte = String(req.query[`${field}From`]);
+    if (req.query[`${field}To`]) range.$lte = String(req.query[`${field}To`]);
+    if (Object.keys(range).length) query[`staffDetails.${field}`] = range;
+  }
 
   const [data, total] = await Promise.all([
     User.find(query)

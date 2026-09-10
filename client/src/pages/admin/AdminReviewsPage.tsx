@@ -195,9 +195,9 @@ const AdminReviewsPage = () => {
               </div>,
               <span className={item.status === 'flagged' ? 'ha-pill ha-pill-suspended' : 'ha-pill ha-pill-active'}>{item.status}</span>,
               <div className="ha-actions">
-                <button className="ha-act-btn" onClick={() => moderate(item._id, 'approved')}>Approve</button>
-                <button className="ha-act-btn danger" onClick={() => moderate(item._id, 'deleted')}>Remove</button>
-                <button className="ha-act-btn" onClick={() => moderate(item._id, 'flagged')}>Investigate</button>
+                <button className="ha-act-btn" disabled={item.status === 'approved' || item.status === 'deleted'} onClick={() => moderate(item._id, 'approved')}>Approve</button>
+                <button className="ha-act-btn danger" disabled={item.status === 'deleted'} onClick={() => moderate(item._id, 'deleted')}>Remove</button>
+                <button className="ha-act-btn" disabled={item.status === 'flagged' || item.status === 'deleted'} onClick={() => moderate(item._id, 'flagged')}>Investigate</button>
               </div>,
             ])
           }

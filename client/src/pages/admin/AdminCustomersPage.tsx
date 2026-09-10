@@ -25,7 +25,7 @@ interface CustomerOverview {
 
 type DatePreset = 'all' | 'current_month' | 'last_month' | 'current_year' | 'last_year' | 'custom';
 
-const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
+const toIsoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const computePresetRange = (preset: DatePreset): { from: string; to: string } => {
   const now = new Date();
@@ -220,10 +220,10 @@ const AdminCustomersPage = () => {
               ]}
             />
           </span>
-          {datePreset === 'custom' && (
+          {(
             <>
-              <input type="date" className="ha-input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              <input type="date" className="ha-input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              <input type="date" disabled={datePreset !== 'custom'} aria-label="From Date" className="ha-input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              <input type="date" disabled={datePreset !== 'custom'} aria-label="To Date" className="ha-input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
             </>
           )}
           <button type="button" className="ha-btn-secondary" onClick={() => setShowMoreFilters((v) => !v)}>

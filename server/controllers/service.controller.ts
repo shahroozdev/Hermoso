@@ -53,6 +53,7 @@ export const getServices = asyncHandler(
     if (category) query.category = new RegExp(category as string, 'i');
     if (categoryId) query.categoryId = categoryId;
     if (search) query.name = new RegExp(search as string, 'i');
+    if (req.query.description) query.description = new RegExp(String(req.query.description).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     if (aiScanLink) query.aiScanLink = aiScanLink;
 
     const durationRange = numericRange(durationMin, durationMax);

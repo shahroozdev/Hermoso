@@ -1,3 +1,4 @@
+import Time24Input from './form/Time24Input';
 import { CreateSalonPayload, salonService } from "@/services/salonService";
 import { ownerService, type OwnerRecord } from "@/services/ownerService";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
@@ -63,11 +64,11 @@ const schema = z.object({
   workingHours: z.record(
     z.enum(DAYS),
     z.object({
-      open: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
-      close: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
+      open: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format"),
+      close: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format"),
       off: z.boolean(),
-      breakStart: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format").optional().or(z.literal("")),
-      breakEnd: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format").optional().or(z.literal("")),
+      breakStart: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format").optional().or(z.literal("")),
+      breakEnd: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format").optional().or(z.literal("")),
     }),
   ),
 });
@@ -484,8 +485,7 @@ const WorkingHours = () => {
             </label>
             {!h.off && (
               <div className="ha-hours-time">
-                <input
-                  type="time"
+                <Time24Input
                   className="ha-input ha-input-sm"
                   value={h.open}
                   onChange={(e) =>
@@ -493,8 +493,7 @@ const WorkingHours = () => {
                   }
                 />
                 <span>to</span>
-                <input
-                  type="time"
+                <Time24Input
                   className="ha-input ha-input-sm"
                   value={h.close}
                   onChange={(e) =>
@@ -505,8 +504,7 @@ const WorkingHours = () => {
             )}
             {!h.off && hasBreak && (
               <div className="ha-hours-time">
-                <input
-                  type="time"
+                <Time24Input
                   min="00:00"
                   max="23:59"
                   className="ha-input ha-input-sm"
@@ -516,8 +514,7 @@ const WorkingHours = () => {
                   }
                 />
                 <span>break to</span>
-                <input
-                  type="time"
+                <Time24Input
                   min="00:00"
                   max="23:59"
                   className="ha-input ha-input-sm"

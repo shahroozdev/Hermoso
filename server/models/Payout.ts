@@ -1,3 +1,4 @@
+import { legacyMoneyPlugin } from '../utils/legacyMoney.js';
 import mongoose, { Document, Schema } from 'mongoose';
 import { integerPaisaValidator } from '../utils/money.js';
 
@@ -19,5 +20,7 @@ const payoutSchema = new Schema<IPayout>(
 );
 
 payoutSchema.index({ salonId: 1, createdAt: -1 });
+
+payoutSchema.plugin(legacyMoneyPlugin, {"amountInPaisa":"amount"});
 
 export const Payout = mongoose.model<IPayout>('Payout', payoutSchema);

@@ -138,8 +138,11 @@ export const moderateReview = asyncHandler(async (req: AuthRequest, res: Respons
     return next(new ApiError(400, 'Invalid moderation status'));
   }
 
-  const review = await Review.findByIdAndUpdate(req.params.id, { status }, { new: true });
-  if (!review) return next(new ApiError(404, 'Review not found'));
+  const review = await Review.findOneAndUpdate(
+    { _id: req.params.id, status: { $nin: [status, ReviewStatus.DELETED] } },
+    { status }, { new: true, runValidators: true }
+  );
+  if (!review) return next(new ApiError(409, 'Review is unavailable or this action is no longer valid'));
 
   res.json({ success: true, data: review });
 });

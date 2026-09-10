@@ -42,7 +42,8 @@ export const getServicesSchema = z.object({
     durationMax: z.string().optional(),
     priceMin: z.string().optional(),
     priceMax: z.string().optional(),
-    aiScanLink: z.string().optional()
+    aiScanLink: z.string().optional(),
+    description: z.string().optional()
   })
 });
 

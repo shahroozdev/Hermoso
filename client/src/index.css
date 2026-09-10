@@ -587,6 +587,7 @@ textarea::placeholder {
 }
 
 .ha-main {
+  min-width: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1631,4 +1632,28 @@ textarea::placeholder {
   .ha-day-label {
     min-width: auto;
   }
+}
+
+/* QA: constrain laptop layouts and keep record scrolling inside the table. */
+html { scrollbar-gutter: stable; }
+.ha-content, .ha-card, .ha-form-group, .ha-modal-scroll-section { min-width: 0; }
+.ha-card-title { flex-wrap: wrap; gap: 12px; }
+.ha-card-title > span, .ha-content > .space-y-4 > .flex { flex-wrap: wrap; gap: 8px; }
+.ha-content .ha-input { min-width: 0; max-width: 100%; }
+.ha-modal { max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); }
+.ha-modal-header, .ha-modal-footer { flex-shrink: 0; }
+.ha-modal-scroll-section { overflow: hidden; }
+.ha-modal-scroll-section > div:has(> .ha-table-scroll) { display: flex; flex-direction: column; min-height: 0; }
+.ha-modal-scroll-section .ha-table-scroll { min-height: 0; max-height: 45dvh; overflow: auto; }
+.ha-modal-scroll-section thead { position: sticky; top: 0; background: var(--surface-soft); z-index: 1; }
+.ha-table-scroll td:has([title]) { max-width: 240px; overflow-wrap: anywhere; }
+.ha-table-scroll td [title] { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.ha-icon-btn { color: var(--text); }
+.ha-icon-btn.danger { color: var(--rose); }
+input[type="date"], input[type="time"] { color-scheme: dark; }
+.light input[type="date"], .light input[type="time"] { color-scheme: light; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+@media (min-width: 1024px) and (max-width: 1440px) {
+  .ha-content { padding: 18px; }
+  .ha-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

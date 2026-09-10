@@ -15,6 +15,8 @@ const VerifyOtpPage = () => {
   const [params] = useSearchParams();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [resending, setResending] = useState(false);
+  const [email, setEmail] = useState(params.get('email') || '');
   const emailParam = params.get('email') || '';
 
   const onSubmit = async (form: { email: string; otp: string }) => {
@@ -22,8 +24,8 @@ const VerifyOtpPage = () => {
     setMessage('');
     try {
       await authService.verifyOtp(form);
-      setMessage('OTP verified successfully. Setting up your salon...');
-      setTimeout(() => navigate(`/create-salon?email=${encodeURIComponent(form.email)}`), 1200);
+      setMessage('OTP verified successfully. Please log in to continue.');
+      navigate('/login');
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'OTP verification failed');
     }
@@ -33,10 +35,14 @@ const VerifyOtpPage = () => {
     setError('');
     setMessage('');
     try {
-      await authService.resendOtp(emailParam);
+      if (!z.string().email().safeParse(email).success) { setError('Enter a valid email address first.'); return; }
+      setResending(true);
+      await authService.resendOtp(email);
       setMessage('OTP resent successfully.');
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to resend OTP');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -51,14 +57,14 @@ const VerifyOtpPage = () => {
         <h2 className="text-xl font-semibold">Verify OTP</h2>
         <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to your email and phone.</p>
         <div className="mt-4 grid gap-3">
-          <FormInput name="email" type="email" label="Email" required />
+          <div onChange={(e) => setEmail((e.target as HTMLInputElement).value)}><FormInput name="email" type="email" label="Email" required /></div>
           <FormInput name="otp" type="text" label="OTP" placeholder="6-digit code" required maxLength={6} inputMode="numeric" />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         {message ? <p className="mt-2 text-sm text-emerald-600">{message}</p> : null}
         <button type="submit" className="mt-4 w-full rounded bg-primary p-2 text-white">Verify OTP</button>
-        <button type="button" className="mt-2 w-full rounded border p-2" onClick={resend} disabled={!emailParam}>
-          Resend OTP
+        <button type="button" className="mt-2 w-full rounded border p-2" onClick={resend} disabled={!email.trim() || resending}>
+          {resending ? 'Sending...' : 'Resend OTP'}
         </button>
         <Link
           to="/login"

@@ -28,7 +28,7 @@ const force = args.includes('--force');
 
 const MIGRATION_ID = 'paisa-migration-v1';
 
-const toPaisaExpr = (field: string) => ({ $round: [{ $multiply: [`$${field}`, 100] }, 0] });
+const toPaisaExpr = (field: string) => ({ $ifNull: [`$${field}InPaisa`, { $round: [{ $multiply: [`$${field}`, 100] }, 0] }] });
 
 async function alreadyMigrated(): Promise<boolean> {
   const doc = await (mongoose.connection.collection('migrations') as any).findOne({ _id: MIGRATION_ID });
@@ -36,7 +36,7 @@ async function alreadyMigrated(): Promise<boolean> {
 }
 
 async function markMigrated(): Promise<void> {
-  await (mongoose.connection.collection('migrations') as any).insertOne({ _id: MIGRATION_ID, appliedAt: new Date() });
+  await (mongoose.connection.collection('migrations') as any).updateOne({ _id: MIGRATION_ID }, { $set: { appliedAt: new Date() } }, { upsert: true });
 }
 
 async function migrateBookings(): Promise<void> {
@@ -81,19 +81,16 @@ async function migrateEvents(): Promise<void> {
           $map: {
             input: '$services',
             as: 's',
-            in: {
-              serviceId: '$$s.serviceId',
-              serviceName: '$$s.serviceName',
-              duration: '$$s.duration',
-              priceInPaisa: { $round: [{ $multiply: ['$$s.price', 100] }, 0] }
-            }
+            in: { $mergeObjects: ['$$s', {
+              priceInPaisa: { $ifNull: ['$$s.priceInPaisa', { $round: [{ $multiply: ['$$s.price', 100] }, 0] }] }
+            }] }
           }
         },
         totalPriceInPaisa: toPaisaExpr('totalPrice'),
         finalPriceInPaisa: toPaisaExpr('finalPrice')
       }
     },
-    { $unset: ['totalPrice', 'finalPrice'] }
+    { $unset: ['totalPrice', 'finalPrice', 'services.price'] }
   ]);
   console.log(`Events modified: ${result.modifiedCount}`);
 }
@@ -175,15 +172,11 @@ async function migratePOS(): Promise<void> {
           $map: {
             input: '$items',
             as: 'i',
-            in: {
-              serviceId: '$$i.serviceId',
-              type: '$$i.type',
-              name: '$$i.name',
-              qty: '$$i.qty',
-              priceInPaisa: { $round: [{ $multiply: ['$$i.price', 100] }, 0] },
-              discountInPaisa: { $round: [{ $multiply: ['$$i.discount', 100] }, 0] },
-              totalInPaisa: { $round: [{ $multiply: ['$$i.total', 100] }, 0] }
-            }
+            in: { $mergeObjects: ['$$i', {
+              priceInPaisa: { $ifNull: ['$$i.priceInPaisa', { $round: [{ $multiply: ['$$i.price', 100] }, 0] }] },
+              discountInPaisa: { $ifNull: ['$$i.discountInPaisa', { $round: [{ $multiply: ['$$i.discount', 100] }, 0] }] },
+              totalInPaisa: { $ifNull: ['$$i.totalInPaisa', { $round: [{ $multiply: ['$$i.total', 100] }, 0] }] }
+            }] }
           }
         },
         subtotalInPaisa: toPaisaExpr('subtotal'),
@@ -193,7 +186,7 @@ async function migratePOS(): Promise<void> {
         grandTotalInPaisa: toPaisaExpr('grandTotal')
       }
     },
-    { $unset: ['subtotal', 'itemDiscount', 'gstAmount', 'globalDiscountAmount', 'grandTotal'] }
+    { $unset: ['subtotal', 'itemDiscount', 'gstAmount', 'globalDiscountAmount', 'grandTotal', 'items.price', 'items.discount', 'items.total'] }
   ]);
   console.log(`POS transactions modified: ${result.modifiedCount}`);
 }

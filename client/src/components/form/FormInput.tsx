@@ -1,3 +1,4 @@
+import Time24Input from './Time24Input';
 import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { MultiSelectInput } from "./MultiSelectInput";
@@ -109,7 +110,7 @@ const FormInput = ({
         return <input {...baseInputProps} type="date" />;
 
       case "time":
-        return <input {...baseInputProps} type="time" />;
+        return <Time24Input {...baseInputProps} />;
 
       case "password":
         return (

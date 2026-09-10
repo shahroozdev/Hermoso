@@ -88,8 +88,8 @@ export const getEventsSchema = z.object({
     durationMax: z.string().regex(/^\d+$/, 'durationMax must be a number').optional(),
     priceMin: z.string().regex(/^\d+$/, 'priceMin must be a number').optional(),
     priceMax: z.string().regex(/^\d+$/, 'priceMax must be a number').optional(),
-    discountMin: z.string().regex(/^\d+$/, 'discountMin must be a number').optional(),
-    discountMax: z.string().regex(/^\d+$/, 'discountMax must be a number').optional(),
+    discountMin: z.string().regex(/^\d+(\.\d+)?$/, 'discountMin must be a number').optional(),
+    discountMax: z.string().regex(/^\d+(\.\d+)?$/, 'discountMax must be a number').optional(),
     finalPriceMin: z.string().regex(/^\d+$/, 'finalPriceMin must be a number').optional(),
     finalPriceMax: z.string().regex(/^\d+$/, 'finalPriceMax must be a number').optional()
   })

@@ -205,6 +205,8 @@ const CategoryManagerModal = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
+  const visibleCategories = categories.filter((category) => category.name.toLowerCase().includes(categorySearch.trim().toLowerCase()));
   const [deletingCategory, setDeletingCategory] = useState<CategoryRecord | null>(null);
 
   const handleCreate = async () => {
@@ -263,9 +265,10 @@ const CategoryManagerModal = ({
       }
     >
       {error ? <div className="ha-error-banner">{error}</div> : null}
+      <div className="mb-3 flex gap-2"><input className="ha-input" aria-label="Search categories" placeholder="Search categories..." value={categorySearch} onChange={(e) => setCategorySearch(e.target.value)} /><button type="button" className="ha-btn-secondary" onClick={() => setCategorySearch('')}>Reset</button></div>
       <div className="space-y-2" style={{ maxHeight: 260, overflowY: 'auto' }}>
-        {categories.length === 0 ? <p className="text-sm text-muted">No categories yet.</p> : null}
-        {categories.map((category) => (
+        {visibleCategories.length === 0 ? <p className="text-sm text-muted">No categories yet.</p> : null}
+        {visibleCategories.map((category) => (
           <div key={category._id} className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-2">
             {editingId === category._id ? (
               <>

@@ -38,6 +38,7 @@ const GenericModal = ({ title, onClose, children, footer, wide }: GenericModalPr
         <div className="ha-modal-header">
           <h3>{title}</h3>
           <button
+            type="button"
             ref={firstFocusRef}
             className="ha-modal-close"
             onClick={onClose}

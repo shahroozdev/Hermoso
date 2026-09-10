@@ -27,6 +27,7 @@ const OwnerServicesPage = () => {
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [deletingService, setDeletingService] = useState<ServiceItem | null>(null);
   const [search, setSearch] = useState("");
+  const [description, setDescription] = useState('');
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [aiScanFilter, setAiScanFilter] = useState("all");
   const [durationMin, setDurationMin] = useState("");
@@ -46,11 +47,12 @@ const OwnerServicesPage = () => {
   );
 
   const hasActiveFilters = Boolean(
-    search || categoryFilter !== "all" || aiScanFilter !== "all" || durationMin || durationMax || priceMin || priceMax,
+    search || description || categoryFilter !== "all" || aiScanFilter !== "all" || durationMin || durationMax || priceMin || priceMax,
   );
 
   const clearFilters = () => {
     setSearch("");
+    setDescription('');
     setCategoryFilter("all");
     setAiScanFilter("all");
     setDurationMin("");
@@ -61,6 +63,7 @@ const OwnerServicesPage = () => {
 
   const filterParams = {
     search,
+    ...(description ? { description } : {}),
     ...(categoryFilter !== "all" ? { category: categoryFilter } : {}),
     ...(aiScanFilter !== "all" ? { aiScanLink: aiScanFilter } : {}),
     ...(durationMin ? { durationMin } : {}),
@@ -92,7 +95,7 @@ const OwnerServicesPage = () => {
           item.name || "",
           item.category || item.categoryId?.name || "-",
           item.duration ? `${item.duration} min` : "-",
-          item.priceInPaisa != null ? formatMoney(item.priceInPaisa) : "-",
+          item.priceInPaisa != null ? (item.priceInPaisa / 100).toFixed(2) : "",
           item.description || "-",
           aiScanLabel(item.aiScanLink),
         ]),
@@ -133,6 +136,7 @@ const OwnerServicesPage = () => {
           />
         </span>
         <RangeFilter label="Duration (min)" min={durationMin} max={durationMax} onMin={setDurationMin} onMax={setDurationMax} />
+        <input className="ha-input" style={{maxWidth:220}} aria-label="Service description" placeholder="Search description..." value={description} onChange={e => setDescription(e.target.value)} />
         <RangeFilter label="Price" min={priceMin} max={priceMax} onMin={setPriceMin} onMax={setPriceMax} />
         {hasActiveFilters && (
           <button type="button" className="ha-btn-secondary" onClick={clearFilters}>Clear Filters</button>

@@ -1,3 +1,4 @@
+import { legacyMoneyPlugin } from '../utils/legacyMoney.js';
 import mongoose, { Document, Schema } from 'mongoose';
 import { EventCategory, type EventCategoryType } from '../utils/constants.js';
 import { applyPercent, integerPaisaValidator, sumPaisa } from '../utils/money.js';
@@ -55,7 +56,7 @@ eventSchema.index({ salonId: 1, category: 1 });
 eventSchema.index({ salonId: 1, active: 1 });
 
 // Pre-save hook to calculate totals and final price
-eventSchema.pre('save', function(next) {
+eventSchema.pre('validate', function(next) {
   if (this.services && this.services.length > 0) {
     this.totalPriceInPaisa = sumPaisa(this.services.map((service) => service.priceInPaisa));
     this.totalDuration = this.services.reduce((sum, service) => sum + service.duration, 0);
@@ -63,5 +64,8 @@ eventSchema.pre('save', function(next) {
   }
   next();
 });
+
+eventSchema.plugin(legacyMoneyPlugin, {"totalPriceInPaisa":"totalPrice","finalPriceInPaisa":"finalPrice"});
+(eventSchema.path('services') as mongoose.Schema.Types.DocumentArray).schema.plugin(legacyMoneyPlugin, { priceInPaisa: 'price' });
 
 export const Event = mongoose.model<IEvent>('Event', eventSchema);

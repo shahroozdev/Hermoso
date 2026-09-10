@@ -1,6 +1,6 @@
+import { payoutPeriod as periodLabel, downloadReceiptImage } from '../utils/payoutReceipt';
 import GenericModal from './GenericModal';
-import { downloadCsv } from '../utils';
-import { formatMoney, paisaToRupees } from '../utils/money';
+import { formatMoney } from '../utils/money';
 
 interface PayoutDetailModalProps {
   payout: {
@@ -15,15 +15,6 @@ interface PayoutDetailModalProps {
   onClose: () => void;
 }
 
-const periodLabel = (dateLike?: string) => {
-  const d = new Date(dateLike || '');
-  if (Number.isNaN(d.getTime())) return '-';
-  const month = d.toLocaleString('en-US', { month: 'short' });
-  const day = d.getDate();
-  if (day <= 10) return `${month} 1–10`;
-  if (day <= 20) return `${month} 11–20`;
-  return `${month} 21–${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`;
-};
 
 const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
   const p = payout;
@@ -31,19 +22,12 @@ const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
   const bankAccount = p.bankAccount || 'Not on file';
 
   const handleDownloadReceipt = () => {
-    const rows = [
-      ['Payout ID', 'Salon', 'Period', 'Amount (PKR)', 'Status', 'Paid Date', 'Bank Account'],
-      [
-        String(p._id),
-        p.salonId?.name || 'Unknown',
-        periodLabel(p.createdAt),
-        String(paisaToRupees(p.amountInPaisa || 0)),
-        p.status || '',
-        isCompleted && p.payoutDate ? new Date(p.payoutDate).toLocaleDateString() : '-',
-        bankAccount,
-      ],
-    ];
-    downloadCsv(`payout-receipt-${String(p._id).slice(-8).toUpperCase()}.csv`, rows);
+    downloadReceiptImage(String(p._id), [
+      ['Payout ID', p._id], ['Salon', p.salonId?.name || 'Unknown'],
+      ['Period', periodLabel(p.createdAt)], ['Amount (PKR)', ((p.amountInPaisa || 0) / 100).toFixed(2)],
+      ['Status', p.status || ''], ['Paid Date', p.payoutDate ? new Date(p.payoutDate).toLocaleDateString() : '-'],
+      ['Bank Account', bankAccount],
+    ]);
   };
 
   return (

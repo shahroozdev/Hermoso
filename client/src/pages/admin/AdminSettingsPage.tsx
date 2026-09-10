@@ -88,7 +88,7 @@ const AdminSettingsPage = () => {
                   <div className="ha-salon-sub">{item.sub}</div>
                 </div>
                 <label className="ha-switch">
-                  <input type="checkbox" checked={toggles[item.key]} onChange={() => setToggle(item.key)} />
+                  <input type="checkbox" checked={toggles[item.key]} onChange={() => setToggle(item.key as keyof typeof toggles)} />
                   <span className="ha-switch-slider" />
                 </label>
               </div>

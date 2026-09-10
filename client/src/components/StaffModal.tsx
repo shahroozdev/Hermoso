@@ -33,9 +33,9 @@ export const staffSchema = z.object({
 
     joiningDate: z.string().min(1, "Joining date is required"),
 
-    shiftStartTime: z.string().min(1, "Shift start time is required"),
+    shiftStartTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm from 00:00 to 23:59"),
 
-    shiftEndTime: z.string().min(1, "Shift end time is required"),
+    shiftEndTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm from 00:00 to 23:59"),
 
     commissionPercentage: z.coerce
       .number()
@@ -116,6 +116,7 @@ const StaffModal = () => {
       });
       setFormSuccess("Staff created successfully");
       invalidate();
+      setOnClose(true);
       return { success: true, data: result.data };
     } catch (err) {
       setFormError(err.response?.data?.message || "Failed to create service");
@@ -123,7 +124,7 @@ const StaffModal = () => {
     }
   };
   return (
-    <>
+    <div className="ml-auto">
       <button
         type="button"
         className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-2 text-sm font-semibold text-slate-900"
@@ -292,7 +293,7 @@ const StaffModal = () => {
           </GenericModal>
         </Form>
       )}
-    </>
+    </div>
   );
 };
 

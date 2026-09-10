@@ -28,6 +28,9 @@ const TABLE = <T,>({
   rows,
 }: TableProps<T>) => {
   const [page, setPage] = useState(1);
+  const filterKey = JSON.stringify(serviceParams || {});
+  const [previousFilterKey, setPreviousFilterKey] = useState(filterKey);
+  if (previousFilterKey !== filterKey) { setPreviousFilterKey(filterKey); setPage(1); }
   const [pageSize, setPageSize] = useState(10);
 
   const isDynamic = !!service;

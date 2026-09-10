@@ -124,6 +124,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
             />
             <TABLE<ServiceItem>
               noBorder
+              showPagination
               queryKey={["salon-services", salon._id]}
               service={serviceService.list}
               serviceParams={{ salonId: salon._id, search: serviceSearch }}

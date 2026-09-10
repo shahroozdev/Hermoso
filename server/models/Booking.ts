@@ -1,3 +1,4 @@
+import { legacyMoneyPlugin } from '../utils/legacyMoney.js';
 import mongoose, { Document, Schema } from 'mongoose';
 import { BookingStatus, type BookingStatusType } from '../utils/constants.js';
 import { integerPaisaValidator } from '../utils/money.js';
@@ -58,5 +59,7 @@ bookingSchema.pre('save', async function preventDuplicateSlot(next) {
     return next(error as Error);
   }
 });
+
+bookingSchema.plugin(legacyMoneyPlugin, {"priceInPaisa":"price"});
 
 export const Booking = mongoose.model<IBooking>('Booking', bookingSchema);

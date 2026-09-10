@@ -50,6 +50,7 @@ const STATUS_OPTIONS = [
 ];
 
 const AdminNotificationsPage = () => {
+  const [showSentReport, setShowSentReport] = useState(false);
   const [viewNotif, setViewNotif] = useState<NotificationItem | null>(null);
   const [editNotif, setEditNotif] = useState<NotificationItem | null>(null);
   const [recipientsNotif, setRecipientsNotif] = useState<NotificationItem | null>(null);
@@ -165,8 +166,9 @@ const AdminNotificationsPage = () => {
             Mark All Read
           </button>
           <button className="ha-act-btn" onClick={handleExportSentSummary} disabled={exportingSummary}>
-            {exportingSummary ? "Exporting..." : "Export All Sent Notifications"}
+            {exportingSummary ? "Exporting..." : "Export Notification"}
           </button>
+          <button className="ha-act-btn" onClick={() => setShowSentReport(true)}>Sent Notifications Report</button>
           <NotificationModal />
         </div>
       </div>
@@ -318,6 +320,7 @@ const AdminNotificationsPage = () => {
         />
       )}
 
+      {showSentReport && <SentNotificationsReport onClose={() => setShowSentReport(false)} />}
       {recipientsNotif && (
         <RecipientReportModal
           notification={recipientsNotif}
@@ -378,8 +381,10 @@ const RecipientReportModal = ({
 
   const handleDownloadReport = () => {
     const rows = [
-      ["Name", "Email", "Role", "Read Status"],
+      ["Title", "Description", "Name", "Email", "Role", "Read Status"],
       ...filteredRecipients.map((r) => [
+        campaignInfo.title || notification.title,
+        campaignInfo.message || notification.message,
         r.user?.name || "Deleted user",
         r.user?.email || "-",
         (r.user?.role || "-").replace("_", " "),
@@ -453,7 +458,7 @@ const RecipientReportModal = ({
               <table className="ha-salon-table min-w-full text-left text-sm">
                 <thead>
                   <tr>
-                    <th className="px-3 py-2">Name</th>
+                    <th className="px-3 py-2">Title</th><th className="px-3 py-2">Description</th><th className="px-3 py-2">Name</th>
                     <th className="px-3 py-2">Email</th>
                     <th className="px-3 py-2">Role</th>
                     <th className="px-3 py-2">Read</th>
@@ -462,7 +467,7 @@ const RecipientReportModal = ({
                 <tbody>
                   {filteredRecipients.map((r) => (
                     <tr key={r._id} className="border-t border-[var(--border)]">
-                      <td className="px-3 py-2">{r.user?.name || "Deleted user"}</td>
+                      <td className="px-3 py-2">{campaignInfo.title || notification.title}</td><td className="px-3 py-2">{campaignInfo.message || notification.message}</td><td className="px-3 py-2">{r.user?.name || "Deleted user"}</td>
                       <td className="px-3 py-2">{r.user?.email || "-"}</td>
                       <td className="px-3 py-2 capitalize">{(r.user?.role || "-").replace("_", " ")}</td>
                       <td className="px-3 py-2">{r.isRead ? "Read" : "Unread"}</td>
@@ -481,6 +486,18 @@ const RecipientReportModal = ({
       )}
     </GenericModal>
   );
+};
+
+const SentNotificationsReport = ({ onClose }: { onClose: () => void }) => {
+  const { data, loading, error } = useApi(() => notificationService.getSentSummary(), ['sent-notifications-report']);
+  const items: SentSummaryItem[] = data?.data || [];
+  return <GenericModal title="Sent Notifications Report — All Audiences" wide onClose={onClose}>
+    {loading ? <p>Loading report...</p> : error ? <p role="alert">{error}</p> : <div className="ha-modal-scroll-section"><div className="ha-table-scroll">
+      <table className="ha-salon-table"><thead><tr>{['Title', 'Description', 'Audience', 'Sent Date', 'Recipients', 'Read'].map((label) => <th key={label}>{label}</th>)}</tr></thead>
+        <tbody>{items.map((item) => <tr key={item._id}><td>{item.title}</td><td>{item.message}</td><td>{roleLabel(item.targetRole)}</td><td>{formatDateInput(item.createdAt)}</td><td>{item.recipientCount}</td><td>{item.readCount}</td></tr>)}</tbody>
+      </table>{!items.length && <p>No sent notifications.</p>}
+    </div></div>}
+  </GenericModal>;
 };
 
 export default AdminNotificationsPage;

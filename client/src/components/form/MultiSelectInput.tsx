@@ -95,7 +95,7 @@ export const MultiSelectInput = ({
     setOpen((prev) => !prev);
   };
   return (
-    <div className="relative">
+    <div className="relative min-w-0 w-full">
       {/* TRIGGER */}
       <div
         ref={triggerRef}
@@ -105,24 +105,20 @@ export const MultiSelectInput = ({
         {selectedValues.length > 0 ? (
           // Chip list is capped and scrolls internally so a large selection can never
           // grow the trigger (and therefore the surrounding modal layout) unbounded — BUG-142.
-          <div className="flex max-h-24 flex-1 flex-wrap gap-2 overflow-y-auto
+          <div className="flex min-w-0 max-w-full flex-1 gap-2 overflow-x-auto
                          [&::-webkit-scrollbar]:w-1.5
                          [&::-webkit-scrollbar-track]:bg-transparent
                          [&::-webkit-scrollbar-thumb]:bg-gray-400
                          [&::-webkit-scrollbar-thumb]:rounded-full">
-            {selectedValues.length > 4 ? (
-              <div className="flex items-center gap-1 rounded-lg bg-[var(--accent-2)] px-2 py-1 text-sm">
-                <span>{selectedValues.length} selected</span>
-              </div>
-            ) : (
+            {(
               selectedValues.map((val) => {
                 const option = options?.find((o) => o.value === val);
                 return (
                   <div
                     key={val}
-                    className="flex items-center gap-1 rounded-lg bg-[var(--accent-2)] px-2 py-1 text-sm"
+                    className="flex shrink-0 items-center gap-1 rounded-lg bg-[var(--accent-2)] px-2 py-1 text-sm"
                   >
-                    <span>{option?.label}</span>
+                    <span className="max-w-40 truncate" title={option?.label}>{option?.label || val}</span>
                     <button
                       type="button"
                       onClick={(e) => {

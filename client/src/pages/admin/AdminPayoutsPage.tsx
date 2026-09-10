@@ -1,3 +1,4 @@
+import { payoutPeriod as periodLabel } from '../../utils/payoutReceipt';
 import { useMemo, useState } from 'react';
 import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
@@ -31,15 +32,6 @@ const compactMoney = (valueInPaisa: number) => {
   return `${Math.round(n)}`;
 };
 
-const periodLabel = (dateLike?: string) => {
-  const d = new Date(dateLike || '');
-  if (Number.isNaN(d.getTime())) return '-';
-  const month = d.toLocaleString('en-US', { month: 'short' });
-  const day = d.getDate();
-  if (day <= 10) return `${month} 1–10`;
-  if (day <= 20) return `${month} 11–20`;
-  return `${month} 21–${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`;
-};
 
 const AdminPayoutsPage = () => {
   const [receiptPayout, setReceiptPayout] = useState<PayoutItem | null>(null);

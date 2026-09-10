@@ -102,9 +102,9 @@ const OwnerEventsPage = () => {
           item.category ? item.category.replace(/_/g, ' ') : "-",
           (item.services || []).map((s) => s.serviceName).join(', ') || "-",
           item.totalDuration ? `${item.totalDuration} min` : "-",
-          item.totalPriceInPaisa != null ? formatMoney(item.totalPriceInPaisa) : "-",
+          item.totalPriceInPaisa != null ? (item.totalPriceInPaisa / 100).toFixed(2) : "",
           item.discount ? `${item.discount}%` : "-",
-          item.finalPriceInPaisa != null ? formatMoney(item.finalPriceInPaisa) : "-",
+          item.finalPriceInPaisa != null ? (item.finalPriceInPaisa / 100).toFixed(2) : "",
         ]),
       ];
       downloadCsv(`hermoso-events-${new Date().toISOString().slice(0, 10)}.csv`, rows);

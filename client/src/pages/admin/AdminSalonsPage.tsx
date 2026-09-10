@@ -328,7 +328,7 @@ const AdminSalonsPage = () => {
               </span>,
               (() => {
                 const isPending = pendingActionId === salon._id;
-                const items = [
+                const items: import('@/components/ActionsMenu').ActionMenuItem[] = [
                   { label: "View", onClick: () => setViewSalon(salon) },
                 ];
                 if (salon.status !== "suspended") {

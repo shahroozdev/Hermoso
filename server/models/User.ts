@@ -46,6 +46,7 @@ export interface IUser extends Document {
   location?: {
     city?: string;
     country?: string;
+    coordinates?: [number, number];
   };
   bankAccount?: string;
   role: Role;
@@ -80,6 +81,7 @@ const userSchema = new Schema<IUser>(
     location: {
       city: { type: String, trim: true, default: "" },
       country: { type: String, trim: true, default: "" },
+      coordinates: { type: [Number], default: undefined },
     },
     bankAccount: { type: String, trim: true, default: "" },
     role: {

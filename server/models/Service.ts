@@ -1,3 +1,4 @@
+import { legacyMoneyPlugin } from '../utils/legacyMoney.js';
 import mongoose, { Document, Schema } from 'mongoose';
 import { integerPaisaValidator } from '../utils/money.js';
 
@@ -36,5 +37,7 @@ const serviceSchema = new Schema<IService>(
 );
 
 serviceSchema.index({ salonId: 1, name: 1 }, { unique: true });
+
+serviceSchema.plugin(legacyMoneyPlugin, {"priceInPaisa":"price"});
 
 export const Service = mongoose.model<IService>('Service', serviceSchema);
