@@ -24,6 +24,7 @@ interface ServiceItem extends ServiceRecord {
 const aiScanLabel = (value?: string) => AI_SCAN_CATEGORIES.find((c) => c.value === value)?.label || "-";
 
 const OwnerServicesPage = () => {
+  const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [deletingService, setDeletingService] = useState<ServiceItem | null>(null);
   const [search, setSearch] = useState("");
@@ -51,6 +52,7 @@ const OwnerServicesPage = () => {
   );
 
   const clearFilters = () => {
+    setComparisons({});
     setSearch("");
     setDescription('');
     setCategoryFilter("all");
@@ -62,6 +64,7 @@ const OwnerServicesPage = () => {
   };
 
   const filterParams = {
+    ...comparisons,
     search,
     ...(description ? { description } : {}),
     ...(categoryFilter !== "all" ? { category: categoryFilter } : {}),
@@ -135,9 +138,9 @@ const OwnerServicesPage = () => {
             options={[{ value: "all", label: "All AI Scan Links" }, ...AI_SCAN_CATEGORIES]}
           />
         </span>
-        <RangeFilter label="Duration (min)" min={durationMin} max={durationMax} onMin={setDurationMin} onMax={setDurationMax} />
+        <RangeFilter operator={comparisons.durationOp} onOperator={op => setComparisons(prev => ({...prev, durationOp: op}))} label="Duration (min)" min={durationMin} max={durationMax} onMin={setDurationMin} onMax={setDurationMax} />
         <input className="ha-input" style={{maxWidth:220}} aria-label="Service description" placeholder="Search description..." value={description} onChange={e => setDescription(e.target.value)} />
-        <RangeFilter label="Price" min={priceMin} max={priceMax} onMin={setPriceMin} onMax={setPriceMax} />
+        <RangeFilter operator={comparisons.priceOp} onOperator={op => setComparisons(prev => ({...prev, priceOp: op}))} label="Price" min={priceMin} max={priceMax} onMin={setPriceMin} onMax={setPriceMax} />
         {hasActiveFilters && (
           <button type="button" className="ha-btn-secondary" onClick={clearFilters}>Clear Filters</button>
         )}

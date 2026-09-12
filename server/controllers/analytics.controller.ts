@@ -75,6 +75,11 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
     ])
   ]);
 
+  const [bookingStatuses, customerGrowth, revenueByMonth] = await Promise.all([
+    Booking.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    User.aggregate([{ $match: { role: Roles.CUSTOMER } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } }, { $sort: { _id: -1 } }, { $limit: 12 }, { $sort: { _id: 1 } }]),
+    Payment.aggregate([{ $match: { status: 'paid', paidAt: { $ne: null } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$paidAt' } }, amountInPaisa: { $sum: '$amountInPaisa' } } }, { $sort: { _id: -1 } }, { $limit: 12 }, { $sort: { _id: 1 } }]),
+  ]);
   const bookingsTotal = bookings || 0;
   const categoriesTotal = categoryAgg.reduce((sum, item) => sum + item.total, 0) || 1;
   const cityTotal = cityAgg.reduce((sum, item) => sum + item.total, 0) || 1;
@@ -113,6 +118,9 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
         grossRevenueInPaisa: revenueAgg[0]?.gross || 0
       },
       charts: {
+        bookingStatuses,
+        customerGrowth,
+        revenueByMonth,
         bookingsByMonth,
         categoryDistribution,
         trafficByCity

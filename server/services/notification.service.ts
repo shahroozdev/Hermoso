@@ -87,6 +87,7 @@ export const deliverAnnouncement = async (notification: INotification) => {
   });
 
   notification.status = 'sent';
+  notification.sentAt = new Date();
   notification.recipientCount = recipients.length;
   await notification.save();
 

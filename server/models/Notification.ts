@@ -10,6 +10,7 @@ export interface INotification extends Document {
   isRead: boolean;
   status: 'draft' | 'sent';
   recipientCount: number;
+  sentAt?: Date | null;
   // Links a fanned-out per-recipient copy back to the admin-managed campaign
   // record it was sent from, so a recipient report can be queried per campaign.
   campaignId: mongoose.Types.ObjectId | null;
@@ -32,6 +33,7 @@ const notificationSchema = new Schema<INotification>(
     isRead: { type: Boolean, default: false, index: true },
     status: { type: String, enum: ['draft', 'sent'], default: 'sent', index: true },
     recipientCount: { type: Number, default: 0 },
+    sentAt: { type: Date, default: null },
     campaignId: { type: Schema.Types.ObjectId, ref: 'Notification', default: null, index: true },
     meta: { type: Schema.Types.Mixed, default: {} }
   },

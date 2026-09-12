@@ -1,6 +1,6 @@
 import { staffService } from "../../services/staffService";
 import { formatDate } from "@/utils/format";
-import StaffModal from "@/components/StaffModal";
+import StaffModal, {type StaffEditRecord} from "@/components/StaffModal";
 import TABLE from "@/components/table";
 import { useState } from 'react';
 import RangeFilter from '@/components/form/RangeFilter';
@@ -8,18 +8,9 @@ import Time24Input from '@/components/form/Time24Input';
 import { downloadCsv } from '@/utils';
 import { useToastStore } from '@/store/toastStore';
 
-interface StaffItem {
+interface StaffItem extends StaffEditRecord {
   name?: string;
   status?: string;
-  staffDetails?: {
-    employeeId?: string;
-    designation?: string;
-    salary?: string;
-    joiningDate?: string;
-    shiftStartTime?: string;
-    shiftEndTime?: string;
-    services?: { name?: string }[];
-  };
 }
 
 const OwnerStaffPage = () => {
@@ -38,7 +29,7 @@ const OwnerStaffPage = () => {
       }
       downloadCsv('hermoso-staff.csv', [
         ['Staff ID', 'Name', 'Designation', 'Assigned Services', 'Salary PKR', 'Joining Date', 'Shift Start Time', 'Shift End Time', 'Status'],
-        ...items.map((item) => { const d = item.staffDetails || {}; return [d.employeeId || '', item.name || '', d.designation || '', (d.services || []).map(s => s.name).join(', '), String(d.salary ?? ''), formatDate(d.joiningDate) || '', d.shiftStartTime || '', d.shiftEndTime || '', item.status || '']; }),
+        ...items.map((item) => { const d = item.staffDetails || {}; return [d.employeeId || '', item.name || '', d.designation || '', (d.services || []).map(s => typeof s === 'string' ? s : s.name).join(', '), String(d.salary ?? ''), formatDate(d.joiningDate) || '', d.shiftStartTime || '', d.shiftEndTime || '', item.status || '']; }),
       ]);
     } catch { showToast('Failed to export staff', 'error'); }
     finally { setExporting(false); }
@@ -48,12 +39,12 @@ const OwnerStaffPage = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Staff Management</h2>
-        <button className="ha-act-btn ml-auto mr-2" onClick={exportStaff} disabled={exporting}>{exporting ? 'Exporting...' : 'Export'}</button>
-        <StaffModal />
+        <div className="ha-page-actions"><button className="ha-act-btn" onClick={exportStaff} disabled={exporting}>{exporting ? 'Exporting...' : 'Export'}</button>
+        <StaffModal /></div>
       </div>
-      <div className="ha-card grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="ha-card ha-filter-grid ha-staff-filters">
         {Object.entries({ employeeId: 'Staff ID', search: 'Name', designation: 'Designation', servicesSearch: 'Assigned Services' }).map(([key, label]) => <label key={key}>{label}<input className="ha-input" value={filters[key] || ''} onChange={e => set(key, e.target.value)} /></label>)}
-        <RangeFilter label="Salary PKR" min={filters.salaryMin || ''} max={filters.salaryMax || ''} onMin={v => set('salaryMin', v)} onMax={v => set('salaryMax', v)} />
+        <RangeFilter operator={filters.salaryOp} onOperator={v => set('salaryOp',v)} label="Salary PKR" min={filters.salaryMin || ''} max={filters.salaryMax || ''} onMin={v => set('salaryMin', v)} onMax={v => set('salaryMax', v)} />
         <label>Status<select className="ha-input" value={filters.status || ''} onChange={e => set('status', e.target.value)}><option value="">All Statuses</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></label>
         {Object.entries({ joinedFrom: 'Joined From', joinedTo: 'Joined To' }).map(([key, label]) => <label key={key}>{label}<input type="date" className="ha-input" value={filters[key] || ''} onChange={e => set(key, e.target.value)} /></label>)}
         {Object.entries({ shiftStartTimeFrom: 'Shift Start From', shiftStartTimeTo: 'Shift Start To', shiftEndTimeFrom: 'Shift End From', shiftEndTimeTo: 'Shift End To' }).map(([key, label]) => <label key={key}>{label}<Time24Input className="ha-input" value={filters[key] || ''} onChange={e => set(key, e.target.value)} /></label>)}
@@ -84,14 +75,14 @@ const OwnerStaffPage = () => {
               d?.employeeId || "-",
               item.name || "-",
               d?.designation || "-",
-              (d?.services || []).map((s) => s.name).join(", ") || "-",
+              (d?.services || []).map((s) => typeof s === 'string' ? s : s.name).join(", ") || "-",
               d?.salary || "-",
               formatDate(d?.joiningDate) || "-",
               d?.shiftStartTime || "-",
               d?.shiftEndTime || "-",
               item.status === "active" ? "Yes" : "No",
               <div className="ha-actions" key="actions">
-                <button className="ha-act-btn">Edit</button>
+                <StaffModal staff={item} />
                 {item.status === "inactive" ? (
                   <button className="ha-act-btn">Activate</button>
                 ) : (

@@ -146,6 +146,7 @@ export const getSentNotificationsSummary = asyncHandler(async (req: AuthRequest,
     {
       $addFields: {
         recipientCount: { $size: '$recipients' },
+        sentAt: { $ifNull: ['$sentAt', { $ifNull: [{ $min: '$recipients.createdAt' }, '$createdAt'] }] },
         readCount: {
           $size: {
             $filter: {
@@ -163,6 +164,7 @@ export const getSentNotificationsSummary = asyncHandler(async (req: AuthRequest,
         message: 1,
         targetRole: 1,
         createdAt: 1,
+        sentAt: 1,
         recipientCount: 1,
         readCount: 1
       }
@@ -193,8 +195,11 @@ export const getNotifications = asyncHandler(async (req: AuthRequest, res: Respo
     query.userId = null;
     if (unreadOnly === 'true') query.isRead = false;
   } else {
+    // Each recipient's copy is already scoped to them via userId, so it's not
+    // filtered by the recipient's own salonId here — broadcastByRole stamps every
+    // recipient copy with the campaign's salonId (null unless the admin targeted a
+    // specific salon), which won't match a salon owner/staff member's own salonId.
     query.userId = req.user?._id;
-    if (req.user?.salonId) query.salonId = req.user.salonId;
     if (unreadOnly === 'true') query.isRead = false;
   }
 
@@ -214,7 +219,7 @@ export const getNotifications = asyncHandler(async (req: AuthRequest, res: Respo
     }
     query.createdAt = range;
   }
-  const recipientsRange = numericRange(recipientsMin, recipientsMax);
+  const recipientsRange = numericRange(recipientsMin, recipientsMax, req.query.recipientsOp);
   if (recipientsRange) query.recipientCount = recipientsRange;
 
   const data = await Notification.find(query)

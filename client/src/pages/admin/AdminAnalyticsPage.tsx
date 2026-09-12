@@ -2,6 +2,8 @@
 import ErrorBlock from '../../components/ErrorBlock';
 import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';
+import MetricChart from '../../components/MetricChart';
+import { formatMoney } from '../../utils/money';
 
 const AdminAnalyticsPage = () => {
   const { data, loading, error } = useApi(() => dashboardService.admin(), ["admin-dashboard"]);
@@ -41,7 +43,7 @@ const AdminAnalyticsPage = () => {
 
       <div className="ha-row-2">
         <div className="ha-card">
-          <div className="ha-card-title">User Growth <span>Last 6 months</span></div>
+          <div className="ha-card-title">Booking Trend <span>Last 6 months</span></div>
           <div className="ha-trend-line" style={{ height: 90, marginBottom: 8 }}>
             {months.map((m, i) => {
               const h = Math.max(24, Math.round((m?.totalBookings / max) * 90));
@@ -78,6 +80,10 @@ const AdminAnalyticsPage = () => {
             ))}
           </div>
         </div>
+      </div>
+      <div className="ha-row-2">
+        <MetricChart title="Customer Registrations by Month" points={(data?.data?.charts?.customerGrowth || []).map(item=>({label:item._id,value:item.count}))} />
+        <MetricChart title="Monthly Paid Revenue" points={(data?.data?.charts?.revenueByMonth || []).map(item=>({label:item._id,value:item.amountInPaisa}))} format={formatMoney} />
       </div>
     </>
   );

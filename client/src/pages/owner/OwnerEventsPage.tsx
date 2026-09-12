@@ -22,6 +22,7 @@ interface EventItem extends EventRecord {
 }
 
 const OwnerEventsPage = () => {
+  const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<EventItem | null>(null);
   const [search, setSearch] = useState("");
@@ -51,6 +52,7 @@ const OwnerEventsPage = () => {
   );
 
   const clearFilters = () => {
+    setComparisons({});
     setSearch("");
     setCategoryFilter("all");
     setServicesSearch("");
@@ -65,6 +67,7 @@ const OwnerEventsPage = () => {
   };
 
   const filterParams = {
+    ...comparisons,
     search,
     ...(categoryFilter !== "all" ? { category: categoryFilter } : {}),
     ...(servicesSearch ? { servicesSearch } : {}),
@@ -152,10 +155,10 @@ const OwnerEventsPage = () => {
             onChange={(e) => setServicesSearch(e.target.value)}
           />
         </div>
-        <RangeFilter label="Duration (min)" min={durationMin} max={durationMax} onMin={setDurationMin} onMax={setDurationMax} />
-        <RangeFilter label="Price" min={priceMin} max={priceMax} onMin={setPriceMin} onMax={setPriceMax} />
-        <RangeFilter label="Discount (%)" min={discountMin} max={discountMax} onMin={setDiscountMin} onMax={setDiscountMax} />
-        <RangeFilter label="Final Price" min={finalPriceMin} max={finalPriceMax} onMin={setFinalPriceMin} onMax={setFinalPriceMax} />
+        <RangeFilter operator={comparisons.durationOp} onOperator={op => setComparisons(prev => ({...prev, durationOp: op}))} label="Duration (min)" min={durationMin} max={durationMax} onMin={setDurationMin} onMax={setDurationMax} />
+        <RangeFilter operator={comparisons.priceOp} onOperator={op => setComparisons(prev => ({...prev, priceOp: op}))} label="Price" min={priceMin} max={priceMax} onMin={setPriceMin} onMax={setPriceMax} />
+        <RangeFilter operator={comparisons.discountOp} onOperator={op => setComparisons(prev => ({...prev, discountOp: op}))} label="Discount (%)" min={discountMin} max={discountMax} onMin={setDiscountMin} onMax={setDiscountMax} />
+        <RangeFilter operator={comparisons.finalPriceOp} onOperator={op => setComparisons(prev => ({...prev, finalPriceOp: op}))} label="Final Price" min={finalPriceMin} max={finalPriceMax} onMin={setFinalPriceMin} onMax={setFinalPriceMax} />
         {hasActiveFilters && (
           <button type="button" className="ha-btn-secondary" onClick={clearFilters}>Clear Filters</button>
         )}

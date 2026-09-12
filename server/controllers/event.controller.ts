@@ -128,13 +128,13 @@ export const getEvents = asyncHandler(
     // BUG-139: match against the included services' names
     if (servicesSearch) query['services.serviceName'] = new RegExp(servicesSearch as string, 'i');
 
-    const durationRange = numericRange(durationMin, durationMax);
+    const durationRange = numericRange(durationMin, durationMax, req.query.durationOp);
     if (durationRange) query.totalDuration = durationRange;
-    const priceRange = numericRange(priceMin, priceMax);
+    const priceRange = numericRange(priceMin, priceMax, req.query.priceOp);
     if (priceRange) query.totalPriceInPaisa = priceRange;
-    const discountRange = numericRange(discountMin, discountMax);
+    const discountRange = numericRange(discountMin, discountMax, req.query.discountOp);
     if (discountRange) query.discount = discountRange;
-    const finalPriceRange = numericRange(finalPriceMin, finalPriceMax);
+    const finalPriceRange = numericRange(finalPriceMin, finalPriceMax, req.query.finalPriceOp);
     if (finalPriceRange) query.finalPriceInPaisa = finalPriceRange;
 
     const data = await Event.find(query)

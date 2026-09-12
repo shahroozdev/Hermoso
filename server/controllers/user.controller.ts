@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import { adminFilters } from '../utils/adminFilters.js';
 import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { RefreshToken } from '../models/RefreshToken.js';
@@ -345,11 +346,7 @@ const requireSuperAdmin = (req: AuthRequest) => {
 export const listAdmins = asyncHandler(async (req: AuthRequest, res: Response) => {
   requireSuperAdmin(req);
 
-  const { search = '' } = req.query;
-  const match: Record<string, unknown> = { role: { $in: [Roles.ADMIN, Roles.SUPER_ADMIN] } };
-  if (search) {
-    match.$or = [{ name: new RegExp(search as string, 'i') }, { email: new RegExp(search as string, 'i') }];
-  }
+  const match = adminFilters(req.query);
 
   const admins = await User.find(match)
     .select('name email phone status createdAt role')

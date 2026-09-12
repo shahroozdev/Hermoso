@@ -25,6 +25,7 @@ const statusClass = (status) => {
 };
 
 const AdminSalonsPage = () => {
+  const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -114,6 +115,7 @@ const AdminSalonsPage = () => {
   );
 
   const clearFilters = () => {
+    setComparisons({});
     setSearch("");
     setCityFilter("all");
     setStatusFilter("all");
@@ -228,7 +230,7 @@ const AdminSalonsPage = () => {
           </span>
         </div>
 
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="ha-filter-bar">
           <input
             type="text"
             className="ha-input"
@@ -256,11 +258,11 @@ const AdminSalonsPage = () => {
 
         {showMoreFilters && (
           <div className="ha-card" style={{ marginBottom: 12, background: "var(--surface-soft)" }}>
-            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-              <RangeFilter label="Services" min={servicesMin} max={servicesMax} onMin={setServicesMin} onMax={setServicesMax} />
-              <RangeFilter label="Bookings" min={bookingsMin} max={bookingsMax} onMin={setBookingsMin} onMax={setBookingsMax} />
-              <RangeFilter label="Revenue" min={revenueMin} max={revenueMax} onMin={setRevenueMin} onMax={setRevenueMax} />
-              <RangeFilter label="Commission %" min={commissionMin} max={commissionMax} onMin={setCommissionMin} onMax={setCommissionMax} />
+            <div className="ha-filter-grid">
+              <RangeFilter operator={comparisons.servicesOp} onOperator={op => setComparisons(prev => ({...prev, servicesOp: op}))} label="Services" min={servicesMin} max={servicesMax} onMin={setServicesMin} onMax={setServicesMax} />
+              <RangeFilter operator={comparisons.bookingsOp} onOperator={op => setComparisons(prev => ({...prev, bookingsOp: op}))} label="Bookings" min={bookingsMin} max={bookingsMax} onMin={setBookingsMin} onMax={setBookingsMax} />
+              <RangeFilter operator={comparisons.revenueOp} onOperator={op => setComparisons(prev => ({...prev, revenueOp: op}))} label="Revenue" min={revenueMin} max={revenueMax} onMin={setRevenueMin} onMax={setRevenueMax} />
+              <RangeFilter operator={comparisons.commissionOp} onOperator={op => setComparisons(prev => ({...prev, commissionOp: op}))} label="Commission %" min={commissionMin} max={commissionMax} onMin={setCommissionMin} onMax={setCommissionMax} />
             </div>
           </div>
         )}
@@ -276,6 +278,7 @@ const AdminSalonsPage = () => {
           queryKey={["salons"]}
           service={salonService.list}
           serviceParams={{
+            ...comparisons,
             search,
             ...(cityFilter !== "all" ? { city: cityFilter } : {}),
             ...(statusFilter !== "all" ? { status: statusFilter } : {}),

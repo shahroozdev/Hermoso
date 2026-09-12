@@ -66,6 +66,10 @@ export const updateEventSchema = z.object({
 // Get events query schema
 export const getEventsSchema = z.object({
   query: z.object({
+    durationOp: z.enum(['eq','gt','gte','lt','lte','between']).optional(),
+    priceOp: z.enum(['eq','gt','gte','lt','lte','between']).optional(),
+    discountOp: z.enum(['eq','gt','gte','lt','lte','between']).optional(),
+    finalPriceOp: z.enum(['eq','gt','gte','lt','lte','between']).optional(),
     page: z.string().regex(/^\d+$/, 'Page must be a number').optional().default('1'),
     limit: z.string().regex(/^\d+$/, 'Limit must be a number').optional().default('10'),
     search: z.string().optional().default(''),

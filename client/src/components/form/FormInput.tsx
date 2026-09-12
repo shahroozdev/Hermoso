@@ -25,6 +25,8 @@ interface FormInputProps {
   className?: string;
   autoComplete?: string;
   maxLength?: number;
+  min?: number;
+  max?: number;
   inputMode?: "text" | "numeric" | "tel" | "email" | "decimal" | "search" | "url" | "none";
 }
 
@@ -40,6 +42,8 @@ const FormInput = ({
   className = "",
   autoComplete,
   maxLength,
+  min,
+  max,
   inputMode,
 }: FormInputProps) => {
   const {
@@ -50,7 +54,7 @@ const FormInput = ({
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const error = errors[name];
+  const error = name.split('.').reduce((value, key) => value?.[key], errors);
 
   const baseInputProps = {
     id: name,
@@ -104,7 +108,7 @@ const FormInput = ({
         );
 
       case "number":
-        return <input {...baseInputProps} type="number" />;
+        return <input {...baseInputProps} type="number" min={min} max={max} />;
 
       case "date":
         return <input {...baseInputProps} type="date" />;

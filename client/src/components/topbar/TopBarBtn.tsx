@@ -67,14 +67,7 @@ const TopBarBtn = () => {
     }
 
     if (key === "notifications") {
-      const field = document.querySelector(
-        ".ha-content input, .ha-content textarea",
-      ) as HTMLInputElement | HTMLTextAreaElement | null;
-      if (field) {
-        field.scrollIntoView({ behavior: "smooth", block: "center" });
-        field.focus();
-        return;
-      }
+      if (clickFirstButtonMatchingText(["add notification"])) return;
     }
 
     window.dispatchEvent(

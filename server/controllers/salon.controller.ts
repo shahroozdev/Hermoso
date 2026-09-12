@@ -98,7 +98,7 @@ export const getSalons = asyncHandler(
     if (search) query.name = new RegExp(search as string, "i");
     if (ownerId) query.ownerId = new mongoose.Types.ObjectId(ownerId as string);
 
-    const commissionRange = numericRange(commissionMin, commissionMax);
+    const commissionRange = numericRange(commissionMin, commissionMax, req.query.commissionOp);
     if (commissionRange) query.commissionRate = commissionRange;
 
     if (req.user?.role === Roles.SALON_OWNER) {
@@ -114,11 +114,11 @@ export const getSalons = asyncHandler(
     // filtering on them (and paginating correctly afterward) needs a second $match
     // post-lookup, with a $facet to get the total alongside the paginated page.
     const computedMatch: Record<string, unknown> = {};
-    const servicesRange = numericRange(servicesMin, servicesMax);
+    const servicesRange = numericRange(servicesMin, servicesMax, req.query.servicesOp);
     if (servicesRange) computedMatch.servicesCount = servicesRange;
-    const bookingsRange = numericRange(bookingsMin, bookingsMax);
+    const bookingsRange = numericRange(bookingsMin, bookingsMax, req.query.bookingsOp);
     if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
-    const revenueRange = numericRange(revenueMin, revenueMax);
+    const revenueRange = numericRange(revenueMin, revenueMax, req.query.revenueOp);
     if (revenueRange) computedMatch.revenueInPaisa = revenueRange;
     if (active === "active") computedMatch.active = true;
     else if (active === "inactive") computedMatch.active = false;
@@ -479,13 +479,13 @@ export const getSalonRevenue = asyncHandler(
     // (same pattern as getSalons's computedMatch), with a $facet to compute the
     // total alongside the paginated page.
     const computedMatch: Record<string, unknown> = {};
-    const bookingsRange = numericRange(bookingsMin, bookingsMax);
+    const bookingsRange = numericRange(bookingsMin, bookingsMax, req.query.bookingsOp);
     if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
-    const grossRange = numericRange(grossMin, grossMax);
+    const grossRange = numericRange(grossMin, grossMax, req.query.grossOp);
     if (grossRange) computedMatch.grossRevenueInPaisa = grossRange;
-    const commissionRange = numericRange(commissionMin, commissionMax);
+    const commissionRange = numericRange(commissionMin, commissionMax, req.query.commissionOp);
     if (commissionRange) computedMatch.commissionRate = commissionRange;
-    const platformRange = numericRange(platformMin, platformMax);
+    const platformRange = numericRange(platformMin, platformMax, req.query.platformOp);
     if (platformRange) computedMatch.platformRevenueInPaisa = platformRange;
 
     const pipeline: mongoose.PipelineStage[] = [];

@@ -92,7 +92,7 @@ const AdminOwnersPage = () => {
           </span>
         </div>
 
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="ha-filter-bar">
           <input
             type="text"
             className="ha-input"

@@ -4,12 +4,17 @@
     "BUG-097/099/100/148/149/150 notification reports, scrolling and blank type",
     "BUG-111/154 customer date preset and comparison",
     "BUG-158 processed review action disabled",
+    "BUG-186/187/188/189 sent sub-tab filters/export and styled preview",
+    "BUG-180 strict comparison symbols, request semantics and reset",
+    "BUG-192/193/194/195 compact settings and filtered admin export",
     "BUG-153 salon services paginate and scroll records",
     "BUG-159/160 payout receipt is PNG",
     "BUG-107/151/152/162 services preview, category search and numeric export",
     "BUG-142/145 multiple services save and close event modal",
     "BUG-164/165/166/167 staff filters, stable button, 24h shifts",
+    "BUG-197/198/199/200 compact staff, actual picker, edit validation",
     "BUG-147 laptop pages have no document horizontal overflow",
-    "BUG-147 admin laptop layouts"
+    "BUG-147 admin laptop layouts",
+    "BUG-168/169/170/171 compact cards and real chart series"
   ]
 }

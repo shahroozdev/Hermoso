@@ -33,7 +33,7 @@ const GenericModal = ({ title, onClose, children, footer, wide }: GenericModalPr
 
   return (
     <>
-      <div className={`ha-modal-overlay h-screen ${theme === 'light' ? 'light' : ''}`} onClick={onClose} />
+      <div className={`ha-modal-overlay h-screen !mt-0 ${theme === 'light' ? 'light' : ''}`} onClick={onClose} />
       <div className={`ha-modal ${wide ? 'wide' : ''} ${theme === 'light' ? 'light' : ''}`}>
         <div className="ha-modal-header">
           <h3>{title}</h3>

@@ -278,7 +278,7 @@ export const pageMeta: Record<
   notifications: {
     title: "Push Notifications",
     sub: "Send targeted messages to customers & salons",
-    action: "New Campaign",
+    action: "+ Add Notification",
   },
   settings: {
     title: "Platform Settings",

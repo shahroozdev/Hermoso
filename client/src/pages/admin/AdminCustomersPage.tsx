@@ -1,16 +1,16 @@
-import { useMemo, useState } from 'react';
-import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
-import ErrorBlock from '../../components/ErrorBlock';
-import CustomerDetailModal from '../../components/CustomerDetailModal';
-import TABLE from '@/components/table';
-import { useApi } from '../../hooks/useApi';
-import { useInvalidate } from '../../hooks/useInvalidate';
-import { customerService } from '../../services/customerService';
-import { useToastStore } from '../../store/toastStore';
-import { formatMoney, rupeesToPaisa } from '../../utils/money';
-import { downloadCsv } from '../../utils';
-import SearchableSelect from '@/components/form/SearchableSelect';
-import RangeFilter from '@/components/form/RangeFilter';
+import { useMemo, useState } from "react";
+import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
+import ErrorBlock from "../../components/ErrorBlock";
+import CustomerDetailModal from "../../components/CustomerDetailModal";
+import TABLE from "@/components/table";
+import { useApi } from "../../hooks/useApi";
+import { useInvalidate } from "../../hooks/useInvalidate";
+import { customerService } from "../../services/customerService";
+import { useToastStore } from "../../store/toastStore";
+import { formatMoney, rupeesToPaisa } from "../../utils/money";
+import { downloadCsv } from "../../utils";
+import SearchableSelect from "@/components/form/SearchableSelect";
+import RangeFilter from "@/components/form/RangeFilter";
 
 interface CustomerOverview {
   _id: string;
@@ -23,52 +23,75 @@ interface CustomerOverview {
   eventCount: number;
 }
 
-type DatePreset = 'all' | 'current_month' | 'last_month' | 'current_year' | 'last_year' | 'custom';
+type DatePreset =
+  | "all"
+  | "current_month"
+  | "last_month"
+  | "current_year"
+  | "last_year"
+  | "custom";
 
-const toIsoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const toIsoDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-const computePresetRange = (preset: DatePreset): { from: string; to: string } => {
+const computePresetRange = (
+  preset: DatePreset,
+): { from: string; to: string } => {
   const now = new Date();
   switch (preset) {
-    case 'current_month':
-      return { from: toIsoDate(new Date(now.getFullYear(), now.getMonth(), 1)), to: toIsoDate(now) };
-    case 'last_month':
+    case "current_month":
+      return {
+        from: toIsoDate(new Date(now.getFullYear(), now.getMonth(), 1)),
+        to: toIsoDate(now),
+      };
+    case "last_month":
       return {
         from: toIsoDate(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
         to: toIsoDate(new Date(now.getFullYear(), now.getMonth(), 0)),
       };
-    case 'current_year':
-      return { from: toIsoDate(new Date(now.getFullYear(), 0, 1)), to: toIsoDate(now) };
-    case 'last_year':
+    case "current_year":
+      return {
+        from: toIsoDate(new Date(now.getFullYear(), 0, 1)),
+        to: toIsoDate(now),
+      };
+    case "last_year":
       return {
         from: toIsoDate(new Date(now.getFullYear() - 1, 0, 1)),
         to: toIsoDate(new Date(now.getFullYear() - 1, 11, 31)),
       };
     default:
-      return { from: '', to: '' };
+      return { from: "", to: "" };
   }
 };
 
 const formatJoinedDate = (createdAt?: string) =>
   createdAt
-    ? new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-    : '-';
+    ? new Date(createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "-";
 
 const AdminCustomersPage = () => {
+  const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [bookingsMin, setBookingsMin] = useState('');
-  const [bookingsMax, setBookingsMax] = useState('');
-  const [spentMin, setSpentMin] = useState('');
-  const [spentMax, setSpentMax] = useState('');
-  const [datePreset, setDatePreset] = useState<DatePreset>('all');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [bookingsMin, setBookingsMin] = useState("");
+  const [bookingsMax, setBookingsMax] = useState("");
+  const [spentMin, setSpentMin] = useState("");
+  const [spentMax, setSpentMax] = useState("");
+  const [datePreset, setDatePreset] = useState<DatePreset>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
-  const kpiReq = useApi(() => customerService.getOverview({ page: 1, limit: 1 }), ["customer-overview"]);
+  const kpiReq = useApi(
+    () => customerService.getOverview({ page: 1, limit: 1 }),
+    ["customer-overview"],
+  );
 
   const kpi = useMemo(() => {
     const m = kpiReq.data?.meta;
@@ -82,10 +105,10 @@ const AdminCustomersPage = () => {
 
   const handleDatePresetChange = (preset: DatePreset) => {
     setDatePreset(preset);
-    if (preset === 'all' || preset === 'custom') {
-      if (preset === 'all') {
-        setFromDate('');
-        setToDate('');
+    if (preset === "all" || preset === "custom") {
+      if (preset === "all") {
+        setFromDate("");
+        setToDate("");
       }
       return;
     }
@@ -95,37 +118,51 @@ const AdminCustomersPage = () => {
   };
 
   const handleFlag = async (id: string, currentStatus: string | undefined) => {
-    const isFlagged = currentStatus === 'suspended' || currentStatus === 'inactive';
-    const newStatus = isFlagged ? 'active' : 'suspended';
+    const isFlagged =
+      currentStatus === "suspended" || currentStatus === "inactive";
+    const newStatus = isFlagged ? "active" : "suspended";
     try {
       await customerService.updateStatus(id, newStatus);
       invalidate();
-      showToast(isFlagged ? 'Customer unflagged.' : 'Customer flagged.');
+      showToast(isFlagged ? "Customer unflagged." : "Customer flagged.");
     } catch (err) {
       const apiErr = err as { response?: { data?: { message?: string } } };
-      showToast(apiErr.response?.data?.message || 'Failed to update customer status. Please try again.', 'error');
+      showToast(
+        apiErr.response?.data?.message ||
+          "Failed to update customer status. Please try again.",
+        "error",
+      );
     }
   };
 
   const hasActiveFilters = Boolean(
-    search || statusFilter !== 'all' || bookingsMin || bookingsMax || spentMin || spentMax || fromDate || toDate,
+    search ||
+    statusFilter !== "all" ||
+    bookingsMin ||
+    bookingsMax ||
+    spentMin ||
+    spentMax ||
+    fromDate ||
+    toDate,
   );
 
   const clearFilters = () => {
-    setSearch('');
-    setStatusFilter('all');
-    setBookingsMin('');
-    setBookingsMax('');
-    setSpentMin('');
-    setSpentMax('');
-    setDatePreset('all');
-    setFromDate('');
-    setToDate('');
+    setComparisons({});
+    setSearch("");
+    setStatusFilter("all");
+    setBookingsMin("");
+    setBookingsMax("");
+    setSpentMin("");
+    setSpentMax("");
+    setDatePreset("all");
+    setFromDate("");
+    setToDate("");
   };
 
   const filterParams = {
+    ...comparisons,
     ...(search ? { search } : {}),
-    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    ...(statusFilter !== "all" ? { status: statusFilter } : {}),
     ...(bookingsMin ? { bookingsMin } : {}),
     ...(bookingsMax ? { bookingsMax } : {}),
     ...(spentMin ? { spentMin: rupeesToPaisa(Number(spentMin)) } : {}),
@@ -136,18 +173,31 @@ const AdminCustomersPage = () => {
 
   const handleExport = async () => {
     try {
-      const res = await customerService.getOverview({ page: 1, limit: 1000, ...filterParams });
+      const res = await customerService.getOverview({
+        page: 1,
+        limit: 1000,
+        ...filterParams,
+      });
       const items: CustomerOverview[] = res?.data || [];
       const rows = [
-        ['Name', 'Email', 'Joined Date', 'Bookings', 'AI Scans', 'Total Spent', 'Status'],
+        [
+          "Name",
+          "Email",
+          "Joined Date",
+          "Bookings",
+          "AI Scans",
+          "Total Spent",
+          "Status",
+        ],
         ...items.map((item) => {
           const aiScans = Math.max(0, Math.round(item.bookingsCount * 0.35));
-          const isFlagged = item.status === 'suspended' || item.status === 'inactive';
+          const isFlagged =
+            item.status === "suspended" || item.status === "inactive";
           const isVip = item.totalSpentInPaisa >= rupeesToPaisa(80000);
-          const statusLabel = isFlagged ? 'flagged' : isVip ? 'vip' : 'active';
+          const statusLabel = isFlagged ? "flagged" : isVip ? "vip" : "active";
           return [
-            item.name || '',
-            item.email || '',
+            item.name || "",
+            item.email || "",
             formatJoinedDate(item.createdAt),
             String(item.bookingsCount ?? 0),
             String(aiScans),
@@ -156,36 +206,74 @@ const AdminCustomersPage = () => {
           ];
         }),
       ];
-      downloadCsv(`hermoso-customers-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+      downloadCsv(
+        `hermoso-customers-${new Date().toISOString().slice(0, 10)}.csv`,
+        rows,
+      );
     } catch (err) {
       const apiErr = err as { response?: { data?: { message?: string } } };
-      showToast(apiErr.response?.data?.message || 'Failed to export customers', 'error');
+      showToast(
+        apiErr.response?.data?.message || "Failed to export customers",
+        "error",
+      );
     }
   };
 
   if (kpiReq.loading) return <AdminPageSkeleton variant="table" />;
   if (kpiReq.error) return <ErrorBlock text={kpiReq.error} />;
 
-  const icons = ['🧑', '💅', '✨', '⚠️'];
+  const icons = ["🧑", "💅", "✨", "⚠️"];
 
   return (
     <>
       <div className="ha-kpi-row">
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Customers</div><div className="ha-kpi-val">{kpi.totalCustomers.toLocaleString()}</div><div className="ha-kpi-change up">Registered accounts</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Returning Customers</div><div className="ha-kpi-val">{kpi.returningCustomers.toLocaleString()}</div><div className="ha-kpi-change up">{kpi.totalCustomers ? Math.round((kpi.returningCustomers / kpi.totalCustomers) * 100) : 0}% retention</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Total Revenue</div><div className="ha-kpi-val">{formatMoney(kpi.totalRevenueInPaisa)}</div><div className="ha-kpi-change up">From bookings</div></div>
-        <div className="ha-kpi-card"><div className="ha-kpi-label">Flagged Accounts</div><div className="ha-kpi-val white">{kpi.flaggedAccounts}</div><div className="ha-kpi-change" style={{ color: 'var(--rose)' }}>Needs review</div></div>
+        <div className="ha-kpi-card">
+          <div className="ha-kpi-label">Total Customers</div>
+          <div className="ha-kpi-val">
+            {kpi.totalCustomers.toLocaleString()}
+          </div>
+          <div className="ha-kpi-change up">Registered accounts</div>
+        </div>
+        <div className="ha-kpi-card">
+          <div className="ha-kpi-label">Returning Customers</div>
+          <div className="ha-kpi-val">
+            {kpi.returningCustomers.toLocaleString()}
+          </div>
+          <div className="ha-kpi-change up">
+            {kpi.totalCustomers
+              ? Math.round((kpi.returningCustomers / kpi.totalCustomers) * 100)
+              : 0}
+            % retention
+          </div>
+        </div>
+        <div className="ha-kpi-card">
+          <div className="ha-kpi-label">Total Revenue</div>
+          <div className="ha-kpi-val">
+            {formatMoney(kpi.totalRevenueInPaisa)}
+          </div>
+          <div className="ha-kpi-change up">From bookings</div>
+        </div>
+        <div className="ha-kpi-card">
+          <div className="ha-kpi-label">Flagged Accounts</div>
+          <div className="ha-kpi-val white">{kpi.flaggedAccounts}</div>
+          <div className="ha-kpi-change" style={{ color: "var(--rose)" }}>
+            Needs review
+          </div>
+        </div>
       </div>
 
       <div className="ha-card">
         <div className="ha-card-title">
           Customer Accounts
-          <span style={{ display: 'inline-flex', gap: 8 }}>
-            <button className="ha-act-btn" onClick={handleExport}>Export</button>
+          <span style={{ display: "inline-flex", gap: 8 }}>
+            <button className="ha-act-btn" onClick={handleExport}>
+              Export
+            </button>
           </span>
         </div>
 
-        <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="ha-filter-bar"
+        >
           <input
             type="text"
             className="ha-input"
@@ -194,53 +282,89 @@ const AdminCustomersPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <span style={{ minWidth: 160, display: 'inline-block' }}>
+          <span style={{ minWidth: 160, display: "inline-block" }}>
             <SearchableSelect
               value={statusFilter}
               onChange={setStatusFilter}
               options={[
-                { value: 'all', label: 'All Status' },
-                { value: 'active', label: 'Active' },
-                { value: 'suspended', label: 'Suspended' },
-                { value: 'inactive', label: 'Inactive' },
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "suspended", label: "Suspended" },
+                { value: "inactive", label: "Inactive" },
               ]}
             />
           </span>
-          <span style={{ minWidth: 180, display: 'inline-block' }}>
+          <span style={{ minWidth: 180, display: "inline-block" }}>
             <SearchableSelect
               value={datePreset}
               onChange={(v) => handleDatePresetChange(v as DatePreset)}
               options={[
-                { value: 'all', label: 'Joined: Any Time' },
-                { value: 'current_month', label: 'Current Month' },
-                { value: 'last_month', label: 'Last Month' },
-                { value: 'current_year', label: 'Current Year' },
-                { value: 'last_year', label: 'Last Year' },
-                { value: 'custom', label: 'Custom Range' },
+                { value: "all", label: "Joined: Any Time" },
+                { value: "current_month", label: "Current Month" },
+                { value: "last_month", label: "Last Month" },
+                { value: "current_year", label: "Current Year" },
+                { value: "last_year", label: "Last Year" },
+                { value: "custom", label: "Custom Range" },
               ]}
             />
           </span>
           {(
-            <>
-              <input type="date" disabled={datePreset !== 'custom'} aria-label="From Date" className="ha-input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              <input type="date" disabled={datePreset !== 'custom'} aria-label="To Date" className="ha-input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-            </>
+            <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="date" disabled={datePreset !== "custom"}
+                aria-label="From Date"
+                className="ha-input"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+              <input
+                type="date" disabled={datePreset !== "custom"}
+                aria-label="To Date"
+                className="ha-input"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </span>
           )}
-          <button type="button" className="ha-btn-secondary" onClick={() => setShowMoreFilters((v) => !v)}>
-            {showMoreFilters ? 'Hide Filters' : 'More Filters'}
+          <button
+            type="button"
+            className="ha-btn-secondary"
+            onClick={() => setShowMoreFilters((v) => !v)}
+          >
+            {showMoreFilters ? "Hide Filters" : "More Filters"}
           </button>
           {hasActiveFilters && (
-            <button type="button" className="ha-btn-secondary" onClick={clearFilters}>
+            <button
+              type="button"
+              className="ha-btn-secondary"
+              onClick={clearFilters}
+            >
               Clear Filters
             </button>
           )}
         </div>
 
         {showMoreFilters && (
-          <div className="ha-card" style={{ marginBottom: 12, background: 'var(--surface-soft)' }}>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-              <RangeFilter label="Bookings" min={bookingsMin} max={bookingsMax} onMin={setBookingsMin} onMax={setBookingsMax} />
-              <RangeFilter label="Spent Amount" min={spentMin} max={spentMax} onMin={setSpentMin} onMax={setSpentMax} />
+          <div
+            className="ha-card"
+            style={{ marginBottom: 12, background: "var(--surface-soft)" }}
+          >
+            <div className="ha-filter-grid"
+            >
+              <RangeFilter operator={comparisons.bookingsOp} onOperator={op => setComparisons(prev => ({...prev, bookingsOp: op}))}
+                label="Bookings"
+                min={bookingsMin}
+                max={bookingsMax}
+                onMin={setBookingsMin}
+                onMax={setBookingsMax}
+              />
+              <RangeFilter operator={comparisons.spentOp} onOperator={op => setComparisons(prev => ({...prev, spentOp: op}))}
+                label="Spent Amount"
+                min={spentMin}
+                max={spentMax}
+                onMin={setSpentMin}
+                onMax={setSpentMax}
+              />
             </div>
           </div>
         )}
@@ -252,20 +376,28 @@ const AdminCustomersPage = () => {
           service={customerService.getOverview}
           serviceParams={filterParams}
           columns={[
-            { title: 'Customer' },
-            { title: 'Joined Date' },
-            { title: 'Bookings' },
-            { title: 'AI Scans' },
-            { title: 'Total Spent' },
-            { title: 'Status' },
-            { title: 'Actions' },
+            { title: "Customer" },
+            { title: "Joined Date" },
+            { title: "Bookings" },
+            { title: "AI Scans" },
+            { title: "Total Spent" },
+            { title: "Status" },
+            { title: "Actions" },
           ]}
           rows={(data) =>
             data?.map((item, idx) => {
-              const aiScans = Math.max(0, Math.round(item.bookingsCount * 0.35));
-              const isFlagged = item.status === 'suspended' || item.status === 'inactive';
+              const aiScans = Math.max(
+                0,
+                Math.round(item.bookingsCount * 0.35),
+              );
+              const isFlagged =
+                item.status === "suspended" || item.status === "inactive";
               const isVip = item.totalSpentInPaisa >= rupeesToPaisa(80000);
-              const statusLabel = isFlagged ? 'flagged' : isVip ? 'vip' : 'active';
+              const statusLabel = isFlagged
+                ? "flagged"
+                : isVip
+                  ? "vip"
+                  : "active";
               const joined = formatJoinedDate(item.createdAt);
               return [
                 <div className="ha-salon-cell">
@@ -278,14 +410,32 @@ const AdminCustomersPage = () => {
                 joined,
                 item.bookingsCount,
                 aiScans,
-                <span className="ha-money">{formatMoney(item.totalSpentInPaisa)}</span>,
-                <span className={statusLabel === 'active' ? 'ha-pill ha-pill-active' : statusLabel === 'vip' ? 'ha-pill ha-pill-vip' : 'ha-pill ha-pill-suspended'}>
+                <span className="ha-money">
+                  {formatMoney(item.totalSpentInPaisa)}
+                </span>,
+                <span
+                  className={
+                    statusLabel === "active"
+                      ? "ha-pill ha-pill-active"
+                      : statusLabel === "vip"
+                        ? "ha-pill ha-pill-vip"
+                        : "ha-pill ha-pill-suspended"
+                  }
+                >
                   {statusLabel}
                 </span>,
                 <div className="ha-actions">
-                  <button className="ha-act-btn" onClick={() => setViewingId(item._id)}>View</button>
-                  <button className="ha-act-btn" onClick={() => handleFlag(item._id, item.status)}>
-                    {isFlagged ? 'Unflag' : 'Flag'}
+                  <button
+                    className="ha-act-btn"
+                    onClick={() => setViewingId(item._id)}
+                  >
+                    View
+                  </button>
+                  <button
+                    className="ha-act-btn"
+                    onClick={() => handleFlag(item._id, item.status)}
+                  >
+                    {isFlagged ? "Unflag" : "Flag"}
                   </button>
                 </div>,
               ];
@@ -295,7 +445,10 @@ const AdminCustomersPage = () => {
       </div>
 
       {viewingId && (
-        <CustomerDetailModal customerId={viewingId} onClose={() => setViewingId(null)} />
+        <CustomerDetailModal
+          customerId={viewingId}
+          onClose={() => setViewingId(null)}
+        />
       )}
     </>
   );

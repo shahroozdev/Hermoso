@@ -86,7 +86,7 @@ export const getPayouts = asyncHandler(async (req: AuthRequest, res: Response) =
     query.salonId = req.user?.salonId;
   }
 
-  const netRange = numericRange(netMin, netMax);
+  const netRange = numericRange(netMin, netMax, req.query.netOp);
   if (netRange) query.amountInPaisa = netRange;
 
   if (dateFrom || dateTo) {

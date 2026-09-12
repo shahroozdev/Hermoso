@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { User } from '../models/User.js';
 import { Service } from '../models/Service.js';
 import { numericRange } from '../utils/numericRange.js';
+import { validateStaffCommission } from '../utils/staffValidation.js';
 import { Roles } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -18,6 +19,7 @@ const isAuthorized = (req: AuthRequest, staffSalonId: unknown): boolean => {
 
 // ─── POST /staff ─────────────────────────────────────────────────────────────
 export const createStaff = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  validateStaffCommission(req.body);
   const salonId = scopedSalonId(req);
   if (!salonId) return next(new ApiError(400, 'salonId is required'));
 
@@ -78,7 +80,7 @@ export const getStaff = asyncHandler(async (req: AuthRequest, res: Response) => 
     const services = await Service.find({ name: literal(req.query.servicesSearch), ...(query.salonId ? { salonId: query.salonId } : {}) }).select('_id');
     query['staffDetails.services'] = { $in: services.map((service) => service._id) };
   }
-  const salaryRange = numericRange(req.query.salaryMin, req.query.salaryMax);
+  const salaryRange = numericRange(req.query.salaryMin, req.query.salaryMax, req.query.salaryOp);
   if (salaryRange) query['staffDetails.salary'] = salaryRange;
   const joined: Record<string, Date> = {};
   if (req.query.joinedFrom) joined.$gte = new Date(String(req.query.joinedFrom));
@@ -127,6 +129,7 @@ export const getStaffById = asyncHandler(async (req: AuthRequest, res: Response,
 
 // ─── PUT /staff/:id ───────────────────────────────────────────────────────────
 export const updateStaff = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  validateStaffCommission(req.body);
   const staff = await User.findOne({ _id: req.params.id, role: Roles.STAFF });
   if (!staff) return next(new ApiError(404, 'Staff not found'));
   if (!isAuthorized(req, staff.salonId)) return next(new ApiError(403, 'Forbidden'));

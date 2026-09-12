@@ -9,6 +9,7 @@ import ErrorBlock from '../../components/ErrorBlock';
 import CreateAdminModal from '@/components/createAdmin';
 import ActionsMenu from '@/components/ActionsMenu';
 import OwnerCredentialsModal from '@/components/OwnerCredentialsModal';
+import { downloadCsv } from '@/utils';
 
 const DEFAULT_TOGGLES: PlatformSettingsRecord = {
   aiSkinScan: true,
@@ -26,6 +27,9 @@ const AdminSettingsPage = () => {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [editAdmin, setEditAdmin] = useState<AdminRecord | null>(null);
   const [adminSearch, setAdminSearch] = useState('');
+  const [adminRole, setAdminRole] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [newAdminCredentials, setNewAdminCredentials] = useState<{
     email?: string;
@@ -38,11 +42,11 @@ const AdminSettingsPage = () => {
   const [localToggles, setLocalToggles] = useState<PlatformSettingsRecord | null>(null);
   const toggles = localToggles ?? loadedSettings ?? DEFAULT_TOGGLES;
 
-  const adminsReq = useApi(() => adminService.list({ search: adminSearch }), ['admins', adminSearch]);
+  const adminsReq = useApi(() => isSuperAdmin ? adminService.list({ search: adminSearch, role: adminRole, fromDate, toDate }) : Promise.resolve({data:[]}), ['admins', adminSearch, adminRole, fromDate, toDate]);
   const admins = (adminsReq.data as { data?: AdminRecord[] } | null)?.data || [];
 
   const setToggle = (key: keyof PlatformSettingsRecord) => {
-    setLocalToggles((prev) => ({ ...(prev ?? DEFAULT_TOGGLES), [key]: !(prev ?? DEFAULT_TOGGLES)[key] }));
+    setLocalToggles((prev) => ({ ...(prev ?? loadedSettings ?? DEFAULT_TOGGLES), [key]: !(prev ?? loadedSettings ?? DEFAULT_TOGGLES)[key] }));
   };
 
   const saveSettings = async () => {
@@ -71,7 +75,7 @@ const AdminSettingsPage = () => {
 
   return (
     <>
-      <div className="ha-row-2">
+      <div className="ha-settings-layout">
         <div className="ha-card">
           <div className="ha-card-title">Platform Settings</div>
           <div className="ha-settings-list">
@@ -94,13 +98,18 @@ const AdminSettingsPage = () => {
               </div>
             ))}
           </div>
-          <button className="ha-topbar-btn primary" style={{ width: '100%', marginTop: 14 }} onClick={saveSettings} disabled={isSaving}>
+          <button className="ha-topbar-btn primary" style={{ marginTop: 12 }} onClick={saveSettings} disabled={isSaving}>
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
         <div className="ha-card">
-          <div className="ha-card-title">Admin Access</div>
+          <div className="ha-card-title">Admin Access
+            {isSuperAdmin && <button className="ha-act-btn" disabled={adminsReq.loading || !!adminsReq.error} onClick={() => downloadCsv('hermoso-admin-access.csv', [
+              ['Name','Email','Role','Joined Date','Status'],
+              ...admins.map(admin => [admin.name, admin.email, admin.role, admin.createdAt?.slice(0,10) || '', admin.status || '']),
+            ])}>Export</button>}
+          </div>
 
           {!isSuperAdmin ? (
             <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
@@ -108,7 +117,7 @@ const AdminSettingsPage = () => {
             </p>
           ) : (
             <>
-              <div style={{ marginBottom: 10 }}>
+              <div className="ha-filter-grid" style={{ marginBottom: 10 }}>
                 <input
                   type="text"
                   className="ha-input"
@@ -116,6 +125,10 @@ const AdminSettingsPage = () => {
                   value={adminSearch}
                   onChange={(e) => setAdminSearch(e.target.value)}
                 />
+                <label>Role<select aria-label="Role" className="ha-input" value={adminRole} onChange={e=>setAdminRole(e.target.value)}><option value="">All roles</option><option value="super_admin">Super Admin</option><option value="admin">Admin</option></select></label>
+                <label>From Date<input type="date" className="ha-input" value={fromDate} onChange={e=>setFromDate(e.target.value)} /></label>
+                <label>To Date<input type="date" className="ha-input" value={toDate} onChange={e=>setToDate(e.target.value)} /></label>
+                <button className="ha-btn-secondary" onClick={()=>{setAdminSearch('');setAdminRole('');setFromDate('');setToDate('');}}>Reset Filters</button>
               </div>
 
               {actionError ? (
@@ -127,7 +140,7 @@ const AdminSettingsPage = () => {
               {adminsReq.error ? (
                 <ErrorBlock text={adminsReq.error} />
               ) : (
-                <table className="ha-salon-table" style={{ minWidth: '100%' }}>
+                <div className="ha-table-scroll"><table className="ha-salon-table" style={{ minWidth: '100%' }}>
                   <thead>
                     <tr>
                       <th>Admin</th>
@@ -186,12 +199,12 @@ const AdminSettingsPage = () => {
                       );
                     })}
                   </tbody>
-                </table>
+                </table>{!admins.length && !adminsReq.loading && <p>No admins match these filters.</p>}</div>
               )}
 
               <button
                 className="ha-topbar-btn primary"
-                style={{ width: '100%', marginTop: 14 }}
+                style={{ marginTop: 12 }}
                 onClick={() => setInviteModalOpen(true)}
               >
                 + Invite Admin

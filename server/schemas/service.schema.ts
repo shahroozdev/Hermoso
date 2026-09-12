@@ -32,6 +32,8 @@ export const updateServiceSchema = z.object({
 // Get services query schema
 export const getServicesSchema = z.object({
   query: z.object({
+    priceOp: z.enum(['eq','gt','gte','lt','lte','between']).optional(),
+    durationOp: z.enum(['eq','gt','gte','lt','lte','between']).optional(),
     page: z.string().regex(/^\d+$/, 'Page must be a number').optional().default('1'),
     limit: z.string().regex(/^\d+$/, 'Limit must be a number').optional().default('10'),
     search: z.string().optional().default(''),

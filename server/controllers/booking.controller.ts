@@ -427,7 +427,7 @@ export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) 
     if (Object.keys(range).length) match.bookingDate = range;
   }
 
-  const amountRange = numericRange(amountMin, amountMax);
+  const amountRange = numericRange(amountMin, amountMax, req.query.amountOp);
   if (amountRange) match.priceInPaisa = amountRange;
 
   if (req.user?.role === Roles.SUPER_ADMIN) {

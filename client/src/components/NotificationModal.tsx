@@ -44,6 +44,7 @@ export const NotificationFormModal = ({
   const [message, setMessage] = useState(notification?.message || '');
   const [targetRole, setTargetRole] = useState(notification?.targetRole || 'customer');
   const [type, setType] = useState(notification?.type || '');
+  const [preview, setPreview] = useState(false);
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -80,7 +81,7 @@ export const NotificationFormModal = ({
       onClose={onClose}
       footer={
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button className="ha-act-btn" onClick={() => setStatus(`Preview: "${title || 'Untitled'}"`)}>
+          <button type="button" className="ha-act-btn" onClick={() => setPreview(v => !v)} aria-expanded={preview}>
             Preview
           </button>
           <button className="ha-topbar-btn primary" onClick={save} disabled={isSaving}>
@@ -90,6 +91,12 @@ export const NotificationFormModal = ({
       }
     >
       <div className="space-y-4">
+        {preview && <section className="ha-notification-preview" aria-label="Notification preview">
+          <div className="ha-salon-sub">HERMOSO · Notification preview</div>
+          <h4>{title.trim() || 'Untitled notification'}</h4>
+          <p>{message.trim() || 'Your message will appear here.'}</p>
+          <small>{RECIPIENT_TYPES.find(option => option.value === targetRole)?.label} · {TYPE_OPTIONS.find(option => option.value === type)?.label || 'Select a type'}</small>
+        </section>}
         <div>
           <label className="mb-2 block text-xs font-semibold uppercase text-muted">Title</label>
           <input

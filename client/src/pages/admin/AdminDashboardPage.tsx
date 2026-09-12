@@ -2,6 +2,8 @@
 import ErrorBlock from '../../components/ErrorBlock';
 import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';
+import MetricChart from '../../components/MetricChart';
+import { formatMoney } from '../../utils/money';
 
 const donutColors = ['#d4a843', '#7c3aed', '#10b981', '#f43f5e', '#0ea5e9', '#f59e0b'];
 
@@ -44,13 +46,13 @@ const AdminDashboardPage = () => {
           <div className="ha-kpi-change up">Registered users</div>
         </div>
         <div className="ha-kpi-card">
-          <div className="ha-kpi-label">Bookings This Month</div>
+          <div className="ha-kpi-label">Total Bookings</div>
           <div className="ha-kpi-val">{(data?.data?.totals?.bookings ?? 0).toLocaleString()}</div>
           <div className="ha-kpi-change up">Tenant bookings</div>
         </div>
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Platform Revenue</div>
-          <div className="ha-kpi-val">{Math.round(data?.data?.totals?.platformRevenue || 0).toLocaleString()}</div>
+          <div className="ha-kpi-val">{formatMoney(data?.data?.totals?.platformRevenueInPaisa || 0)}</div>
           <div className="ha-kpi-change up">Commission earned</div>
         </div>
       </div>
@@ -139,6 +141,10 @@ const AdminDashboardPage = () => {
         </div>
       </div>
       {/* </div> */}
+      <div className="ha-row-2">
+        <MetricChart title="Bookings by Status" points={(data?.data?.charts?.bookingStatuses || []).map(item=>({label:item._id,value:item.count}))} />
+        <MetricChart title="Monthly Paid Revenue" points={(data?.data?.charts?.revenueByMonth || []).map(item=>({label:item._id,value:item.amountInPaisa}))} format={formatMoney} />
+      </div>
     </>
   );
 };

@@ -19,6 +19,9 @@ interface CreateAdminPayload {
 
 interface ListAdminsParams {
   search?: string;
+  role?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 export const adminService = {

@@ -73,9 +73,9 @@ export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: R
   // on them (and paginating correctly afterward) needs a second $match post-lookup,
   // with a $facet to get the total alongside the paginated page.
   const computedMatch: Record<string, unknown> = {};
-  const bookingsRange = numericRange(bookingsMin, bookingsMax);
+  const bookingsRange = numericRange(bookingsMin, bookingsMax, req.query.bookingsOp);
   if (bookingsRange) computedMatch.bookingsCount = bookingsRange;
-  const spentRange = numericRange(spentMin, spentMax);
+  const spentRange = numericRange(spentMin, spentMax, req.query.spentOp);
   if (spentRange) computedMatch.totalSpentInPaisa = spentRange;
 
   const pipeline: mongoose.PipelineStage[] = [

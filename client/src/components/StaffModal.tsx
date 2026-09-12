@@ -92,11 +92,28 @@ export const staffDefaults = {
     services: [],
   },
 };
-const StaffModal = () => {
+export type StaffEditRecord = {
+  _id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  bankAccount?: string;
+  location?: { city?: string; country?: string };
+  staffDetails?: Partial<Omit<z.infer<typeof staffSchema>['staffDetails'], 'services'>> & { services?: (string | {_id: string; name?: string})[]; employeeId?: string };
+};
+const StaffModal = ({ staff }: { staff?: StaffEditRecord } = {}) => {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [onClose, setOnClose] = useState(true);
   const invalidate = useInvalidate();
+  const [saving, setSaving] = useState(false);
+  const defaults = staff ? {
+    ...staffDefaults, ...staff, location: {...staffDefaults.location,...staff.location},
+    staffDetails: {...staffDefaults.staffDetails,...staff.staffDetails,
+      joiningDate: staff.staffDetails?.joiningDate?.slice(0,10) || '',
+      services: (staff.staffDetails?.services || []).map(service=>typeof service === 'string' ? service : service._id),
+    },
+  } : staffDefaults;
 
   const servicesReq = useApi(
     () => serviceService.list({ page: 1, limit: 50 }),
@@ -105,26 +122,30 @@ const StaffModal = () => {
   const createStaff = async (data) => {
     setFormError("");
     setFormSuccess("");
+    setSaving(true);
     try {
-      const result = await staffService.create({
+      const payload = {
         name: data.name,
         email: data.email,
         phone: data.phone,
         bankAccount: data.bankAccount,
         location: data.location,
         staffDetails: data.staffDetails,
-      });
-      setFormSuccess("Staff created successfully");
+      };
+      const result = staff ? await staffService.update(staff._id, payload) : await staffService.create(payload);
+      setFormSuccess(staff ? 'Staff updated successfully' : 'Staff created successfully');
       invalidate();
       setOnClose(true);
       return { success: true, data: result.data };
     } catch (err) {
-      setFormError(err.response?.data?.message || "Failed to create service");
+      setFormError(err.response?.data?.message || "Failed to save staff");
       throw err;
+    } finally {
+      setSaving(false);
     }
   };
   return (
-    <div className="ml-auto">
+    <div className="ha-staff-trigger">
       <button
         type="button"
         className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-2 text-sm font-semibold text-slate-900"
@@ -132,17 +153,17 @@ const StaffModal = () => {
           setOnClose(false);
         }}
       >
-        + Add Staff
+        {staff ? 'Edit' : '+ Add Staff'}
       </button>
       {!onClose && (
         <Form
           schema={staffSchema}
-          defaultValues={staffDefaults}
+          defaultValues={defaults}
           onSubmit={createStaff}
           className="grid gap-5"
         >
           <GenericModal
-            title="+ Add Staff"
+            title={staff ? 'Edit Staff' : '+ Add Staff'}
             onClose={() => {
               setOnClose(true);
             }}
@@ -150,9 +171,10 @@ const StaffModal = () => {
               <div>
                 <button
                   type="submit"
+                  disabled={saving}
                   className="rounded-xl border border-[var(--border)] bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900"
                 >
-                  Add Staff
+                  {saving ? 'Saving...' : staff ? 'Save Staff' : 'Add Staff'}
                 </button>
               </div>
             }
@@ -243,6 +265,8 @@ const StaffModal = () => {
               <FormInput
                 name="staffDetails.commissionPercentage"
                 type="number"
+                min={0}
+                max={100}
                 label="Commission %"
                 placeholder="0"
               />

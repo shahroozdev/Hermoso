@@ -59,6 +59,7 @@ const statusPillClass = (status: string) => {
 const bookingIdOf = (id: string) => `#HRM-${id.slice(-4).toUpperCase()}`;
 
 const AdminBookingsPage = () => {
+  const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
   const statsReq = useApi(() => bookingService.getStats(), ["booking-stats"]);
@@ -113,6 +114,7 @@ const AdminBookingsPage = () => {
   );
 
   const clearFilters = () => {
+    setComparisons({});
     setBookingIdSearch('');
     setCustomerSearch('');
     setSalonSearch('');
@@ -126,6 +128,7 @@ const AdminBookingsPage = () => {
   };
 
   const filterParams = {
+    ...comparisons,
     ...(bookingIdSearch ? { bookingId: bookingIdSearch } : {}),
     ...(customerSearch ? { customer: customerSearch } : {}),
     ...(salonSearch ? { salon: salonSearch } : {}),
@@ -185,7 +188,7 @@ const AdminBookingsPage = () => {
           </span>
         </div>
 
-        <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="ha-filter-bar">
           <input
             type="text"
             className="ha-input"
@@ -243,8 +246,8 @@ const AdminBookingsPage = () => {
 
         {showMoreFilters && (
           <div className="ha-card" style={{ marginBottom: 12, background: 'var(--surface-soft)' }}>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-              <RangeFilter label="Amount" min={amountMin} max={amountMax} onMin={setAmountMin} onMax={setAmountMax} />
+            <div className="ha-filter-grid">
+              <RangeFilter operator={comparisons.amountOp} onOperator={op => setComparisons(prev => ({...prev, amountOp: op}))} label="Amount" min={amountMin} max={amountMax} onMin={setAmountMin} onMax={setAmountMax} />
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted">Select Period</label>
                 <SearchableSelect

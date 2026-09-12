@@ -56,10 +56,10 @@ export const getServices = asyncHandler(
     if (req.query.description) query.description = new RegExp(String(req.query.description).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     if (aiScanLink) query.aiScanLink = aiScanLink;
 
-    const durationRange = numericRange(durationMin, durationMax);
+    const durationRange = numericRange(durationMin, durationMax, req.query.durationOp);
     if (durationRange) query.duration = durationRange;
 
-    const priceRange = numericRange(priceMin, priceMax);
+    const priceRange = numericRange(priceMin, priceMax, req.query.priceOp);
     if (priceRange) query.priceInPaisa = priceRange;
 
     const data = await Service.find(query)
