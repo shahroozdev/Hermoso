@@ -1,4 +1,5 @@
-﻿import { useMemo, useState } from "react";
+import { useConfirmAction } from '@/hooks/useConfirmAction';
+import { useMemo, useState } from "react";
 import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
 import { useApi } from "../../hooks/useApi";
@@ -25,6 +26,7 @@ const statusClass = (status) => {
 };
 
 const AdminSalonsPage = () => {
+  const confirmation = useConfirmAction();
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -83,7 +85,8 @@ const AdminSalonsPage = () => {
     ];
   }, [data]);
 
-  const patchStatus = async (id, status) => {
+  const patchStatus = (id, status) => confirmation.ask(status === 'suspended' ? 'Suspend Salon' : 'Activate Salon', 'Confirm this salon status change?', () => patchStatusNow(id, status));
+  const patchStatusNow = async (id, status) => {
     setErrorAction("");
     setPendingActionId(id);
     try {
@@ -372,6 +375,7 @@ const AdminSalonsPage = () => {
       )}
 
       {viewSalon && <SalonViewModal salon={viewSalon} onClose={() => setViewSalon(null)} />}
+    {confirmation.modal}
     </>
   );
 };

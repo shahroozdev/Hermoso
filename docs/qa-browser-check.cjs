@@ -91,7 +91,7 @@ const results = [];
    const req=page.waitForRequest(r=>r.url().includes('grossMin=10000')&&r.url().includes('grossOp=gt'));await page.getByLabel('Gross PKR value').fill('100');await req;
    await page.getByRole('button',{name:'Clear Filters',exact:true}).click();assert.equal(await op.inputValue(),'gte');
    const controls=await page.getByText('Commission Rate Controls',{exact:true}).boundingBox();const report=await page.getByText('Revenue by Salon This Month',{exact:true}).boundingBox();assert.ok(controls.y<report.y);
-   assert.ok((await page.getByRole('button',{name:'Save Commission Rules'}).boundingBox()).width<230);
+   await page.getByRole('button',{name:'Edit Commission Rates'}).click();assert.ok((await page.getByRole('button',{name:'Save Commission Rules'}).boundingBox()).width<230);await page.getByRole('button',{name:'Close modal'}).click();
   });
   await check('BUG-192/193/194/195 compact settings and filtered admin export',async()=>{
    await page.goto(base+'/admin/settings');await page.getByLabel('Role',{exact:true}).selectOption('admin');await page.getByLabel('From Date',{exact:true}).fill('2026-09-01');await page.getByLabel('To Date',{exact:true}).fill('2026-09-12');

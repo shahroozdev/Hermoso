@@ -1728,3 +1728,35 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 }
 @media (max-width: 1000px) { .ha-settings-layout { grid-template-columns: 1fr; } }
 @media (max-width: 768px) { .ha-notifications-page { height: auto; } .ha-notifications-panel .ha-table-scroll { max-height: 50dvh; } .ha-kpi-row { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* September QA: consistent headings, bounded filters and record-only scrolling. */
+.ha-card > .ha-card-title { padding: 8px 4px; margin-bottom: 10px; }
+.ha-filter-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 210px)); justify-content: start; }
+.ha-staff-filters { grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); }
+.ha-range-filter { width: 100%; max-width: 210px; }
+.ha-range-controls { width: 100%; }
+.ha-range-controls .ha-input { height: 32px; min-height: 32px; padding: 5px 7px; font-size: 12px; }
+.ha-service-filters { align-items: end; }
+.ha-password-form { width: 100%; max-width: 380px; }
+.ha-password-form input { min-height: 34px; height: 36px; padding-top: 6px; padding-bottom: 6px; font-size: 13px; }
+.ha-password-form button[type=submit] { padding: 8px 12px; }
+.ha-hours-time > .ha-time-control { flex: 0 0 106px; width: 106px; }
+.ha-hours-time .ha-time-control input { width: 106px; height: 32px; min-height: 32px; padding: 5px 30px 5px 7px; font-size: 12px; }
+.ha-hours-row { gap: 8px; padding: 8px 0; }
+.ha-modal-body:has(.ha-salon-services) { overflow-y: auto; }
+.ha-salon-services { flex: 0 0 auto; overflow: visible; }
+.ha-salon-services .ha-records-table { flex: 0 0 auto; }
+.ha-salon-services .ha-table-scroll { flex: 0 0 auto; height: 280px; min-height: 280px; max-height: 280px; overflow: auto; }
+.ha-salon-services .ha-table-scroll tbody tr { height: 48px; }
+.ha-records-toolbar, .ha-commission-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.ha-commission-summary { flex-shrink: 0; }
+.ha-revenue-page, .ha-revenue-body, .ha-revenue-records { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
+.ha-revenue-page { height: 100%; }
+.ha-revenue-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-revenue-body, .ha-revenue-records { flex: 1; }
+.ha-revenue-records > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-revenue-records > .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-revenue-records .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-revenue-records .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-revenue-records thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media(max-width:768px) { .ha-revenue-page { height: auto; } .ha-revenue-records .ha-table-scroll { max-height: 50dvh; } .ha-filter-grid { grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); } }

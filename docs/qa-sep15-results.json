@@ -1,0 +1,19 @@
+{
+  "passed": [
+    "Owner bookings filters, reset and matching export",
+    "Owner customers filters, reset and matching export",
+    "Owner reviews filters, reset and matching export",
+    "Owner revenue filters, reset and matching export",
+    "Owner export traverses every filtered page",
+    "salons confirmation cancels without mutation and confirms once",
+    "owners confirmation cancels without mutation and confirms once",
+    "customers confirmation cancels without mutation and confirms once",
+    "bookings confirmation cancels without mutation and confirms once",
+    "reviews confirmation cancels without mutation and confirms once",
+    "BUG-133 salon service comparison filters and fixed table height",
+    "BUG-176 and 196 compact ranges and correct password form",
+    "BUG-202 and 225 commission popup and records-only scrolling",
+    "BUG-211 compact working-hour fields",
+    "New owner pages fit laptop widths"
+  ]
+}

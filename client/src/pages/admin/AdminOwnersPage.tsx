@@ -1,3 +1,4 @@
+import { useConfirmAction } from '@/hooks/useConfirmAction';
 import { useState } from "react";
 import TABLE from "@/components/table";
 import ErrorBlock from "../../components/ErrorBlock";
@@ -20,6 +21,7 @@ const ownerStatusLabel = (owner: OwnerRecord) => {
 };
 
 const AdminOwnersPage = () => {
+  const confirmation = useConfirmAction();
   const { ownerModalOpen, setOwnerModal } = useUIStore();
   const { showToast } = useToastStore();
   const [errorAction, setErrorAction] = useState("");
@@ -65,7 +67,8 @@ const AdminOwnersPage = () => {
     }
   };
 
-  const patchStatus = async (id: string, currentStatus: string | undefined) => {
+  const patchStatus = (id: string, currentStatus: string | undefined) => confirmation.ask(currentStatus === 'active' ? 'Suspend Salon Owner' : 'Activate Salon Owner', 'Confirm this salon owner status change?', () => patchStatusNow(id, currentStatus));
+  const patchStatusNow = async (id: string, currentStatus: string | undefined) => {
     setErrorAction("");
     const nextStatus = currentStatus === "suspended" || currentStatus === "inactive" ? "active" : "suspended";
     try {
@@ -242,6 +245,7 @@ const AdminOwnersPage = () => {
           onClose={() => setNewOwnerCredentials(null)}
         />
       )}
+    {confirmation.modal}
     </>
   );
 };

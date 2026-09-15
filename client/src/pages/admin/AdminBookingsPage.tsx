@@ -1,3 +1,4 @@
+import { useConfirmAction } from '@/hooks/useConfirmAction';
 import { useMemo, useState } from 'react';
 import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
@@ -59,6 +60,7 @@ const statusPillClass = (status: string) => {
 const bookingIdOf = (id: string) => `#HRM-${id.slice(-4).toUpperCase()}`;
 
 const AdminBookingsPage = () => {
+  const confirmation = useConfirmAction();
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
@@ -97,7 +99,8 @@ const AdminBookingsPage = () => {
     setToDate(range.to);
   };
 
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleStatusUpdate = (id: string, status: string) => confirmation.ask(status === 'cancelled' ? 'Cancel Booking' : 'Confirm Booking', 'Confirm this booking status change?', () => handleStatusUpdateNow(id, status));
+  const handleStatusUpdateNow = async (id: string, status: string) => {
     try {
       await bookingService.updateStatus(id, status);
       invalidate();
@@ -335,6 +338,7 @@ const AdminBookingsPage = () => {
           }
         />
       </div>
+    {confirmation.modal}
     </>
   );
 };

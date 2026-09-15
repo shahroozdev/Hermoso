@@ -4,6 +4,8 @@ interface CustomerParams {
   page?: number;
   limit?: number;
   search?: string;
+  name?: string;
+  email?: string;
   status?: string;
   bookingsMin?: number | string;
   bookingsMax?: number | string;

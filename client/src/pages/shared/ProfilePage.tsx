@@ -136,7 +136,7 @@ const ProfilePage = () => {
           schema={profileSchema}
           defaultValues={profileDefaults}
           onSubmit={onProfileSubmit}
-          className="ha-password-form mt-5 grid gap-3"
+          className="mt-5 grid gap-3"
         >
           <div className="grid gap-4 md:grid-cols-2">
             <FormInput
@@ -228,7 +228,7 @@ const ProfilePage = () => {
           schema={passwordSchema}
           defaultValues={emptyPasswordDefaults}
           onSubmit={onPasswordSubmit}
-          className="mt-5 grid gap-4"
+          className="ha-password-form mt-5 grid gap-3"
         >
           <FormInput
             name="currentPassword"

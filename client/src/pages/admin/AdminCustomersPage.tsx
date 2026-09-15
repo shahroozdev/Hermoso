@@ -1,3 +1,4 @@
+import { useConfirmAction } from '@/hooks/useConfirmAction';
 import { useMemo, useState } from "react";
 import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
@@ -74,6 +75,7 @@ const formatJoinedDate = (createdAt?: string) =>
     : "-";
 
 const AdminCustomersPage = () => {
+  const confirmation = useConfirmAction();
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -117,7 +119,8 @@ const AdminCustomersPage = () => {
     setToDate(range.to);
   };
 
-  const handleFlag = async (id: string, currentStatus: string | undefined) => {
+  const handleFlag = (id: string, currentStatus: string | undefined) => confirmation.ask(currentStatus === 'suspended' || currentStatus === 'inactive' ? 'Unflag Customer' : 'Flag Customer', 'Confirm this customer flag change?', () => handleFlagNow(id, currentStatus));
+  const handleFlagNow = async (id: string, currentStatus: string | undefined) => {
     const isFlagged =
       currentStatus === "suspended" || currentStatus === "inactive";
     const newStatus = isFlagged ? "active" : "suspended";
@@ -450,6 +453,7 @@ const AdminCustomersPage = () => {
           onClose={() => setViewingId(null)}
         />
       )}
+    {confirmation.modal}
     </>
   );
 };

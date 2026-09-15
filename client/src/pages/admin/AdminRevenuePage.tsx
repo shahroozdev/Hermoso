@@ -1,3 +1,4 @@
+import GenericModal from '@/components/GenericModal';
 import { useMemo, useState } from "react";
 import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
@@ -35,6 +36,7 @@ const compactMoney = (valueInPaisa: number) => {
 };
 
 const AdminRevenuePage = () => {
+  const [showCommission, setShowCommission] = useState(false);
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   // `ratesOverride` holds the user's in-progress edits; until they touch a field,
   // the displayed rates are derived straight from the loaded settings (no effect
@@ -123,6 +125,7 @@ const AdminRevenuePage = () => {
       await settingsService.update({ commissionRules: rates });
       invalidate(["platform-settings"]);
       setRatesOverride(null);
+      setShowCommission(false);
       showToast("Commission rules saved successfully.");
     } catch (err) {
       const message =
@@ -140,7 +143,7 @@ const AdminRevenuePage = () => {
   if (settingsReq.error) return <ErrorBlock text={settingsReq.error} />;
 
   return (
-    <>
+    <div className="ha-revenue-page">
       <div className="ha-kpi-row">
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Total GMV This Month</div>
@@ -170,9 +173,9 @@ const AdminRevenuePage = () => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="ha-card ha-commission-controls">
-          <div className="ha-card-title">Commission Rate Controls</div>
+      <div className="ha-revenue-body">
+        <div className="ha-card ha-commission-summary"><div><strong>Commission Rate Controls</strong><p className="text-xs text-muted">Default {loadedRates.defaultRate}% · VIP {loadedRates.vipRate}% · Events {loadedRates.eventRate}% · Promo {loadedRates.promoRate}%</p></div><button className="ha-act-btn" onClick={()=>setShowCommission(true)}>Edit Commission Rates</button></div>
+        {showCommission && <GenericModal title="Commission Rate Controls" onClose={()=>{if(!saving){setShowCommission(false);setRatesOverride(null);}}}>
           <div className="ha-commission-grid">
             {[
               {
@@ -213,7 +216,7 @@ const AdminRevenuePage = () => {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <input
-                    className="ha-input"
+                    className="ha-input" type="number" min="0" max="100" aria-label={row.title}
                     style={{
                       width: 64,
                       textAlign: "center",
@@ -238,6 +241,7 @@ const AdminRevenuePage = () => {
             className="ha-topbar-btn primary"
             style={{
               width: "auto",
+              alignSelf: "flex-start",
               marginTop: 16,
               paddingTop: 10,
               paddingBottom: 10,
@@ -247,8 +251,9 @@ const AdminRevenuePage = () => {
           >
             {saving ? "Saving..." : "Save Commission Rules"}
           </button>
-        </div>
-        <div className="ha-card" style={{ paddingBottom: 0 }}>
+
+        </GenericModal>}
+        <div className="ha-card ha-revenue-records" style={{ paddingBottom: 0 }}>
           <div className="ha-card-title">Revenue by Salon This Month</div>
 
           <div className="ha-filter-bar"
@@ -370,7 +375,7 @@ const AdminRevenuePage = () => {
 
 
       </div>
-    </>
+    </div>
   );
 };
 

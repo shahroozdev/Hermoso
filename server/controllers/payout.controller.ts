@@ -1,3 +1,4 @@
+import { dateRange } from '../utils/dateRange.js';
 import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { Payout } from '../models/Payout.js';
@@ -86,19 +87,13 @@ export const getPayouts = asyncHandler(async (req: AuthRequest, res: Response) =
     query.salonId = req.user?.salonId;
   }
 
+  const payoutRange = dateRange(req.query.payoutFrom, req.query.payoutTo);
+  if (payoutRange) query.payoutDate = payoutRange;
   const netRange = numericRange(netMin, netMax, req.query.netOp);
   if (netRange) query.amountInPaisa = netRange;
 
-  if (dateFrom || dateTo) {
-    const range: Record<string, Date> = {};
-    if (dateFrom) range.$gte = new Date(dateFrom as string);
-    if (dateTo) {
-      const end = new Date(dateTo as string);
-      end.setHours(23, 59, 59, 999);
-      range.$lte = end;
-    }
-    query.createdAt = range;
-  }
+  const createdRange = dateRange(dateFrom, dateTo);
+  if (createdRange) query.createdAt = createdRange;
 
   // salon-name and bank-account filters need the joined salon/owner docs, so
   // they're applied in a second $match after the lookups below (same pattern

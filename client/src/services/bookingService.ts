@@ -12,6 +12,7 @@ interface BookingParams {
   customer?: string;
   salon?: string;
   service?: string;
+  staff?: string;
   amountMin?: number | string;
   amountMax?: number | string;
 }

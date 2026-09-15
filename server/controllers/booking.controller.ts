@@ -1,3 +1,4 @@
+import { literalRegex } from '../utils/literalRegex.js';
 import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { Booking, type IBooking } from '../models/Booking.js';
@@ -452,6 +453,7 @@ export const getBookings = asyncHandler(async (req: AuthRequest, res: Response) 
 
   if (customer) pipeline.push({ $match: { 'customerId.name': new RegExp(customer as string, 'i') } });
   if (salon) pipeline.push({ $match: { 'salonId.name': new RegExp(salon as string, 'i') } });
+  if (req.query.staff) pipeline.push({ $match: { 'staffId.name': literalRegex(req.query.staff) } });
   if (service) pipeline.push({ $match: { 'serviceId.name': new RegExp(service as string, 'i') } });
   if (bookingId) {
     const sanitized = sanitizeBookingIdSearch(bookingId as string);

@@ -7,6 +7,8 @@ interface PayoutParams {
   status?: string;
   search?: string;
   bankAccount?: string;
+  payoutFrom?: string;
+  payoutTo?: string;
   dateFrom?: string;
   dateTo?: string;
   netMin?: number | string;

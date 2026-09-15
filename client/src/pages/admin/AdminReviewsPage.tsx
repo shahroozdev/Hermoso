@@ -1,3 +1,4 @@
+import { useConfirmAction } from '@/hooks/useConfirmAction';
 import { useMemo, useState } from 'react';
 import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
@@ -26,6 +27,7 @@ const stars = (rating: number) => {
 };
 
 const AdminReviewsPage = () => {
+  const confirmation = useConfirmAction();
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
   const statsReq = useApi(() => reviewService.getStats(), ["review-stats"]);
@@ -63,7 +65,8 @@ const AdminReviewsPage = () => {
     ...(search ? { search } : {}),
   };
 
-  const moderate = async (id: string, status: string) => {
+  const moderate = (id: string, status: string) => confirmation.ask(status === 'approved' ? 'Approve Review' : status === 'deleted' ? 'Remove Review' : 'Investigate Review', 'Confirm this review moderation action?', () => moderateNow(id, status));
+  const moderateNow = async (id: string, status: string) => {
     try {
       await reviewService.moderate(id, status as 'approved' | 'flagged' | 'deleted');
       invalidate();
@@ -213,6 +216,7 @@ const AdminReviewsPage = () => {
           onCancel={() => setConfirmModerateAll(false)}
         />
       )}
+    {confirmation.modal}
     </>
   );
 };

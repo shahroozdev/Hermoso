@@ -9,6 +9,8 @@ import { useInvalidate } from "@/hooks/useInvalidate";
 import { useToastStore } from "@/store/toastStore";
 import { formatMoney } from "@/utils/money";
 import { truncateWords } from "@/utils";
+import RangeFilter from './form/RangeFilter';
+import { rupeesToPaisa } from '@/utils/money';
 
 const aiScanLabel = (value?: string) => AI_SCAN_CATEGORIES.find((c) => c.value === value)?.label || "-";
 
@@ -51,6 +53,11 @@ const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
 const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [serviceSearch, setServiceSearch] = useState("");
+  const [filters, setFilters] = useState<Record<string,string>>({});
+  const setFilter = (key: string, value: string) => setFilters(prev=>({...prev,[key]:value}));
+  const serviceParams = {salonId: salon._id, search: serviceSearch, ...filters,
+    ...(filters.priceMin ? {priceMin: rupeesToPaisa(filters.priceMin)} : {}),
+    ...(filters.priceMax ? {priceMax: rupeesToPaisa(filters.priceMax)} : {})};
   const [deletingService, setDeletingService] = useState<ServiceItem | null>(null);
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
@@ -105,7 +112,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
         </div>
 
         {salon._id && (
-          <div className="ha-modal-scroll-section" style={{ marginTop: 20 }}>
+          <div className="ha-modal-scroll-section ha-salon-services" style={{ marginTop: 20 }}>
             <div className="flex items-center justify-between" style={{ marginBottom: 10, flexShrink: 0 }}>
               <h4 className="text-sm font-semibold">Services</h4>
               {isSuspended ? (
@@ -114,6 +121,7 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
                 <ServiceModal salonId={salon._id} />
               )}
             </div>
+            <div className="ha-filter-grid">
             <input
               type="text"
               className="ha-input"
@@ -122,12 +130,18 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
               value={serviceSearch}
               onChange={(e) => setServiceSearch(e.target.value)}
             />
+            <label>Category<input className="ha-input" aria-label="Service category" value={filters.category || ''} onChange={e=>setFilter('category',e.target.value)} /></label>
+            <label>Description<input className="ha-input" aria-label="Service description" value={filters.description || ''} onChange={e=>setFilter('description',e.target.value)} /></label>
+            <label>AI Scan<select className="ha-input" aria-label="AI Scan" value={filters.aiScanLink || ''} onChange={e=>setFilter('aiScanLink',e.target.value)}><option value="">All</option>{AI_SCAN_CATEGORIES.filter(c=>c.value).map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
+            {['duration','price'].map(field=><RangeFilter key={field} label={field === 'duration' ? 'Duration (min)' : 'Price'} min={filters[field+'Min']||''} max={filters[field+'Max']||''} onMin={v=>setFilter(field+'Min',v)} onMax={v=>setFilter(field+'Max',v)} operator={filters[field+'Op']} onOperator={v=>setFilter(field+'Op',v)} />)}
+            <button className="ha-btn-secondary" onClick={()=>{setServiceSearch('');setFilters({});}}>Reset Filters</button>
+            </div>
             <TABLE<ServiceItem>
               noBorder
               showPagination
               queryKey={["salon-services", salon._id]}
               service={serviceService.list}
-              serviceParams={{ salonId: salon._id, search: serviceSearch }}
+              serviceParams={serviceParams}
               columns={[
                 { title: "Name" },
                 { title: "Category" },

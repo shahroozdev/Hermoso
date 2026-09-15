@@ -1,3 +1,5 @@
+import { literalRegex } from '../utils/literalRegex.js';
+import { dateRange } from '../utils/dateRange.js';
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { Booking } from '../models/Booking.js';
@@ -23,6 +25,11 @@ export const getCustomers = asyncHandler(async (req: AuthRequest, res: Response)
     query._id = { $in: customerIds };
   }
 
+  if (req.query.name) query.name = literalRegex(req.query.name);
+  if (req.query.email) query.email = literalRegex(req.query.email);
+  if (req.query.status) query.status = req.query.status;
+  const joinedRange = dateRange(req.query.fromDate, req.query.toDate);
+  if (joinedRange) query.createdAt = joinedRange;
   const customers = await User.find(query)
     .select('-password')
     .sort({ createdAt: -1 })
@@ -57,12 +64,8 @@ export const getCustomersOverview = asyncHandler(async (req: AuthRequest, res: R
 
   if (status) query.status = status;
 
-  if (fromDate || toDate) {
-    const createdAtRange: Record<string, Date> = {};
-    if (fromDate) createdAtRange.$gte = new Date(fromDate as string);
-    if (toDate) createdAtRange.$lte = new Date(toDate as string);
-    if (Object.keys(createdAtRange).length) query.createdAt = createdAtRange;
-  }
+  const createdRange = dateRange(fromDate, toDate);
+  if (createdRange) query.createdAt = createdRange;
 
   if (req.user?.role === Roles.SALON_OWNER || req.user?.role === Roles.STAFF) {
     const customerIds = await Booking.distinct('customerId', { salonId: req.user.salonId });

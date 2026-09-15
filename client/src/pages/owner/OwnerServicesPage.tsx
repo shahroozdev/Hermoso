@@ -119,7 +119,7 @@ const OwnerServicesPage = () => {
         </span>
       </div>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <div className="ha-filter-grid ha-service-filters">
         <input
           type="text"
           className="ha-input"

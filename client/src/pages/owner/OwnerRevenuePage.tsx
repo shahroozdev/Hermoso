@@ -1,35 +1,9 @@
-import { payoutService } from '../../services/payoutService';
-import { formatMoney } from '../../utils/money';
-import TABLE from "@/components/table";
-
-interface PayoutItem {
-  amountInPaisa?: number;
-  status?: string;
-  createdAt?: string;
-  payoutDate?: string;
-}
-
-const OwnerRevenuePage = () => {
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Revenue</h2>
-      <TABLE<PayoutItem>
-        title="Payouts"
-        queryKey={["owner-payouts"]}
-        showPagination
-        service={payoutService.list}
-        columns={[{ title: 'Amount' }, { title: 'Status' }, { title: 'Created' }, { title: 'Payout Date' }]}
-        rows={(data) =>
-          data?.map((item) => [
-            formatMoney(item.amountInPaisa),
-            item.status,
-            item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-',
-            item.payoutDate ? new Date(item.payoutDate).toLocaleDateString() : '-',
-          ])
-        }
-      />
-    </div>
-  );
-};
-
-export default OwnerRevenuePage;
+import OwnerRecordsPage from '@/components/OwnerRecordsPage';
+import { payoutService } from '@/services/payoutService';
+import { rupeesToPaisa } from '@/utils/money';
+interface Payout {amountInPaisa?:number;status?:string;createdAt?:string;payoutDate?:string}
+const row=(item:Payout)=>[item.amountInPaisa==null?'':(item.amountInPaisa/100).toFixed(2),item.status||'',item.createdAt?.slice(0,10)||'',item.payoutDate?.slice(0,10)||''];
+export default function OwnerRevenuePage(){return <OwnerRecordsPage<Payout> title="Revenue" queryKey="owner-payouts" service={payoutService.list}
+ filters={[{key:'netMin',label:'Amount From (PKR)',type:'number'},{key:'netMax',label:'Amount To (PKR)',type:'number'},{key:'status',label:'Status',options:['pending','processing','completed','failed']},{key:'dateFrom',label:'Created From',type:'date'},{key:'dateTo',label:'Created To',type:'date'},{key:'payoutFrom',label:'Payout From',type:'date'},{key:'payoutTo',label:'Payout To',type:'date'}]}
+ mapParams={values=>({...values,...(values.netMin!==undefined?{netMin:rupeesToPaisa(values.netMin)}:{}),...(values.netMax!==undefined?{netMax:rupeesToPaisa(values.netMax)}:{})})}
+ columns={['Amount (PKR)','Status','Created','Payout Date']} exportRow={row} rows={items=>items.map(row)}/>;}

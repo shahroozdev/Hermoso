@@ -51,7 +51,7 @@ const TABLE = <T,>({
   const tableRows = typeof rows === "function" ? rows(items) : (rows ?? []);
 
   return (
-    <div className={noBorder?"":"ha-card"}>
+    <div className={noBorder?"ha-records-table":"ha-card ha-records-table"}>
       {title ? <div className="ha-card-title">{title}</div> : null}
       {error ? <div className="ha-error-banner">{error}</div> : null}
       <DataTable columns={columns} rows={tableRows} loading={loading} />

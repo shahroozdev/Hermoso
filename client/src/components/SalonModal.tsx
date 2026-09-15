@@ -488,6 +488,7 @@ const WorkingHours = () => {
                 <Time24Input
                   className="ha-input ha-input-sm"
                   value={h.open}
+                  aria-label={`${day} start time`}
                   onChange={(e) =>
                     setValue(`workingHours.${day}.open`, e.target.value)
                   }
@@ -496,6 +497,7 @@ const WorkingHours = () => {
                 <Time24Input
                   className="ha-input ha-input-sm"
                   value={h.close}
+                  aria-label={`${day} end time`}
                   onChange={(e) =>
                     setValue(`workingHours.${day}.close`, e.target.value)
                   }
@@ -509,6 +511,7 @@ const WorkingHours = () => {
                   max="23:59"
                   className="ha-input ha-input-sm"
                   value={h.breakStart}
+                  aria-label={`${day} break start`}
                   onChange={(e) =>
                     setValue(`workingHours.${day}.breakStart`, e.target.value)
                   }
@@ -519,6 +522,7 @@ const WorkingHours = () => {
                   max="23:59"
                   className="ha-input ha-input-sm"
                   value={h.breakEnd}
+                  aria-label={`${day} break end`}
                   onChange={(e) =>
                     setValue(`workingHours.${day}.breakEnd`, e.target.value)
                   }
