@@ -25,12 +25,14 @@ const LoginPage = () => {
   const { setAuth } = useAuthStore();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
   const normalizedRole = (role?: string) => role === 'admin' ? 'super_admin' : role;
 
   const onSubmit = async (form) => {
     setIsLoading(true);
     setError('');
+    setUnverifiedEmail('');
     try {
       const { rememberMe, ...payload } = form;
       const result = await authService.login(payload);
@@ -44,7 +46,8 @@ const LoginPage = () => {
       else navigate('/customer/salons');
     } catch (err) {
       if (err.response?.data?.code === 'ACCOUNT_NOT_VERIFIED') {
-        navigate(`/verify-otp?email=${encodeURIComponent(form.email)}`);
+        setUnverifiedEmail(form.email);
+        setError(err.response?.data?.message || 'Your account is registered but not verified yet.');
         return;
       }
       setError(err.response?.data?.message || 'Login failed');
@@ -88,9 +91,14 @@ const LoginPage = () => {
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
         <p className="mt-4 text-sm text-slate-500">No account? <Link to="/register" className="text-primary">Register</Link></p>
-        <p className="mt-1 text-sm text-slate-500">
-          Registered but not verified? <Link to="/verify-otp" className="text-primary">Resume OTP verification</Link>
-        </p>
+        {unverifiedEmail ? (
+          <p className="mt-1 text-sm text-slate-500">
+            Registered but not verified?{' '}
+            <Link to={`/verify-otp?email=${encodeURIComponent(unverifiedEmail)}`} className="text-primary">
+              Resume OTP verification
+            </Link>
+          </p>
+        ) : null}
       </Form>
     </div>
   );

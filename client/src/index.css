@@ -194,11 +194,25 @@ textarea::placeholder {
   --glow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 .ha-table-scroll {
+  display: flex;
+  flex-direction: column;
   overflow-x: auto;
   overflow-y: auto;
   max-height: 520px;
   scrollbar-width: thin;
   scrollbar-color: #888 transparent;
+}
+
+.ha-table-scroll > table {
+  flex: none;
+}
+
+.ha-table-empty {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Inside a modal, .ha-modal-body scrolling AND a nested table scrolling at the
@@ -1660,10 +1674,36 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* QA round 2: compact laptop density, measured against content and viewport size. */
 .ha-range-filter { min-width: 0; }
-.ha-range-controls { display: flex; align-items: center; gap: 4px; }
-.ha-range-controls > select.ha-input { flex: 0 0 48px; width: 48px; padding: 5px; }
-.ha-range-controls > div { flex: 1; min-width: 0; }
+.ha-range-controls { display: flex; align-items: center; }
 .ha-range-controls input { width: 100%; }
+
+/* Combo field: operator select + value input(s) rendered as one merged control
+   instead of separate boxes, so comparison filters take less space. */
+.ha-combo-field { display: flex; align-items: center; }
+.ha-combo-field > select,
+.ha-combo-field > input {
+  border-radius: 0;
+  min-width: 0;
+}
+.ha-combo-field > select:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.ha-combo-field > :last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.ha-combo-field > select + input,
+.ha-combo-field > input + input {
+  border-left: none;
+}
+.ha-combo-field > select:focus,
+.ha-combo-field > input:focus {
+  position: relative;
+  z-index: 1;
+}
+.ha-combo-field > select.ha-input { flex: 0 0 48px; width: 48px; padding: 5px; }
+.ha-combo-field > input { flex: 1; }
 .ha-filter-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(138px,1fr)); gap: 8px; align-items: end; }
 .ha-filter-grid > *, .ha-filter-grid label, .ha-filter-grid span { min-width: 0 !important; max-width: 100%; }
 .ha-filter-grid label { display: block; font-size: 11px; color: var(--text-muted); }
@@ -1700,8 +1740,18 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .ha-settings-layout { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 2fr); gap: 14px; align-items: start; }
 .ha-settings-layout .ha-setting-row { padding: 10px 0; gap: 10px; }
 .ha-settings-layout .ha-filter-grid { grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); }
-.ha-commission-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
-.ha-commission-controls { margin-bottom: 12px; }
+.ha-commission-overview-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.ha-commission-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.ha-commission-tile { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--surface-soft); display: flex; flex-direction: column; gap: 4px; }
+.ha-commission-tile-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.ha-commission-tile-value { font-size: 24px; font-weight: 800; color: var(--gold-light); }
+.ha-commission-tile-sub { font-size: 12px; color: var(--text-muted); }
+
+.ha-commission-edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.ha-commission-edit-row { display: grid; grid-template-columns: 1fr 96px; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-soft); }
+.ha-commission-edit-control { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.ha-commission-edit-control .ha-input { width: 100%; min-height: 38px; text-align: center; font-weight: 700; padding: 6px 8px; }
+.ha-commission-edit-suffix { color: var(--text-muted); font-weight: 600; }
 .ha-password-form { max-width: 560px; }
 .ha-metric-chart ul { display: flex; flex-direction: column; gap: 10px; max-height: 210px; overflow: auto; }
 .ha-metric-chart li > div:first-child { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; text-transform: capitalize; }
@@ -1748,8 +1798,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .ha-salon-services .ha-records-table { flex: 0 0 auto; }
 .ha-salon-services .ha-table-scroll { flex: 0 0 auto; height: 280px; min-height: 280px; max-height: 280px; overflow: auto; }
 .ha-salon-services .ha-table-scroll tbody tr { height: 48px; }
-.ha-records-toolbar, .ha-commission-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.ha-commission-summary { flex-shrink: 0; }
+.ha-records-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.ha-commission-overview { flex-shrink: 0; }
 .ha-revenue-page, .ha-revenue-body, .ha-revenue-records { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
 .ha-revenue-page { height: 100%; }
 .ha-revenue-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
@@ -1760,3 +1810,63 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .ha-revenue-records .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
 .ha-revenue-records thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
 @media(max-width:768px) { .ha-revenue-page { height: auto; } .ha-revenue-records .ha-table-scroll { max-height: 50dvh; } .ha-filter-grid { grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); } }
+
+.ha-reviews-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 20px; }
+.ha-reviews-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-reviews-page > .ha-records-card { flex: 1; min-height: 0; }
+.ha-reviews-page .ha-records-card > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-reviews-page .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-reviews-page .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-reviews-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-reviews-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media (max-width: 768px) { .ha-reviews-page { height: auto; } .ha-reviews-page .ha-table-scroll { max-height: 50dvh; } }
+
+.ha-customers-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 20px; }
+.ha-customers-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-customers-page > .ha-records-card { flex: 1; min-height: 0; }
+.ha-customers-page .ha-records-card > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-customers-page .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-customers-page .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-customers-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-customers-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media (max-width: 768px) { .ha-customers-page { height: auto; } .ha-customers-page .ha-table-scroll { max-height: 50dvh; } }
+
+.ha-bookings-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 20px; }
+.ha-bookings-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-bookings-page > .ha-records-card { flex: 1; min-height: 0; }
+.ha-bookings-page .ha-records-card > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-bookings-page .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-bookings-page .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-bookings-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-bookings-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media (max-width: 768px) { .ha-bookings-page { height: auto; } .ha-bookings-page .ha-table-scroll { max-height: 50dvh; } }
+
+.ha-owners-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 20px; }
+.ha-owners-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-owners-page > .ha-records-card { flex: 1; min-height: 0; }
+.ha-owners-page .ha-records-card > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-owners-page .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-owners-page .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-owners-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-owners-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media (max-width: 768px) { .ha-owners-page { height: auto; } .ha-owners-page .ha-table-scroll { max-height: 50dvh; } }
+
+.ha-salons-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 20px; }
+.ha-salons-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-salons-page > .ha-records-card { flex: 1; min-height: 0; }
+.ha-salons-page .ha-records-card > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-salons-page .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-salons-page .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-salons-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-salons-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media (max-width: 768px) { .ha-salons-page { height: auto; } .ha-salons-page .ha-table-scroll { max-height: 50dvh; } }
+
+.ha-payouts-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 20px; }
+.ha-payouts-page > .ha-kpi-row { flex-shrink: 0; margin-bottom: 0; }
+.ha-payouts-page > .ha-records-card { flex: 1; min-height: 0; }
+.ha-payouts-page .ha-records-card > :not(.ha-records-table) { flex-shrink: 0; }
+.ha-payouts-page .ha-records-table { display: flex; flex-direction: column; flex: 1; min-height: 100px; }
+.ha-payouts-page .ha-records-table > :not(.ha-table-scroll) { flex-shrink: 0; }
+.ha-payouts-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+.ha-payouts-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+@media (max-width: 768px) { .ha-payouts-page { height: auto; } .ha-payouts-page .ha-table-scroll { max-height: 50dvh; } }

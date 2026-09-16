@@ -1,55 +1,56 @@
-// import { generateAsciiUrl } from "@/lib/GenerateAsciiUrl";
-// import SuggestionsSkeleton from "@/skeletons/searchSuggestionSkeleton";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-interface SearchSuggestion {
-  id: string;
-  type: "recent" | "trending" | "user" | "topic";
-  text: string;
-  subtitle?: string;
-}
+import { useAuthStore } from "@/store/authStore";
+import {
+  searchService,
+  type GlobalSearchResult,
+  type SearchBooking,
+  type SearchCustomer,
+  type SearchSalon,
+} from "@/services/searchService";
+
+const SEARCHABLE_ROLES = ["super_admin", "admin", "salon_owner", "staff"];
+
+const emptyResults: GlobalSearchResult = { customers: [], bookings: [], salons: [] };
+
 const Searchbar = () => {
-  const [location] = useState("");
   const navigate = useNavigate();
+  const role = useAuthStore((s) => s.user?.role);
+  const canSearch = role ? SEARCHABLE_ROLES.includes(role) : false;
+
   const [searchValue, setSearchValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [, setIsLoadingSuggestions] = useState(false);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<
-    SearchSuggestion[]
-  >([]);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<GlobalSearchResult>(emptyResults);
   const searchRef = useRef<HTMLDivElement>(null);
-  // ✅ Debounced API fetch
-  useEffect(() => {
-    const delayDebounce = setTimeout(async () => {
-      if (searchValue.trim().length > 1 && !isNavigating) {
-        setIsLoadingSuggestions(true);
-        setShowSuggestions(true);
 
-        try {
-          // const res = await getServerSideDataWithFeatures({
-          //   url: `/school/employee/suggestions?q=${searchValue}&country=${location}`,
-          // });
-          // setFilteredSuggestions(res?.data);
-        } catch {
-          setFilteredSuggestions([]);
-        } finally {
-          setIsLoadingSuggestions(false);
-        }
-      } else {
-        setFilteredSuggestions([]);
+  useEffect(() => {
+    if (!canSearch) return;
+    const query = searchValue.trim();
+
+    const delayDebounce = setTimeout(async () => {
+      if (query.length < 2) {
+        setResults(emptyResults);
+        setLoading(false);
+        return;
       }
-    }, 300); // wait 300ms after typing
+      setLoading(true);
+      try {
+        const res = await searchService.global(query);
+        setResults(res?.data || emptyResults);
+      } catch {
+        setResults(emptyResults);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchValue, isNavigating, location]);
-  // ✅ Close on outside click
+  }, [searchValue, canSearch]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     };
@@ -57,36 +58,24 @@ const Searchbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    setIsNavigating(true);
-    setSearchValue(suggestion.text);
+  const goTo = (path: string) => {
     setShowSuggestions(false);
-    // Optional: trigger search navigation
-    const links = {
-      // Reviewee: `/response/${generateAsciiUrl(suggestion?.id?.split("-")[1])}`,
-      Country: `/dashboard?country=${suggestion?.text}`,
-      Category: `/dashbaord?categoryId=${suggestion?.id?.split("-")[1]}`,
-      School: `/dashboard?school=${suggestion?.text}`,
-      Branch: `/dashboard?school=${encodeURI(suggestion?.text)}`,
-    } as Record<string, string>;
-    navigate(
-      links[suggestion?.subtitle as string] ??
-        `?q=${encodeURIComponent(suggestion.text)}`,
-    );
+    setSearchValue("");
+    navigate(path);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-    setIsNavigating(false);
-    setShowSuggestions(true);
-    // if (e.target.value.trim()) {
-    //   setIsLoadingSuggestions(true);
-    // }
-  };
+  const handleCustomerClick = (customer: SearchCustomer) =>
+    goTo(`/admin/customers?search=${encodeURIComponent(customer.email || customer.name)}`);
 
-  const handleInputFocus = () => {
-    setShowSuggestions(true);
-  };
+  const handleBookingClick = (booking: SearchBooking) =>
+    goTo(`/admin/bookings?customer=${encodeURIComponent(booking.customer?.name || "")}`);
+
+  const handleSalonClick = (salon: SearchSalon) =>
+    goTo(`/admin/salons?search=${encodeURIComponent(salon.name)}`);
+
+  const hasResults = results.customers.length > 0 || results.bookings.length > 0 || results.salons.length > 0;
+  const trimmedQuery = searchValue.trim();
+
   return (
     <div className="bg-[var(--surface-soft)] hidden md:block max-w-60 w-52 border border-border border-solid  z-10 relative p-1 rounded-xl  shadow-lg  sm:mx-auto mx-auto">
       <div className="grid grid-cols-12 sm:gap-2 gap-1">
@@ -108,74 +97,84 @@ const Searchbar = () => {
           <input
             placeholder="Search clients, bookings"
             value={searchValue}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
+            onChange={(e) => {
+              setSearchValue(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
             className=" !bg-transparent text-xs text-[var(--text)] p-1 !outline-none !border-none placeholder:text-muted"
           />
-          {showSuggestions && searchValue.length > 1 ? (
-            <>
-              {/* {isLoadingSuggestions ? (
-                <SuggestionsSkeleton />
-              ) : ( */}
-                <div className="absolute top-full left-0 right-0 bg-[var(--surface-soft)] border border-[var(--border)] text-left rounded-md shadow-lg z-20 mt-1 max-h-80 overflow-y-auto">
-                  {filteredSuggestions?.length > 0 ? (
-                    <>
-                      {filteredSuggestions?.map((suggestion) => (
+          {showSuggestions && trimmedQuery.length > 1 && canSearch ? (
+            <div className="absolute top-full left-0 right-0 bg-[var(--surface-soft)] border border-[var(--border)] text-left rounded-md shadow-lg z-20 mt-1 max-h-80 overflow-y-auto">
+              {loading ? (
+                <div className="px-4 py-3 text-xs text-muted">Searching...</div>
+              ) : hasResults ? (
+                <>
+                  {results.customers.length > 0 && (
+                    <div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Clients
+                      </div>
+                      {results.customers.map((customer) => (
                         <div
-                          key={suggestion.id}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                          onClick={() => handleSuggestionClick(suggestion)}
+                          key={customer._id}
+                          className="px-4 py-2 hover:bg-[var(--surface)] cursor-pointer"
+                          onClick={() => handleCustomerClick(customer)}
                         >
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">
-                              {suggestion.text}
-                            </div>
-                            {suggestion.subtitle && (
-                              <div className="text-xs text-gray-500">
-                                {suggestion.subtitle}
-                              </div>
-                            )}
+                          <div className="text-xs font-medium text-[var(--text)]">{customer.name}</div>
+                          <div className="text-[11px] text-muted">{customer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {results.bookings.length > 0 && (
+                    <div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Bookings
+                      </div>
+                      {results.bookings.map((booking) => (
+                        <div
+                          key={booking._id}
+                          className="px-4 py-2 hover:bg-[var(--surface)] cursor-pointer"
+                          onClick={() => handleBookingClick(booking)}
+                        >
+                          <div className="text-xs font-medium text-[var(--text)]">
+                            {booking.customer?.name || "Unknown"} · {booking.salon?.name || "-"}
+                          </div>
+                          <div className="text-[11px] text-muted">
+                            {booking.bookingDate ? new Date(booking.bookingDate).toLocaleDateString() : ""} {booking.status || ""}
                           </div>
                         </div>
                       ))}
-                      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
-                        <button className="text-xs text-green-600 hover:text-green-700 font-medium">
-                          Results for "{searchValue}"
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    searchValue.trim().length > 1 && (
-                      <div className="px-4 py-6 text-center text-gray-500">
-                        {/* <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" /> */}
-                        <p className="text-sm">No suggestions found</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          Try different keywords
-                        </p>
-                      </div>
-                    )
+                    </div>
                   )}
+                  {results.salons.length > 0 && (
+                    <div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Salons
+                      </div>
+                      {results.salons.map((salon) => (
+                        <div
+                          key={salon._id}
+                          className="px-4 py-2 hover:bg-[var(--surface)] cursor-pointer"
+                          onClick={() => handleSalonClick(salon)}
+                        >
+                          <div className="text-xs font-medium text-[var(--text)]">{salon.name}</div>
+                          <div className="text-[11px] text-muted">{salon.location?.city}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="px-4 py-6 text-center text-muted">
+                  <p className="text-sm">No results found</p>
+                  <p className="text-xs mt-1">Try different keywords</p>
                 </div>
-              {/* )} */}
-            </>
-          ) : (
-            <></>
-          )}
+              )}
+            </div>
+          ) : null}
         </div>
-        {/* <div className="col-span-4 sm:flex items-center border-[1px] rounded-md border-border bg-white px-2 hidden relative">
-          <MapPin className=" text-muted-foreground  sm:w-4 sm:h-4 w-3 h-3 " />
-          <input
-            placeholder="Country"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="py-2 text-base bg-background border-0  [&::placeholder]:text-[16px] sm:h-8 h-6 focus-visible:outline-none focus-visible:ring-0 focus-visible:border-transparent"
-          />
-        </div> */}
-        {/* <div className="col-span-1">
-          <Button className="w-full py-3 text-base bg-primary hover:bg-primary/90 font-medium sm:h-8 h-6">
-            <Search className=""/>
-          </Button>
-        </div> */}
       </div>
     </div>
   );

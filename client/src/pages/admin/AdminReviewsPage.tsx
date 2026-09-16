@@ -65,7 +65,14 @@ const AdminReviewsPage = () => {
     ...(search ? { search } : {}),
   };
 
-  const moderate = (id: string, status: string) => confirmation.ask(status === 'approved' ? 'Approve Review' : status === 'deleted' ? 'Remove Review' : 'Investigate Review', 'Confirm this review moderation action?', () => moderateNow(id, status));
+  const moderate = (id: string, status: string) => {
+    const config = status === 'approved'
+      ? { title: 'Approve Review', message: 'Are you sure you want to approve this review?', confirmLabel: 'Approve' }
+      : status === 'deleted'
+        ? { title: 'Remove Review', message: 'Are you sure you want to remove this review?', confirmLabel: 'Remove' }
+        : { title: 'Investigate Review', message: 'Are you sure you want to mark this review for investigation?', confirmLabel: 'Investigate' };
+    confirmation.ask(config.title, config.message, () => moderateNow(id, status), config.confirmLabel);
+  };
   const moderateNow = async (id: string, status: string) => {
     try {
       await reviewService.moderate(id, status as 'approved' | 'flagged' | 'deleted');
@@ -114,7 +121,7 @@ const AdminReviewsPage = () => {
   if (statsReq.error) return <ErrorBlock text={statsReq.error} />;
 
   return (
-    <>
+    <div className="ha-reviews-page">
       <div className="ha-kpi-row">
         <div className="ha-kpi-card"><div className="ha-kpi-label">Platform Avg Rating</div><div className="ha-kpi-val">{stats.averageRating}</div><div className="ha-kpi-change up">Across all salons</div></div>
         <div className="ha-kpi-card"><div className="ha-kpi-label">Total Reviews</div><div className="ha-kpi-val">{stats.totalReviews.toLocaleString()}</div><div className="ha-kpi-change up">Live review volume</div></div>
@@ -122,7 +129,7 @@ const AdminReviewsPage = () => {
         <div className="ha-kpi-card"><div className="ha-kpi-label">AI-Verified Reviews</div><div className="ha-kpi-val">{stats.approvedPercentage}%</div><div className="ha-kpi-change up">Authentic signals</div></div>
       </div>
 
-      <div className="ha-card">
+      <div className="ha-card ha-records-card">
         <div className="ha-card-title">
           Review Moderation Queue
           <span style={{ display: "inline-flex", gap: 8 }}>
@@ -196,7 +203,7 @@ const AdminReviewsPage = () => {
                 <div className="ha-salon-name" style={{ fontSize: 13 }}>{item.comment || 'No comment'}</div>
                 {item.reply ? <div className="ha-salon-sub">Reply: {item.reply}</div> : null}
               </div>,
-              <span className={item.status === 'flagged' ? 'ha-pill ha-pill-suspended' : 'ha-pill ha-pill-active'}>{item.status}</span>,
+              <span className={item.status === 'deleted' ? 'ha-pill ha-pill-suspended' : item.status === 'flagged' ? 'ha-pill ha-pill-pending' : 'ha-pill ha-pill-active'}>{item.status}</span>,
               <div className="ha-actions">
                 <button className="ha-act-btn" disabled={item.status === 'approved' || item.status === 'deleted'} onClick={() => moderate(item._id, 'approved')}>Approve</button>
                 <button className="ha-act-btn danger" disabled={item.status === 'deleted'} onClick={() => moderate(item._id, 'deleted')}>Remove</button>
@@ -210,14 +217,14 @@ const AdminReviewsPage = () => {
       {confirmModerateAll && (
         <ConfirmModal
           title="Moderate All Pending Reviews"
-          message="Approve all currently pending reviews? This cannot be undone."
+          message="Are you sure you want to approve all currently pending reviews? This action cannot be undone."
           confirmLabel="Approve All"
           onConfirm={handleModerateAll}
           onCancel={() => setConfirmModerateAll(false)}
         />
       )}
     {confirmation.modal}
-    </>
+    </div>
   );
 };
 

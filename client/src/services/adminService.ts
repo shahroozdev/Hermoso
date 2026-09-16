@@ -22,6 +22,8 @@ interface ListAdminsParams {
   role?: string;
   fromDate?: string;
   toDate?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const adminService = {

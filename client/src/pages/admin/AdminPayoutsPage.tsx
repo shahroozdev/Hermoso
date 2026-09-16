@@ -216,7 +216,7 @@ const AdminPayoutsPage = () => {
   if (statsReq.error) return <ErrorBlock text={statsReq.error} />;
 
   return (
-    <>
+    <div className="ha-payouts-page">
       <div className="ha-kpi-row">
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Pending Payouts</div>
@@ -246,7 +246,7 @@ const AdminPayoutsPage = () => {
         </div>
       </div>
 
-      <div className="ha-card" style={{ paddingBottom: 0 }}>
+      <div className="ha-card ha-records-card" style={{ paddingBottom: 0 }}>
         <div className="ha-card-title">
           Payout Queue
           <span style={{ display: "inline-flex", gap: 8 }}>
@@ -463,7 +463,7 @@ const AdminPayoutsPage = () => {
           onCancel={() => setConfirmReleaseAll(false)}
         />
       )}
-    </>
+    </div>
   );
 };
 

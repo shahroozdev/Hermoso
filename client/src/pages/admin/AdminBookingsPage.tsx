@@ -1,5 +1,6 @@
 import { useConfirmAction } from '@/hooks/useConfirmAction';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminPageSkeleton from '../../components/skeletons/AdminPageSkeleton';
 import ErrorBlock from '../../components/ErrorBlock';
 import TABLE from '@/components/table';
@@ -61,13 +62,14 @@ const bookingIdOf = (id: string) => `#HRM-${id.slice(-4).toUpperCase()}`;
 
 const AdminBookingsPage = () => {
   const confirmation = useConfirmAction();
+  const [searchParams] = useSearchParams();
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const invalidate = useInvalidate();
   const { showToast } = useToastStore();
   const statsReq = useApi(() => bookingService.getStats(), ["booking-stats"]);
 
-  const [bookingIdSearch, setBookingIdSearch] = useState('');
-  const [customerSearch, setCustomerSearch] = useState('');
+  const [bookingIdSearch, setBookingIdSearch] = useState(() => searchParams.get('bookingId') || '');
+  const [customerSearch, setCustomerSearch] = useState(() => searchParams.get('customer') || '');
   const [salonSearch, setSalonSearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
   const [amountMin, setAmountMin] = useState('');
@@ -175,7 +177,7 @@ const AdminBookingsPage = () => {
   if (statsReq.error) return <ErrorBlock text={statsReq.error} />;
 
   return (
-    <>
+    <div className="ha-bookings-page">
       <div className="ha-kpi-row">
         <div className="ha-kpi-card"><div className="ha-kpi-label">Completed Today</div><div className="ha-kpi-val">{metrics.completedToday}</div><div className="ha-kpi-change up">Live closures</div></div>
         <div className="ha-kpi-card"><div className="ha-kpi-label">Upcoming</div><div className="ha-kpi-val white">{metrics.upcoming}</div><div className="ha-kpi-change up">Pending/confirmed</div></div>
@@ -183,7 +185,7 @@ const AdminBookingsPage = () => {
         <div className="ha-kpi-card"><div className="ha-kpi-label">Event Bookings</div><div className="ha-kpi-val">{metrics.events}</div><div className="ha-kpi-change up">Bridal packages</div></div>
       </div>
 
-      <div className="ha-card">
+      <div className="ha-card ha-records-card">
         <div className="ha-card-title">
           All Bookings
           <span style={{ display: 'inline-flex', gap: 8 }}>
@@ -339,7 +341,7 @@ const AdminBookingsPage = () => {
         />
       </div>
     {confirmation.modal}
-    </>
+    </div>
   );
 };
 

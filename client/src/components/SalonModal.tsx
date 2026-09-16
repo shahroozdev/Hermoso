@@ -217,6 +217,7 @@ const SalonModal = ({
       >
         <GenericModal
           title="+ Add Salon"
+          wide
           onClose={onClose}
           footer={
             <FormButtons onCancel={onClose} isSubmitting={isSubmitting} isUpdating={!!editDefaultValues}/>

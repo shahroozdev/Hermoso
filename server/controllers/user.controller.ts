@@ -347,12 +347,17 @@ export const listAdmins = asyncHandler(async (req: AuthRequest, res: Response) =
   requireSuperAdmin(req);
 
   const match = adminFilters(req.query);
+  const { page = 1, limit = 10 } = req.query;
 
   const admins = await User.find(match)
     .select('name email phone status createdAt role')
-    .sort({ role: 1, name: 1 });
+    .sort({ role: 1, name: 1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit));
 
-  res.json({ success: true, data: admins.map(serializeUser) });
+  const total = await User.countDocuments(match);
+
+  res.json({ success: true, data: admins.map(serializeUser), meta: { page: Number(page), limit: Number(limit), total } });
 });
 
 export const regenerateAdminPassword = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {

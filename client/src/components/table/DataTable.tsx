@@ -1,3 +1,4 @@
+import NoDataFound from "../NoDataFound";
 
 export interface ColumnDef {
   title: string;
@@ -11,6 +12,7 @@ export interface DataTableProps {
   rows: (string | number | React.ReactNode)[][];
   loading?: boolean;
   loadingRows?: number;
+  error?: string | null;
 }
 
 const DataTable = ({
@@ -18,10 +20,11 @@ const DataTable = ({
   rows,
   loading,
   loadingRows = 5,
+  error,
 }: DataTableProps) => (
-  <div className="ha-table-scroll">
+  <div className="ha-table-scroll" style={{ marginTop: 20 }}>
     <table className="ha-salon-table min-w-full text-left text-sm">
-      <thead className="sticky top-0 z-10 bg-[var(--surface-soft)] text-muted">
+      <thead className="sticky top-0 z-10 bg-[var(--surface-soft)] mt-4 text-muted">
         <tr>
           {columns.map((col) => (
             <th
@@ -80,6 +83,11 @@ const DataTable = ({
             ))}
       </tbody>
     </table>
+    {!loading && !error && rows.length === 0 && (
+      <div className="ha-table-empty">
+        <NoDataFound />
+      </div>
+    )}
   </div>
 );
 

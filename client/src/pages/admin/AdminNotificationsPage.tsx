@@ -1,4 +1,4 @@
-import SentNotificationsReport from '../../components/SentNotificationsReport';
+import SentNotificationsReport from "../../components/SentNotificationsReport";
 import { useMemo, useState } from "react";
 import NotificationModal, {
   NotificationFormModal,
@@ -201,182 +201,224 @@ const AdminNotificationsPage = () => {
               {exportingSummary ? "Exporting..." : "Export Notification"}
             </button>
             <span>
-            <NotificationModal />
+              <NotificationModal />
             </span>
           </div>
         </div>
 
-        <div role="tablist" aria-label="Notification reports" className="ha-tabs">
-          <button type="button" role="tab" id="all-notifications-tab" aria-selected={!showSentReport} aria-controls="all-notifications-panel" onClick={()=>setShowSentReport(false)}>All Notifications</button>
-          <button type="button" role="tab" id="sent-notifications-tab" aria-selected={showSentReport} aria-controls="sent-notifications-panel" onClick={()=>setShowSentReport(true)}>Sent Notifications</button>
-        </div>
-        {showSentReport ? <SentNotificationsReport onRecipients={item=>setRecipientsNotif({...item,type:item.type||'system',isRead:false})} /> : <section className="ha-notifications-panel" role="tabpanel" id="all-notifications-panel" aria-labelledby="all-notifications-tab">
-        <div className="ha-card" style={{ marginBottom: 0 }}>
-          <div className="ha-filter-grid"
+        <div
+          role="tablist"
+          aria-label="Notification reports"
+          className="ha-tabs"
+        >
+          <button
+            type="button"
+            role="tab"
+            id="all-notifications-tab"
+            aria-selected={!showSentReport}
+            aria-controls="all-notifications-panel"
+            onClick={() => setShowSentReport(false)}
           >
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted">
-                Title / Description
-              </label>
-              <input
-                type="text"
-                className="ha-input"
-                style={{ minWidth: 220 }}
-                placeholder="Search title or message..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted">
-                Audience
-              </label>
-              <span style={{ minWidth: 160, display: "inline-block" }}>
-                <SearchableSelect
-                  value={audienceFilter}
-                  onChange={setAudienceFilter}
-                  options={AUDIENCE_OPTIONS}
-                />
-              </span>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted">
-                Status
-              </label>
-              <span style={{ minWidth: 150, display: "inline-block" }}>
-                <SearchableSelect
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  options={STATUS_OPTIONS}
-                />
-              </span>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted">
-                Sent From
-              </label>
-              <input
-                type="date"
-                className="ha-input"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted">
-                Sent To
-              </label>
-              <input
-                type="date"
-                className="ha-input"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-              />
-            </div>
-            {hasActiveFilters && (
-              <button
-                type="button"
-                className="ha-btn-secondary"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
+            All Notifications
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="sent-notifications-tab"
+            aria-selected={showSentReport}
+            aria-controls="sent-notifications-panel"
+            onClick={() => setShowSentReport(true)}
+          >
+            Sent Notifications
+          </button>
         </div>
-
-        <TABLE<NotificationItem>
-          title="All Notifications"
-          queryKey={["notifications"]}
-          showPagination
-          service={notificationService.list}
-          serviceParams={serviceParams}
-          columns={[
-            { title: "Title" },
-            { title: "Message" },
-            { title: "Audience" },
-            { title: "Type", size: "150px" },
-            { title: "Sent", size: "120px" },
-            { title: "Status" },
-            { title: "Recipients", size: "100px" },
-            { title: "Actions" },
-          ]}
-          rows={(data) =>
-            data?.map((item) => {
-              const isDraft = item.status === "draft";
-              const isSending = sendingId === item._id;
-              return [
-                <span className="ha-salon-name" style={{ fontSize: 14 }}>
-                  {item.title}
-                </span>,
-                <span
-                  className="ha-salon-sub"
-                  style={{
-                    fontSize: 13,
-                    maxWidth: 250,
-                    display: "block",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {item.message || "-"}
-                </span>,
-                roleLabel(item.targetRole),
-                <span className="ha-pill ha-pill-booking">
-                  {(item.type || "system").replace("_", " ")}
-                </span>,
-                <p>
-                  {formatDateInput(item.createdAt)} <br />
-                  <span className="text-gray-400">
-                    {formatTimeAMPM(item.createdAt)}
+        {showSentReport ? (
+          <SentNotificationsReport
+            onRecipients={(item) =>
+              setRecipientsNotif({
+                ...item,
+                type: item.type || "system",
+                isRead: false,
+              })
+            }
+          />
+        ) : (
+          <section
+            className="ha-notifications-panel"
+            role="tabpanel"
+            id="all-notifications-panel"
+            aria-labelledby="all-notifications-tab"
+          >
+            <div className="ha-card" style={{ marginBottom: 0 }}>
+              <div className="flex *:items-center gap-4 flex-wrap">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase text-muted">
+                    Title / Description
+                  </label>
+                  <input
+                    type="text"
+                    className="ha-input"
+                    style={{ minWidth: 220 }}
+                    placeholder="Search title or message..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase text-muted">
+                    Audience
+                  </label>
+                  <span style={{ minWidth: 160, display: "inline-block" }}>
+                    <SearchableSelect
+                      value={audienceFilter}
+                      onChange={setAudienceFilter}
+                      options={AUDIENCE_OPTIONS}
+                    />
                   </span>
-                </p>,
-                <span
-                  className={
-                    isDraft
-                      ? "ha-pill ha-pill-pending"
-                      : "ha-pill ha-pill-active"
-                  }
-                >
-                  {isDraft ? "Unsent" : "Sent"}
-                </span>,
-                isDraft ? "-" : (item.recipientCount ?? 0).toLocaleString(),
-                <ActionsMenu
-                  items={[
-                    { label: "View", onClick: () => setViewNotif(item) },
-                    ...(isDraft
-                      ? [
-                          { label: "Edit", onClick: () => setEditNotif(item) },
-                          {
-                            label: isSending ? "Sending..." : "Send Now",
-                            onClick: () => handleSendNow(item),
-                          },
-                        ]
-                      : []),
-                    ...(!isDraft && !item.isRead
-                      ? [
-                          {
-                            label: "Mark Read",
-                            onClick: () => handleMarkRead(item._id),
-                          },
-                        ]
-                      : []),
-                    ...(!isDraft
-                      ? [
-                          {
-                            label: "View Recipients",
-                            onClick: () => setRecipientsNotif(item),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />,
-              ];
-            })
-          }
-        />
-        </section>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase text-muted">
+                    Status
+                  </label>
+                  <span style={{ minWidth: 150, display: "inline-block" }}>
+                    <SearchableSelect
+                      value={statusFilter}
+                      onChange={setStatusFilter}
+                      options={STATUS_OPTIONS}
+                    />
+                  </span>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase text-muted">
+                    Sent From
+                  </label>
+                  <input
+                    type="date"
+                    className="ha-input"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase text-muted">
+                    Sent To
+                  </label>
+                  <input
+                    type="date"
+                    className="ha-input"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                  />
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    className="ha-btn-secondary"
+                    style={{ height: 34, marginTop: 20 }}
+                    onClick={clearFilters}
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <TABLE<NotificationItem>
+              title="All Notifications"
+              queryKey={["notifications"]}
+              showPagination
+              service={notificationService.list}
+              serviceParams={serviceParams}
+              columns={[
+                { title: "Title" },
+                { title: "Message" },
+                { title: "Audience" },
+                { title: "Type", size: "150px" },
+                { title: "Sent", size: "120px" },
+                { title: "Status" },
+                { title: "Recipients", size: "100px" },
+                { title: "Actions" },
+              ]}
+              rows={(data) =>
+                data?.map((item) => {
+                  const isDraft = item.status === "draft";
+                  const isSending = sendingId === item._id;
+                  return [
+                    <span className="ha-salon-name" style={{ fontSize: 14 }}>
+                      {item.title}
+                    </span>,
+                    <span
+                      className="ha-salon-sub"
+                      style={{
+                        fontSize: 13,
+                        maxWidth: 250,
+                        display: "block",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.message || "-"}
+                    </span>,
+                    roleLabel(item.targetRole),
+                    <span className="ha-pill ha-pill-booking">
+                      {(item.type || "system").replace("_", " ")}
+                    </span>,
+                    <p>
+                      {formatDateInput(item.createdAt)} <br />
+                      <span className="text-gray-400">
+                        {formatTimeAMPM(item.createdAt)}
+                      </span>
+                    </p>,
+                    <span
+                      className={
+                        isDraft
+                          ? "ha-pill ha-pill-pending"
+                          : "ha-pill ha-pill-active"
+                      }
+                    >
+                      {isDraft ? "Unsent" : "Sent"}
+                    </span>,
+                    isDraft ? "-" : (item.recipientCount ?? 0).toLocaleString(),
+                    <ActionsMenu
+                      items={[
+                        { label: "View", onClick: () => setViewNotif(item) },
+                        ...(isDraft
+                          ? [
+                              {
+                                label: "Edit",
+                                onClick: () => setEditNotif(item),
+                              },
+                              {
+                                label: isSending ? "Sending..." : "Send Now",
+                                onClick: () => handleSendNow(item),
+                              },
+                            ]
+                          : []),
+                        ...(!isDraft && !item.isRead
+                          ? [
+                              {
+                                label: "Mark Read",
+                                onClick: () => handleMarkRead(item._id),
+                              },
+                            ]
+                          : []),
+                        ...(!isDraft
+                          ? [
+                              {
+                                label: "View Recipients",
+                                onClick: () => setRecipientsNotif(item),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />,
+                  ];
+                })
+              }
+            />
+          </section>
+        )}
       </div>
 
       {viewNotif && (

@@ -1,5 +1,4 @@
 import { useApi } from "@/hooks/useApi";
-import NoDataFound from "../NoDataFound";
 import DataTable, { type ColumnDef } from "./DataTable";
 import Pagination from "./Pagination";
 import { useState } from "react";
@@ -54,8 +53,7 @@ const TABLE = <T,>({
     <div className={noBorder?"ha-records-table":"ha-card ha-records-table"}>
       {title ? <div className="ha-card-title">{title}</div> : null}
       {error ? <div className="ha-error-banner">{error}</div> : null}
-      <DataTable columns={columns} rows={tableRows} loading={loading} />
-      {tableRows.length === 0 && !loading && !error && <NoDataFound />}
+      <DataTable columns={columns} rows={tableRows} loading={loading} error={error} />
       {showPagination && isDynamic && (
         <Pagination
           page={page}

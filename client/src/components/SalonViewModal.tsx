@@ -122,14 +122,14 @@ const SalonViewModal = ({ salon, onClose }: SalonViewModalProps) => {
               )}
             </div>
             <div className="ha-filter-grid">
-            <input
+            <label>Search<input
               type="text"
               className="ha-input"
-              style={{ marginBottom: 10, maxWidth: 280, flexShrink: 0 }}
+              style={{ maxWidth: 280, flexShrink: 0 }}
               placeholder="Search services by name..."
               value={serviceSearch}
               onChange={(e) => setServiceSearch(e.target.value)}
-            />
+            /></label>
             <label>Category<input className="ha-input" aria-label="Service category" value={filters.category || ''} onChange={e=>setFilter('category',e.target.value)} /></label>
             <label>Description<input className="ha-input" aria-label="Service description" value={filters.description || ''} onChange={e=>setFilter('description',e.target.value)} /></label>
             <label>AI Scan<select className="ha-input" aria-label="AI Scan" value={filters.aiScanLink || ''} onChange={e=>setFilter('aiScanLink',e.target.value)}><option value="">All</option>{AI_SCAN_CATEGORIES.filter(c=>c.value).map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select></label>

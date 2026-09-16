@@ -126,7 +126,7 @@ const OwnerEventsPage = () => {
         </span>
       </div>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+      <div className='ha-card' style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase text-muted">Name</label>
           <input

@@ -119,7 +119,7 @@ const OwnerServicesPage = () => {
         </span>
       </div>
 
-      <div className="ha-filter-grid ha-service-filters">
+      <div className="ha-filter-grid ha-service-filters ha-card">
         <input
           type="text"
           className="ha-input"

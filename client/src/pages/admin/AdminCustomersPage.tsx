@@ -1,5 +1,6 @@
 import { useConfirmAction } from '@/hooks/useConfirmAction';
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
@@ -76,9 +77,10 @@ const formatJoinedDate = (createdAt?: string) =>
 
 const AdminCustomersPage = () => {
   const confirmation = useConfirmAction();
+  const [searchParams] = useSearchParams();
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [bookingsMin, setBookingsMin] = useState("");
   const [bookingsMax, setBookingsMax] = useState("");
@@ -119,7 +121,15 @@ const AdminCustomersPage = () => {
     setToDate(range.to);
   };
 
-  const handleFlag = (id: string, currentStatus: string | undefined) => confirmation.ask(currentStatus === 'suspended' || currentStatus === 'inactive' ? 'Unflag Customer' : 'Flag Customer', 'Confirm this customer flag change?', () => handleFlagNow(id, currentStatus));
+  const handleFlag = (id: string, currentStatus: string | undefined) => {
+    const isFlagged = currentStatus === 'suspended' || currentStatus === 'inactive';
+    confirmation.ask(
+      isFlagged ? 'Unflag Customer' : 'Flag Customer',
+      isFlagged ? 'Are you sure you want to unflag this customer?' : 'Are you sure you want to flag this customer?',
+      () => handleFlagNow(id, currentStatus),
+      isFlagged ? 'Unflag' : 'Flag',
+    );
+  };
   const handleFlagNow = async (id: string, currentStatus: string | undefined) => {
     const isFlagged =
       currentStatus === "suspended" || currentStatus === "inactive";
@@ -228,7 +238,7 @@ const AdminCustomersPage = () => {
   const icons = ["🧑", "💅", "✨", "⚠️"];
 
   return (
-    <>
+    <div className="ha-customers-page">
       <div className="ha-kpi-row">
         <div className="ha-kpi-card">
           <div className="ha-kpi-label">Total Customers</div>
@@ -265,7 +275,7 @@ const AdminCustomersPage = () => {
         </div>
       </div>
 
-      <div className="ha-card">
+      <div className="ha-card ha-records-card">
         <div className="ha-card-title">
           Customer Accounts
           <span style={{ display: "inline-flex", gap: 8 }}>
@@ -454,7 +464,7 @@ const AdminCustomersPage = () => {
         />
       )}
     {confirmation.modal}
-    </>
+    </div>
   );
 };
 

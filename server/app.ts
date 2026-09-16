@@ -23,6 +23,7 @@ import settingsRoutes from './routes/settings.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import refundRoutes from './routes/refund.routes.js';
+import searchRoutes from './routes/search.routes.js';
 import { swaggerSpec } from './config/swagger.js';
 import { ApiError } from './utils/ApiError.js';
 import helmet from 'helmet';
@@ -144,6 +145,7 @@ app.use('/api/pos', posRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/refunds', refundRoutes);
+app.use('/api/search', searchRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => next(new ApiError(404, 'Route not found')));
 

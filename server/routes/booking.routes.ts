@@ -118,6 +118,6 @@ router.get('/availability', authorize(Roles.CUSTOMER, Roles.SUPER_ADMIN, Roles.S
 router.post('/', authorize(Roles.CUSTOMER), createBooking);
 router.get('/analytics/stats', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF), getBookingStats);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getBookings);
-router.patch('/:id/status', authorize(Roles.SUPER_ADMIN), updateBookingStatus);
+router.patch('/:id/status', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), updateBookingStatus);
 
 export default router;

@@ -1,5 +1,6 @@
-import { useConfirmAction } from '@/hooks/useConfirmAction';
+import { useConfirmAction } from "@/hooks/useConfirmAction";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminPageSkeleton from "../../components/skeletons/AdminPageSkeleton";
 import ErrorBlock from "../../components/ErrorBlock";
 import { useApi } from "../../hooks/useApi";
@@ -27,12 +28,13 @@ const statusClass = (status) => {
 
 const AdminSalonsPage = () => {
   const confirmation = useConfirmAction();
+  const [searchParams] = useSearchParams();
   const [comparisons, setComparisons] = useState<Record<string, string>>({});
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [servicesMin, setServicesMin] = useState("");
   const [servicesMax, setServicesMax] = useState("");
@@ -51,41 +53,53 @@ const AdminSalonsPage = () => {
   const invalidate = useInvalidate();
 
   const { data, loading, error } = useApi(
-    () =>
-      salonService.getCities(),
+    () => salonService.getCities(),
     [cityFilter],
   );
-  const { data:stats} = useApi(
-    () =>
-      salonService.getStatusStats(),
+  const { data: stats } = useApi(
+    () => salonService.getStatusStats(),
     ["salon-status-stats"],
   );
-  const { data: ownersData } = useApi(() => ownerService.list(), ["owner-filter-options"]);
+  const { data: ownersData } = useApi(
+    () => ownerService.list(),
+    ["owner-filter-options"],
+  );
   const ownerOptions = useMemo(
     () => [
       { value: "all", label: "All Owners" },
-      ...((ownersData?.data || []).map((owner) => ({ value: owner._id, label: owner.name }))),
+      ...(ownersData?.data || []).map((owner) => ({
+        value: owner._id,
+        label: owner.name,
+      })),
     ],
     [ownersData],
   );
   const kpis = useMemo(() => {
-    const active = stats?.data?.approved||0
-    const pending = stats?.data?.pending||0
-    const suspended = stats?.data?.suspended||0
-    const cities = data?.data?.length || 0
+    const active = stats?.data?.approved || 0;
+    const pending = stats?.data?.pending || 0;
+    const suspended = stats?.data?.suspended || 0;
+    const cities = data?.data?.length || 0;
     return { active, pending, suspended, cities };
   }, [stats, data]);
 
   const cities = useMemo(() => {
     return [
       "all",
-      ...new Set(
-        (data?.data || []).map((s) => s).filter(Boolean),
-      ),
+      ...new Set((data?.data || []).map((s) => s).filter(Boolean)),
     ];
   }, [data]);
 
-  const patchStatus = (id, status) => confirmation.ask(status === 'suspended' ? 'Suspend Salon' : 'Activate Salon', 'Confirm this salon status change?', () => patchStatusNow(id, status));
+  const salonConfirmConfig = {
+    approve: { title: "Approve Salon", message: "Are you sure you want to approve this salon?", confirmLabel: "Approve" },
+    reject: { title: "Reject Salon", message: "Are you sure you want to reject this salon?", confirmLabel: "Reject" },
+    suspend: { title: "Suspend Salon", message: "Are you sure you want to suspend this salon?", confirmLabel: "Suspend" },
+    activate: { title: "Activate Salon", message: "Are you sure you want to activate this salon?", confirmLabel: "Activate" },
+  };
+
+  const patchStatus = (id, status, action) => {
+    const config = salonConfirmConfig[action];
+    confirmation.ask(config.title, config.message, () => patchStatusNow(id, status), config.confirmLabel);
+  };
   const patchStatusNow = async (id, status) => {
     setErrorAction("");
     setPendingActionId(id);
@@ -93,7 +107,11 @@ const AdminSalonsPage = () => {
       await salonService.updateStatus(id, { status });
       invalidate();
       showToast(
-        status === "approved" ? "Salon approved." : status === "suspended" ? "Salon suspended." : "Salon status updated."
+        status === "approved"
+          ? "Salon approved."
+          : status === "suspended"
+            ? "Salon suspended."
+            : "Salon status updated.",
       );
     } catch (err) {
       setErrorAction(err.response?.data?.message || "Status update failed");
@@ -104,17 +122,27 @@ const AdminSalonsPage = () => {
 
   const handleCreated = () => {
     invalidate();
-    showToast(editDefaultValues ? "Salon updated successfully." : "Salon created successfully.");
+    showToast(
+      editDefaultValues
+        ? "Salon updated successfully."
+        : "Salon created successfully.",
+    );
   };
 
   const hasActiveFilters = Boolean(
     search ||
-      cityFilter !== "all" ||
-      statusFilter !== "all" ||
-      activeFilter !== "all" ||
-      ownerFilter !== "all" ||
-      servicesMin || servicesMax || bookingsMin || bookingsMax ||
-      revenueMin || revenueMax || commissionMin || commissionMax,
+    cityFilter !== "all" ||
+    statusFilter !== "all" ||
+    activeFilter !== "all" ||
+    ownerFilter !== "all" ||
+    servicesMin ||
+    servicesMax ||
+    bookingsMin ||
+    bookingsMax ||
+    revenueMin ||
+    revenueMax ||
+    commissionMin ||
+    commissionMax,
   );
 
   const clearFilters = () => {
@@ -147,14 +175,28 @@ const AdminSalonsPage = () => {
         ...(servicesMax ? { servicesMax } : {}),
         ...(bookingsMin ? { bookingsMin } : {}),
         ...(bookingsMax ? { bookingsMax } : {}),
-        ...(revenueMin ? { revenueMin: rupeesToPaisa(Number(revenueMin)) } : {}),
-        ...(revenueMax ? { revenueMax: rupeesToPaisa(Number(revenueMax)) } : {}),
+        ...(revenueMin
+          ? { revenueMin: rupeesToPaisa(Number(revenueMin)) }
+          : {}),
+        ...(revenueMax
+          ? { revenueMax: rupeesToPaisa(Number(revenueMax)) }
+          : {}),
         ...(commissionMin ? { commissionMin } : {}),
         ...(commissionMax ? { commissionMax } : {}),
       });
       const items: SalonItem[] = res?.data || [];
       const rows = [
-        ["Salon / Clinic", "Owner", "City", "Services", "Bookings", "Revenue", "Commission", "Approval", "Status"],
+        [
+          "Salon / Clinic",
+          "Owner",
+          "City",
+          "Services",
+          "Bookings",
+          "Revenue",
+          "Commission",
+          "Approval",
+          "Status",
+        ],
         ...items.map((s) => [
           s.name || "",
           s.owner?.name || "Unassigned",
@@ -167,9 +209,15 @@ const AdminSalonsPage = () => {
           s.active ? "Active" : "Inactive",
         ]),
       ];
-      downloadCsv(`hermoso-salons-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+      downloadCsv(
+        `hermoso-salons-${new Date().toISOString().slice(0, 10)}.csv`,
+        rows,
+      );
     } catch (err) {
-      showToast(err.response?.data?.message || "Failed to export salons", "error");
+      showToast(
+        err.response?.data?.message || "Failed to export salons",
+        "error",
+      );
     }
   };
 
@@ -177,7 +225,7 @@ const AdminSalonsPage = () => {
   if (error) return <ErrorBlock text={error} />;
 
   return (
-    <>
+    <div className="ha-salons-page">
       <div className="ha-kpi-row">
         {salonsStats.map((stat) => (
           <div className="ha-kpi-card" key={stat.key}>
@@ -190,11 +238,11 @@ const AdminSalonsPage = () => {
         ))}
       </div>
 
-      <div className="ha-card">
+      <div className="ha-card ha-records-card">
         <div className="ha-card-title">
           All Salons & Clinics
           <span style={{ display: "inline-flex", gap: 8 }}>
-            <span style={{ minWidth: 160, display: "inline-block" }}>
+            {/* <span style={{ minWidth: 160, display: "inline-block" }}>
               <SearchableSelect
                 value={cityFilter}
                 onChange={setCityFilter}
@@ -226,7 +274,7 @@ const AdminSalonsPage = () => {
                   { value: "inactive", label: "Inactive" },
                 ]}
               />
-            </span>
+            </span> */}
             <button className="ha-act-btn" onClick={handleExport}>
               Export
             </button>
@@ -243,7 +291,44 @@ const AdminSalonsPage = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
           <span style={{ minWidth: 160, display: "inline-block" }}>
-            <SearchableSelect value={ownerFilter} onChange={setOwnerFilter} options={ownerOptions} />
+            <SearchableSelect
+              value={ownerFilter}
+              onChange={setOwnerFilter}
+              options={ownerOptions}
+            />
+          </span>
+          <span style={{ minWidth: 160, display: "inline-block" }}>
+            <SearchableSelect
+              value={cityFilter}
+              onChange={setCityFilter}
+              options={cities.map((city: string) => ({
+                value: city,
+                label: city === "all" ? "All Cities" : city,
+              }))}
+            />
+          </span>
+          <span style={{ minWidth: 160, display: "inline-block" }}>
+            <SearchableSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "all", label: "All Approval Status" },
+                { value: "pending", label: "Pending" },
+                { value: "approved", label: "Approved" },
+                { value: "suspended", label: "Suspended" },
+              ]}
+            />
+          </span>
+          <span style={{ minWidth: 150, display: "inline-block" }}>
+            <SearchableSelect
+              value={activeFilter}
+              onChange={setActiveFilter}
+              options={[
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "inactive", label: "Inactive" },
+              ]}
+            />
           </span>
           <button
             type="button"
@@ -253,19 +338,70 @@ const AdminSalonsPage = () => {
             {showMoreFilters ? "Hide Filters" : "More Filters"}
           </button>
           {hasActiveFilters && (
-            <button type="button" className="ha-btn-secondary" onClick={clearFilters}>
+            <button
+              type="button"
+              className="ha-btn-secondary"
+              onClick={clearFilters}
+            >
               Clear Filters
             </button>
           )}
         </div>
 
         {showMoreFilters && (
-          <div className="ha-card" style={{ marginBottom: 12, background: "var(--surface-soft)" }}>
-            <div className="ha-filter-grid">
-              <RangeFilter operator={comparisons.servicesOp} onOperator={op => setComparisons(prev => ({...prev, servicesOp: op}))} label="Services" min={servicesMin} max={servicesMax} onMin={setServicesMin} onMax={setServicesMax} />
-              <RangeFilter operator={comparisons.bookingsOp} onOperator={op => setComparisons(prev => ({...prev, bookingsOp: op}))} label="Bookings" min={bookingsMin} max={bookingsMax} onMin={setBookingsMin} onMax={setBookingsMax} />
-              <RangeFilter operator={comparisons.revenueOp} onOperator={op => setComparisons(prev => ({...prev, revenueOp: op}))} label="Revenue" min={revenueMin} max={revenueMax} onMin={setRevenueMin} onMax={setRevenueMax} />
-              <RangeFilter operator={comparisons.commissionOp} onOperator={op => setComparisons(prev => ({...prev, commissionOp: op}))} label="Commission %" min={commissionMin} max={commissionMax} onMin={setCommissionMin} onMax={setCommissionMax} />
+          <div
+            className="ha-card border-none! shadow-none! p-0! rounded-none!"
+            style={{
+              marginBottom: 12,
+              boxShadow: "none",
+              background: "var(--surface-soft)",
+            }}
+          >
+            <div className="ha-filter-grid ">
+              <RangeFilter
+                operator={comparisons.servicesOp}
+                onOperator={(op) =>
+                  setComparisons((prev) => ({ ...prev, servicesOp: op }))
+                }
+                label="Services"
+                min={servicesMin}
+                max={servicesMax}
+                onMin={setServicesMin}
+                onMax={setServicesMax}
+              />
+              <RangeFilter
+                operator={comparisons.bookingsOp}
+                onOperator={(op) =>
+                  setComparisons((prev) => ({ ...prev, bookingsOp: op }))
+                }
+                label="Bookings"
+                min={bookingsMin}
+                max={bookingsMax}
+                onMin={setBookingsMin}
+                onMax={setBookingsMax}
+              />
+              <RangeFilter
+                operator={comparisons.revenueOp}
+                onOperator={(op) =>
+                  setComparisons((prev) => ({ ...prev, revenueOp: op }))
+                }
+                label="Revenue"
+                min={revenueMin}
+                max={revenueMax}
+                onMin={setRevenueMin}
+                onMax={setRevenueMax}
+              />
+              <RangeFilter
+                operator={comparisons.commissionOp}
+                onOperator={(op) =>
+                  setComparisons((prev) => ({ ...prev, commissionOp: op }))
+                }
+                label="Commission %"
+                min={commissionMin}
+                max={commissionMax}
+                onMin={setCommissionMin}
+                onMax={setCommissionMax}
+              />
             </div>
           </div>
         )}
@@ -290,14 +426,18 @@ const AdminSalonsPage = () => {
             ...(servicesMax ? { servicesMax } : {}),
             ...(bookingsMin ? { bookingsMin } : {}),
             ...(bookingsMax ? { bookingsMax } : {}),
-            ...(revenueMin ? { revenueMin: rupeesToPaisa(Number(revenueMin)) } : {}),
-            ...(revenueMax ? { revenueMax: rupeesToPaisa(Number(revenueMax)) } : {}),
+            ...(revenueMin
+              ? { revenueMin: rupeesToPaisa(Number(revenueMin)) }
+              : {}),
+            ...(revenueMax
+              ? { revenueMax: rupeesToPaisa(Number(revenueMax)) }
+              : {}),
             ...(commissionMin ? { commissionMin } : {}),
             ...(commissionMax ? { commissionMax } : {}),
           }}
           columns={[
             { title: "Salon / Clinic", size: "250px" },
-            { title: "Owner" , size: "150px" },
+            { title: "Owner", size: "150px" },
             { title: "City" },
             { title: "Services" },
             { title: "Bookings" },
@@ -328,15 +468,16 @@ const AdminSalonsPage = () => {
               formatMoney(salon.revenueInPaisa),
               salon.commissionRate ?? 10,
               <span className={statusClass(salon.status)}>{salon.status}</span>,
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
                 <span className={`ha-dot ${salon.active ? "on" : "off"}`} />
                 {salon.active ? "Active" : "Inactive"}
               </span>,
               (() => {
                 const isPending = pendingActionId === salon._id;
-                const items: import('@/components/ActionsMenu').ActionMenuItem[] = [
-                  { label: "View", onClick: () => setViewSalon(salon) },
-                ];
+                const items: import("@/components/ActionsMenu").ActionMenuItem[] =
+                  [{ label: "View", onClick: () => setViewSalon(salon) }];
                 if (salon.status !== "suspended") {
                   items.push({
                     label: "Edit",
@@ -348,13 +489,27 @@ const AdminSalonsPage = () => {
                 }
                 if (salon.status === "pending") {
                   items.push(
-                    { label: isPending ? "Approving..." : "Approve", onClick: () => patchStatus(salon._id, "approved") },
-                    { label: isPending ? "Rejecting..." : "Reject", danger: true, onClick: () => patchStatus(salon._id, "suspended") },
+                    {
+                      label: isPending ? "Approving..." : "Approve",
+                      onClick: () => patchStatus(salon._id, "approved", "approve"),
+                    },
+                    {
+                      label: isPending ? "Rejecting..." : "Reject",
+                      danger: true,
+                      onClick: () => patchStatus(salon._id, "suspended", "reject"),
+                    },
                   );
                 } else if (salon.status === "suspended") {
-                  items.push({ label: isPending ? "Activating..." : "Activate", onClick: () => patchStatus(salon._id, "approved") });
+                  items.push({
+                    label: isPending ? "Activating..." : "Activate",
+                    onClick: () => patchStatus(salon._id, "approved", "activate"),
+                  });
                 } else {
-                  items.push({ label: isPending ? "Suspending..." : "Suspend", danger: true, onClick: () => patchStatus(salon._id, "suspended") });
+                  items.push({
+                    label: isPending ? "Suspending..." : "Suspend",
+                    danger: true,
+                    onClick: () => patchStatus(salon._id, "suspended", "suspend"),
+                  });
                 }
                 return <ActionsMenu items={items} />;
               })(),
@@ -374,9 +529,11 @@ const AdminSalonsPage = () => {
         />
       )}
 
-      {viewSalon && <SalonViewModal salon={viewSalon} onClose={() => setViewSalon(null)} />}
-    {confirmation.modal}
-    </>
+      {viewSalon && (
+        <SalonViewModal salon={viewSalon} onClose={() => setViewSalon(null)} />
+      )}
+      {confirmation.modal}
+    </div>
   );
 };
 

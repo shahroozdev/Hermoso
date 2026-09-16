@@ -27,6 +27,13 @@ const DEFAULT_RATES = {
   promoRate: 0,
 };
 
+const COMMISSION_FIELDS: { key: keyof typeof DEFAULT_RATES; title: string; sub: string }[] = [
+  { key: "defaultRate", title: "Default Commission", sub: "Applied to new salons" },
+  { key: "vipRate", title: "VIP Salons Rate", sub: "Top 10% by revenue" },
+  { key: "eventRate", title: "Event Bookings Rate", sub: "Bridal, party packages" },
+  { key: "promoRate", title: "Launch Promo Rate", sub: "First 50 salons · 3 months" },
+];
+
 // Value is expected in paisa; formats the rupee amount compactly (1.2M, 45K).
 const compactMoney = (valueInPaisa: number) => {
   const n = paisaToRupees(valueInPaisa);
@@ -174,85 +181,77 @@ const AdminRevenuePage = () => {
       </div>
 
       <div className="ha-revenue-body">
-        <div className="ha-card ha-commission-summary"><div><strong>Commission Rate Controls</strong><p className="text-xs text-muted">Default {loadedRates.defaultRate}% · VIP {loadedRates.vipRate}% · Events {loadedRates.eventRate}% · Promo {loadedRates.promoRate}%</p></div><button className="ha-act-btn" onClick={()=>setShowCommission(true)}>Edit Commission Rates</button></div>
-        {showCommission && <GenericModal title="Commission Rate Controls" onClose={()=>{if(!saving){setShowCommission(false);setRatesOverride(null);}}}>
-          <div className="ha-commission-grid">
-            {[
-              {
-                key: "defaultRate",
-                title: "Default Commission",
-                sub: "Applied to new salons",
-              },
-              {
-                key: "vipRate",
-                title: "VIP Salons Rate",
-                sub: "Top 10% by revenue",
-              },
-              {
-                key: "eventRate",
-                title: "Event Bookings Rate",
-                sub: "Bridal, party packages",
-              },
-              {
-                key: "promoRate",
-                title: "Launch Promo Rate",
-                sub: "First 50 salons · 3 months",
-              },
-            ].map((row: { key: string; title: string; sub: string }) => (
-              <div
-                key={row.key}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div className="ha-salon-name" style={{ fontSize: 13 }}>
-                    {row.title}
-                  </div>
-                  <div className="ha-salon-sub">{row.sub}</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <input
-                    className="ha-input" type="number" min="0" max="100" aria-label={row.title}
-                    style={{
-                      width: 64,
-                      textAlign: "center",
-                      padding: "6px 8px",
-                      fontWeight: 700,
-                    }}
-                    value={rates[row.key as keyof typeof rates]}
-                    onChange={(e) =>
-                      setRatesOverride((prev) => ({
-                        ...(prev ?? loadedRates),
-                        [row.key]: Number(e.target.value || 0),
-                      }))
-                    }
-                  />
-                  <span style={{ color: "var(--text-muted)" }}>%</span>
-                </div>
+        <div className="ha-card ha-commission-overview">
+          <div className="ha-commission-overview-header">
+            <div>
+              <div className="ha-card-title" style={{ marginBottom: 4 }}>Commission Rate Controls</div>
+              <p className="text-xs text-muted">Platform commission applied per booking category</p>
+            </div>
+            <button className="ha-act-btn" onClick={() => setShowCommission(true)}>Edit Commission Rates</button>
+          </div>
+          <div className="ha-commission-tiles">
+            {COMMISSION_FIELDS.map((field) => (
+              <div key={field.key} className="ha-commission-tile">
+                <div className="ha-commission-tile-label">{field.title}</div>
+                <div className="ha-commission-tile-value">{loadedRates[field.key]}%</div>
+                <div className="ha-commission-tile-sub">{field.sub}</div>
               </div>
             ))}
           </div>
+        </div>
 
-          <button
-            className="ha-topbar-btn primary"
-            style={{
-              width: "auto",
-              alignSelf: "flex-start",
-              marginTop: 16,
-              paddingTop: 10,
-              paddingBottom: 10,
-            }}
-            onClick={saveRules}
-            disabled={saving}
+        {showCommission && (
+          <GenericModal
+            title="Edit Commission Rates"
+            wide
+            onClose={() => { if (!saving) { setShowCommission(false); setRatesOverride(null); } }}
+            footer={
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                <button
+                  className="ha-btn-secondary"
+                  onClick={() => { setShowCommission(false); setRatesOverride(null); }}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button className="ha-topbar-btn primary" style={{ width: "auto" }} onClick={saveRules} disabled={saving}>
+                  {saving ? "Saving..." : "Save Commission Rules"}
+                </button>
+              </div>
+            }
           >
-            {saving ? "Saving..." : "Save Commission Rules"}
-          </button>
-
-        </GenericModal>}
+            <p className="text-xs text-muted" style={{ marginBottom: 4 }}>
+              These rates apply platform-wide and take effect immediately after saving.
+            </p>
+            <div className="ha-commission-edit-grid">
+              {COMMISSION_FIELDS.map((field) => (
+                <div key={field.key} className="ha-commission-edit-row">
+                  <div className="ha-commission-edit-info">
+                    <div className="ha-salon-name" style={{ fontSize: 13 }}>{field.title}</div>
+                    <div className="ha-salon-sub">{field.sub}</div>
+                  </div>
+                  <div className="ha-commission-edit-control">
+                    <input
+                      className="ha-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      aria-label={field.title}
+                      value={rates[field.key]}
+                      onChange={(e) =>
+                        setRatesOverride((prev) => ({
+                          ...(prev ?? loadedRates),
+                          [field.key]: Number(e.target.value || 0),
+                        }))
+                      }
+                    />
+                    <span className="ha-commission-edit-suffix">%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GenericModal>
+        )}
         <div className="ha-card ha-revenue-records" style={{ paddingBottom: 0 }}>
           <div className="ha-card-title">Revenue by Salon This Month</div>
 

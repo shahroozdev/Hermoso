@@ -2,10 +2,10 @@ import { useRef, useState } from 'react';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export const useConfirmAction = () => {
-  const [pending, setPending] = useState<{ title: string; message: string; action: () => Promise<void> } | null>(null);
+  const [pending, setPending] = useState<{ title: string; message: string; action: () => Promise<void>; confirmLabel?: string; danger?: boolean } | null>(null);
   const busy = useRef(false);
-  const ask = (title: string, message: string, action: () => Promise<void>) => setPending({ title, message, action });
-  const modal = pending && <ConfirmModal title={pending.title} message={pending.message}
+  const ask = (title: string, message: string, action: () => Promise<void>, confirmLabel?: string, danger?: boolean) => setPending({ title, message, action, confirmLabel, danger });
+  const modal = pending && <ConfirmModal title={pending.title} message={pending.message} confirmLabel={pending.confirmLabel} danger={pending.danger}
     onCancel={() => { if (!busy.current) setPending(null); }}
     onConfirm={async () => {
       if (busy.current) return;

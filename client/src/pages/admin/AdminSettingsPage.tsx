@@ -9,6 +9,7 @@ import ErrorBlock from '../../components/ErrorBlock';
 import CreateAdminModal from '@/components/createAdmin';
 import ActionsMenu from '@/components/ActionsMenu';
 import OwnerCredentialsModal from '@/components/OwnerCredentialsModal';
+import Pagination from '@/components/table/Pagination';
 import { downloadCsv } from '@/utils';
 
 const DEFAULT_TOGGLES: PlatformSettingsRecord = {
@@ -30,6 +31,8 @@ const AdminSettingsPage = () => {
   const [adminRole, setAdminRole] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [adminsPage, setAdminsPage] = useState(1);
+  const [adminsPageSize, setAdminsPageSize] = useState(10);
   const [isSaving, setIsSaving] = useState(false);
   const [newAdminCredentials, setNewAdminCredentials] = useState<{
     email?: string;
@@ -42,8 +45,23 @@ const AdminSettingsPage = () => {
   const [localToggles, setLocalToggles] = useState<PlatformSettingsRecord | null>(null);
   const toggles = localToggles ?? loadedSettings ?? DEFAULT_TOGGLES;
 
-  const adminsReq = useApi(() => isSuperAdmin ? adminService.list({ search: adminSearch, role: adminRole, fromDate, toDate }) : Promise.resolve({data:[]}), ['admins', adminSearch, adminRole, fromDate, toDate]);
+  const adminsReq = useApi(
+    () => isSuperAdmin
+      ? adminService.list({ search: adminSearch, role: adminRole, fromDate, toDate, page: adminsPage, limit: adminsPageSize })
+      : Promise.resolve({ data: [] }),
+    ['admins', adminSearch, adminRole, fromDate, toDate, adminsPage, adminsPageSize],
+  );
   const admins = (adminsReq.data as { data?: AdminRecord[] } | null)?.data || [];
+  const adminsTotal = (adminsReq.data as { meta?: { total?: number } } | null)?.meta?.total ?? admins.length;
+  const adminsTotalPages = Math.max(1, Math.ceil(adminsTotal / adminsPageSize));
+
+  const resetAdminFilters = () => {
+    setAdminSearch('');
+    setAdminRole('');
+    setFromDate('');
+    setToDate('');
+    setAdminsPage(1);
+  };
 
   const setToggle = (key: keyof PlatformSettingsRecord) => {
     setLocalToggles((prev) => ({ ...(prev ?? loadedSettings ?? DEFAULT_TOGGLES), [key]: !(prev ?? loadedSettings ?? DEFAULT_TOGGLES)[key] }));
@@ -58,6 +76,19 @@ const AdminSettingsPage = () => {
       showToast(err.response?.data?.message || 'Failed to save settings', 'error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleExportAdmins = async () => {
+    try {
+      const res = await adminService.list({ search: adminSearch, role: adminRole, fromDate, toDate, limit: adminsTotal || 1000 });
+      const allAdmins: AdminRecord[] = res?.data || [];
+      downloadCsv('hermoso-admin-access.csv', [
+        ['Name', 'Email', 'Role', 'Joined Date', 'Status'],
+        ...allAdmins.map((admin) => [admin.name, admin.email, admin.role, admin.createdAt?.slice(0, 10) || '', admin.status || '']),
+      ]);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to export admin access', 'error');
     }
   };
 
@@ -104,11 +135,18 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="ha-card">
-          <div className="ha-card-title">Admin Access
-            {isSuperAdmin && <button className="ha-act-btn" disabled={adminsReq.loading || !!adminsReq.error} onClick={() => downloadCsv('hermoso-admin-access.csv', [
-              ['Name','Email','Role','Joined Date','Status'],
-              ...admins.map(admin => [admin.name, admin.email, admin.role, admin.createdAt?.slice(0,10) || '', admin.status || '']),
-            ])}>Export</button>}
+          <div className="ha-card-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span>Admin Access</span>
+            {isSuperAdmin && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="ha-act-btn" disabled={adminsReq.loading || !!adminsReq.error} onClick={handleExportAdmins}>
+                  Export
+                </button>
+                <button className="ha-topbar-btn primary" onClick={() => setInviteModalOpen(true)}>
+                  + Invite Admin
+                </button>
+              </div>
+            )}
           </div>
 
           {!isSuperAdmin ? (
@@ -123,12 +161,12 @@ const AdminSettingsPage = () => {
                   className="ha-input"
                   placeholder="Search admins by name or email..."
                   value={adminSearch}
-                  onChange={(e) => setAdminSearch(e.target.value)}
+                  onChange={(e) => { setAdminSearch(e.target.value); setAdminsPage(1); }}
                 />
-                <label>Role<select aria-label="Role" className="ha-input" value={adminRole} onChange={e=>setAdminRole(e.target.value)}><option value="">All roles</option><option value="super_admin">Super Admin</option><option value="admin">Admin</option></select></label>
-                <label>From Date<input type="date" className="ha-input" value={fromDate} onChange={e=>setFromDate(e.target.value)} /></label>
-                <label>To Date<input type="date" className="ha-input" value={toDate} onChange={e=>setToDate(e.target.value)} /></label>
-                <button className="ha-btn-secondary" onClick={()=>{setAdminSearch('');setAdminRole('');setFromDate('');setToDate('');}}>Reset Filters</button>
+                <label>Role<select aria-label="Role" className="ha-input" value={adminRole} onChange={e=>{setAdminRole(e.target.value);setAdminsPage(1);}}><option value="">All roles</option><option value="super_admin">Super Admin</option><option value="admin">Admin</option></select></label>
+                <label>From Date<input type="date" className="ha-input" value={fromDate} onChange={e=>{setFromDate(e.target.value);setAdminsPage(1);}} /></label>
+                <label>To Date<input type="date" className="ha-input" value={toDate} onChange={e=>{setToDate(e.target.value);setAdminsPage(1);}} /></label>
+                <button className="ha-btn-secondary" onClick={resetAdminFilters}>Reset Filters</button>
               </div>
 
               {actionError ? (
@@ -202,13 +240,14 @@ const AdminSettingsPage = () => {
                 </table>{!admins.length && !adminsReq.loading && <p>No admins match these filters.</p>}</div>
               )}
 
-              <button
-                className="ha-topbar-btn primary"
-                style={{ marginTop: 12 }}
-                onClick={() => setInviteModalOpen(true)}
-              >
-                + Invite Admin
-              </button>
+              <Pagination
+                page={adminsPage}
+                totalPages={adminsTotalPages}
+                onPageChange={setAdminsPage}
+                pageSize={adminsPageSize}
+                onPageSizeChange={(size) => { setAdminsPageSize(size); setAdminsPage(1); }}
+                totalItems={adminsTotal}
+              />
             </>
           )}
         </div>

@@ -67,7 +67,15 @@ const AdminOwnersPage = () => {
     }
   };
 
-  const patchStatus = (id: string, currentStatus: string | undefined) => confirmation.ask(currentStatus === 'active' ? 'Suspend Salon Owner' : 'Activate Salon Owner', 'Confirm this salon owner status change?', () => patchStatusNow(id, currentStatus));
+  const patchStatus = (id: string, currentStatus: string | undefined) => {
+    const isActive = currentStatus === 'active';
+    confirmation.ask(
+      isActive ? 'Suspend Salon Owner' : 'Activate Salon Owner',
+      isActive ? 'Are you sure you want to suspend this salon owner?' : 'Are you sure you want to activate this salon owner?',
+      () => patchStatusNow(id, currentStatus),
+      isActive ? 'Suspend' : 'Activate',
+    );
+  };
   const patchStatusNow = async (id: string, currentStatus: string | undefined) => {
     setErrorAction("");
     const nextStatus = currentStatus === "suspended" || currentStatus === "inactive" ? "active" : "suspended";
@@ -81,8 +89,8 @@ const AdminOwnersPage = () => {
   };
 
   return (
-    <>
-      <div className="ha-card">
+    <div className="ha-owners-page">
+      <div className="ha-card ha-records-card">
         <div className="ha-card-title">
           All Salon Owners
           <span style={{ display: "inline-flex", gap: 8 }}>
@@ -121,7 +129,7 @@ const AdminOwnersPage = () => {
             onChange={(e) => setLocationFilter(e.target.value)}
           />
           <span style={{ minWidth: 160, display: "inline-block" }}>
-            <ComparisonFilter label="Salons" operator={salonsOp} value={salonsValue} onOperatorChange={setSalonsOp} onValueChange={setSalonsValue} />
+            <ComparisonFilter placeholder='Salons' height={34} operator={salonsOp} value={salonsValue} onOperatorChange={setSalonsOp} onValueChange={setSalonsValue} />
           </span>
           <span style={{ minWidth: 160, display: "inline-block" }}>
             <SearchableSelect
@@ -246,7 +254,7 @@ const AdminOwnersPage = () => {
         />
       )}
     {confirmation.modal}
-    </>
+    </div>
   );
 };
 
