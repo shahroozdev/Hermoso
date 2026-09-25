@@ -22,6 +22,9 @@ const roleLabel = (role: string): string => {
   return role || 'All Users';
 };
 
+const typeLabel = (type: string) => type.split('_').filter(Boolean)
+  .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+
 const NotificationDetailModal = ({ notification, onClose }: NotificationDetailModalProps) => {
   const n = notification;
 
@@ -46,7 +49,7 @@ const NotificationDetailModal = ({ notification, onClose }: NotificationDetailMo
           <div>
             <label className="text-xs font-semibold uppercase text-muted">Type</label>
             <p className="text-sm">
-              <span className="ha-pill ha-pill-booking">{n.type}</span>
+              <span className="ha-pill ha-pill-booking">{typeLabel(n.type)}</span>
             </p>
           </div>
           <div>

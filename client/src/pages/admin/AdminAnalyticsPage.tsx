@@ -13,7 +13,9 @@ const AdminAnalyticsPage = () => {
 
   const pm = data?.data?.productMetrics || {};
   const traffic = (data?.data?.charts?.trafficByCity || []).slice(0, 4);
+  const trafficTotal = traffic.reduce((sum, city) => sum + (city.percent || 0), 0);
   const months = (data?.data?.charts?.bookingsByMonth || []).slice(-6);
+  const bookingTrendLabel = `Last ${months.length || 0} month${months.length === 1 ? '' : 's'}`;
   const max = Math.max(...months.map((m) => m?.totalBookings), 1);
 
   return (
@@ -43,7 +45,7 @@ const AdminAnalyticsPage = () => {
 
       <div className="ha-row-2">
         <div className="ha-card">
-          <div className="ha-card-title">Booking Trend <span>Last 6 months</span></div>
+          <div className="ha-card-title">Booking Trend <span>{bookingTrendLabel}</span></div>
           <div className="ha-trend-line" style={{ height: 90, marginBottom: 8 }}>
             {months.map((m, i) => {
               const h = Math.max(24, Math.round((m?.totalBookings / max) * 90));
@@ -78,6 +80,17 @@ const AdminAnalyticsPage = () => {
                 </div>
               </div>
             ))}
+            {trafficTotal < 100 && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Others</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 700 }}>{Math.round(100 - trafficTotal)}%</span>
+                </div>
+                <div style={{ height: 5, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.max(4, 100 - trafficTotal)}%`, height: '100%', borderRadius: 3, background: '#64748b' }} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

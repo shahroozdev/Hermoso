@@ -1870,3 +1870,74 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .ha-payouts-page .ha-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
 .ha-payouts-page thead { position: sticky; top: 0; z-index: 1; background: var(--surface); }
 @media (max-width: 768px) { .ha-payouts-page { height: auto; } .ha-payouts-page .ha-table-scroll { max-height: 50dvh; } }
+
+/* Desktop record pages should grow with the selected page size.  Previously
+   these pages were locked to the remaining viewport height; opening an
+   optional filter panel therefore squeezed the table into a few rows.  Keep
+   horizontal overflow local to the table, but let normal page scrolling show
+   every selected record. */
+@media (min-width: 769px) {
+  .ha-salons-page,
+  .ha-owners-page,
+  .ha-customers-page,
+  .ha-bookings-page,
+  .ha-reviews-page,
+  .ha-payouts-page,
+  .ha-revenue-page,
+  .ha-notifications-page {
+    height: auto;
+  }
+
+  .ha-salons-page .ha-records-card,
+  .ha-owners-page .ha-records-card,
+  .ha-customers-page .ha-records-card,
+  .ha-bookings-page .ha-records-card,
+  .ha-reviews-page .ha-records-card,
+  .ha-payouts-page .ha-records-card,
+  .ha-revenue-records,
+  .ha-notifications-panel > .ha-card:last-child {
+    flex: 0 0 auto;
+  }
+
+  .ha-salons-page .ha-table-scroll,
+  .ha-owners-page .ha-table-scroll,
+  .ha-customers-page .ha-table-scroll,
+  .ha-bookings-page .ha-table-scroll,
+  .ha-reviews-page .ha-table-scroll,
+  .ha-payouts-page .ha-table-scroll,
+  .ha-revenue-records .ha-table-scroll,
+  .ha-notifications-panel .ha-table-scroll,
+  .ha-owner-records .ha-table-scroll {
+    flex: 0 0 auto;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .ha-records-table .ha-pagination {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+}
+
+/* Compact, balanced public forms on desktop while retaining the single-column
+   flow on small screens. */
+.ha-auth-page { min-height: 0; }
+.ha-auth-card .ha-form-group { margin-bottom: 0; }
+.ha-auth-card .ha-input { min-height: 38px; }
+.ha-auth-submit { min-width: 140px; padding: 9px 20px; }
+.ha-metric-empty { min-height: 140px; display: grid; place-items: center; text-align: center; }
+@media (min-width: 769px) {
+  .ha-auth-card { padding: 24px 28px; }
+  .ha-register-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; row-gap: 10px; }
+  .ha-register-fields .ha-password-help { grid-column: 1 / -1; }
+  .ha-register-card .ha-auth-submit { display: block; margin-left: auto; margin-right: auto; }
+  .ha-settings-layout .ha-settings-list { display: grid; gap: 0; }
+  .ha-settings-layout .ha-setting-row { padding: 7px 0; }
+  .ha-commission-overview { padding: 14px; }
+  .ha-commission-tiles { gap: 8px; }
+  .ha-commission-tile { padding: 10px 12px; }
+  .ha-commission-tile-value { font-size: 20px; }
+  .ha-commission-edit-grid { gap: 8px; }
+  .ha-commission-edit-row { padding: 10px 12px; gap: 10px; }
+}

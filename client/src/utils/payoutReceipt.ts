@@ -7,23 +7,11 @@ export const payoutPeriod = (dateLike?: string) => {
   return `${start} ${month} ${date.getFullYear()} to ${end} ${month} ${date.getFullYear()}`;
 };
 
-export const downloadReceiptImage = (id: string, rows: string[][]) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1400;
-  canvas.height = 400 + rows.length * 120;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Receipt rendering is unavailable');
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#172033'; ctx.fillRect(0, 0, canvas.width, 210);
-  ctx.fillStyle = '#efd195'; ctx.font = 'bold 48px sans-serif'; ctx.fillText('HERMOSO', 70, 90);
-  ctx.fillStyle = '#ffffff'; ctx.font = '30px sans-serif'; ctx.fillText('Payout Receipt', 70, 155);
-  rows.forEach(([label, value], i) => {
-    const y = 285 + i * 120;
-    ctx.fillStyle = '#64748b'; ctx.font = '24px sans-serif'; ctx.fillText(label, 70, y);
-    ctx.fillStyle = '#172033'; ctx.font = '30px sans-serif'; ctx.fillText(value, 70, y + 44, 1260);
-  });
-  const link = document.createElement('a');
-  link.download = `payout-receipt-${id}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+export const printPayoutReceipt = (id: string, rows: string[][]) => {
+  const receiptWindow = window.open('', `payout-receipt-${id}`, 'width=760,height=900');
+  if (!receiptWindow) throw new Error('Allow pop-ups to save this receipt as PDF.');
+  const fields = rows.map(([label, value]) => `<div class="row"><span>${label}</span><strong>${value}</strong></div>`).join('');
+  receiptWindow.document.write(`<!doctype html><html><head><title>Payout Receipt ${id}</title><style>
+    body{font-family:Arial,sans-serif;color:#172033;margin:0;padding:32px;background:#f8fafc}.receipt{max-width:620px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}.head{background:#172033;color:#fff;padding:28px}.brand{font-size:24px;font-weight:800;color:#efd195;letter-spacing:2px}.head h1{font-size:20px;margin:10px 0 0}.body{padding:26px}.row{display:flex;justify-content:space-between;gap:24px;padding:13px 0;border-bottom:1px solid #e2e8f0}.row span{color:#64748b}.row strong{text-align:right}.hint{font-size:12px;color:#64748b;margin-top:22px}@media print{body{padding:0;background:#fff}.receipt{border:0;border-radius:0}}</style></head><body><main class="receipt"><header class="head"><div class="brand">HERMOSO</div><h1>Payout Receipt</h1></header><section class="body">${fields}<p class="hint">Reference: ${id}</p></section></main><script>window.onload=()=>window.print();</script></body></html>`);
+  receiptWindow.document.close();
 };

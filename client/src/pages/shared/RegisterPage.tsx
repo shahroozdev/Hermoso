@@ -60,15 +60,15 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-[var(--surface)] p-6">
+    <div className="ha-auth-page flex-1 flex items-center justify-center bg-[var(--surface)] p-6">
       <Form
         schema={schema}
         defaultValues={defaultValues}
         onSubmit={onSubmit}
-        className="w-full max-w-md shell-panel rounded-2xl p-6"
+        className="ha-auth-card ha-register-card w-full max-w-3xl shell-panel rounded-2xl p-6"
       >
         <h2 className="text-xl font-semibold">Register as Salon Owner</h2>
-        <div className="mt-4 grid gap-3">
+        <div className="ha-register-fields mt-4 grid gap-3">
           <FormInput
             name="name"
             type="text"
@@ -116,7 +116,7 @@ const RegisterPage = () => {
             required
             autoComplete="new-password"
           />
-          <p className="-mt-2 text-xs text-slate-500">
+          <p className="ha-password-help -mt-2 text-xs text-slate-500">
             At least 8 characters, with an uppercase letter, a lowercase letter, and a number.
           </p>
           <FormInput
@@ -131,7 +131,7 @@ const RegisterPage = () => {
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         <button
           type="submit"
-          className="mt-4 w-full rounded bg-primary p-2 text-white"
+          className="ha-auth-submit mt-4 rounded bg-primary p-2 text-white"
           disabled={isLoading}
         >
           {isLoading ? 'Registering...' : 'Register'}

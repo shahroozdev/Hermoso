@@ -1,4 +1,4 @@
-import { payoutPeriod as periodLabel, downloadReceiptImage } from '../utils/payoutReceipt';
+import { payoutPeriod as periodLabel, printPayoutReceipt } from '../utils/payoutReceipt';
 import GenericModal from './GenericModal';
 import { formatMoney } from '../utils/money';
 
@@ -22,8 +22,8 @@ const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
   const bankAccount = p.bankAccount || 'Not on file';
 
   const handleDownloadReceipt = () => {
-    downloadReceiptImage(String(p._id), [
-      ['Payout ID', p._id], ['Salon', p.salonId?.name || 'Unknown'],
+    printPayoutReceipt(String(p._id), [
+      ['Payout Reference', `#${String(p._id).slice(-8).toUpperCase()}`], ['Salon', p.salonId?.name || 'Unknown'],
       ['Period', periodLabel(p.createdAt)], ['Amount (PKR)', ((p.amountInPaisa || 0) / 100).toFixed(2)],
       ['Status', p.status || ''], ['Paid Date', p.payoutDate ? new Date(p.payoutDate).toLocaleDateString() : '-'],
       ['Bank Account', bankAccount],
@@ -40,7 +40,7 @@ const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
             Close
           </button>
           <button type="button" className="ha-btn-primary" onClick={handleDownloadReceipt}>
-            Download Receipt
+            Save as PDF
           </button>
         </>
       }
@@ -86,9 +86,14 @@ const PayoutDetailModal = ({ payout, onClose }: PayoutDetailModalProps) => {
           </div>
         </div>
 
-        {isCompleted && (
+        {isCompleted && bankAccount !== 'Not on file' && (
           <div className="rounded-lg bg-green-50 p-3 text-center text-sm text-green-800">
             This payout has been completed and funds have been transferred to the salon's bank account.
+          </div>
+        )}
+        {isCompleted && bankAccount === 'Not on file' && (
+          <div className="rounded-lg bg-amber-50 p-3 text-center text-sm text-amber-800">
+            This payout is marked as completed; no bank-account detail is on file for this receipt.
           </div>
         )}
       </div>

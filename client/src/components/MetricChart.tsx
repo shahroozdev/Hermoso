@@ -9,11 +9,17 @@ export default function MetricChart({title, points, format = value => value.toLo
   const max = Math.max(1, ...points.map(point=>point.value));
   return <section className="ha-card ha-metric-chart" aria-label={title}>
     <h3 className="ha-card-title">{title}</h3>
-    {!points.length ? <p className="text-muted text-sm">No data for this period.</p> : <ul>
+    {!points.length ? <p className="ha-metric-empty text-muted text-sm">No data for this period.</p> : <ul>
       {points.map(point=><li key={point.label}>
-        <div><span>{point.label.replace(/_/g,' ')}</span><strong>{format(point.value)}</strong></div>
+        <div><span>{formatLabel(point.label)}</span><strong>{format(point.value)}</strong></div>
         <div className="ha-metric-track"><span style={{width:`${Math.max(0, point.value)/max*100}%`}} /></div>
       </li>)}
     </ul>}
   </section>;
 }
+
+const formatLabel = (label: string) => {
+  const month = /^\d{4}-(\d{2})$/.exec(label);
+  if (month) return new Date(`${label}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return label.replace(/_/g, ' ');
+};

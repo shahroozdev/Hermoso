@@ -7,8 +7,8 @@ import { Roles } from '../utils/constants.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { AuthRequest } from '../middleware/auth.middleware.js';
 
-const getMonthlySeries = async (match: Record<string, unknown> = {}) => {
-  return Booking.aggregate([
+const getMonthlySeries = async (match: Record<string, unknown> = {}, monthCount = 12) => {
+  const series = await Booking.aggregate([
     { $match: match },
     {
       $group: {
@@ -19,6 +19,13 @@ const getMonthlySeries = async (match: Record<string, unknown> = {}) => {
     { $sort: { _id: 1 } },
     { $project: { month: '$_id', totalBookings: 1, _id: 0 } }
   ]);
+  const byMonth = new Map(series.map((item) => [item.month, item.totalBookings]));
+  const today = new Date();
+  return Array.from({ length: monthCount }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth() - (monthCount - 1 - index), 1);
+    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    return { month, totalBookings: byMonth.get(month) || 0 };
+  });
 };
 
 export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest, res: Response) => {
@@ -26,7 +33,7 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
     Salon.countDocuments(),
     User.countDocuments({ role: Roles.CUSTOMER }),
     Booking.countDocuments(),
-    Payment.aggregate([{ $group: { _id: null, totalRevenue: { $sum: '$platformCommissionInPaisa' }, gross: { $sum: '$amountInPaisa' } } }]),
+    Payment.aggregate([{ $match: { status: 'paid', paidAt: { $ne: null } } }, { $group: { _id: null, totalRevenue: { $sum: '$platformCommissionInPaisa' }, gross: { $sum: '$amountInPaisa' } } }]),
     getMonthlySeries(),
     Booking.aggregate([
       {
@@ -44,8 +51,7 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
           total: { $sum: 1 }
         }
       },
-      { $sort: { total: -1 } },
-      { $limit: 6 }
+      { $sort: { total: -1 } }
     ]),
     Booking.aggregate([
       {
@@ -63,8 +69,7 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
           total: { $sum: 1 }
         }
       },
-      { $sort: { total: -1 } },
-      { $limit: 6 }
+      { $sort: { total: -1 } }
     ]),
     Salon.find().sort({ createdAt: -1 }).limit(5).select('name status location createdAt'),
     Booking.aggregate([{ $group: { _id: '$customerId', total: { $sum: 1 } } }, { $match: { total: { $gt: 1 } } }, { $count: 'count' }]),
@@ -75,11 +80,17 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
     ])
   ]);
 
-  const [bookingStatuses, customerGrowth, revenueByMonth] = await Promise.all([
+  const [bookingStatuses, rawCustomerGrowth, revenueByMonth] = await Promise.all([
     Booking.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
-    User.aggregate([{ $match: { role: Roles.CUSTOMER } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } }, { $sort: { _id: -1 } }, { $limit: 12 }, { $sort: { _id: 1 } }]),
-    Payment.aggregate([{ $match: { status: 'paid', paidAt: { $ne: null } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$paidAt' } }, amountInPaisa: { $sum: '$amountInPaisa' } } }, { $sort: { _id: -1 } }, { $limit: 12 }, { $sort: { _id: 1 } }]),
+    User.aggregate([{ $match: { role: Roles.CUSTOMER } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    Payment.aggregate([{ $match: { status: 'paid', paidAt: { $ne: null } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$paidAt' } }, amountInPaisa: { $sum: '$platformCommissionInPaisa' } } }, { $sort: { _id: -1 } }, { $limit: 12 }, { $sort: { _id: 1 } }]),
   ]);
+  const customerCounts = new Map(rawCustomerGrowth.map((item) => [item._id, item.count]));
+  const customerGrowth = Array.from({ length: 12 }, (_, index) => {
+    const date = new Date(new Date().getFullYear(), new Date().getMonth() - (11 - index), 1);
+    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    return { _id: month, count: customerCounts.get(month) || 0 };
+  });
   const bookingsTotal = bookings || 0;
   const categoriesTotal = categoryAgg.reduce((sum, item) => sum + item.total, 0) || 1;
   const cityTotal = cityAgg.reduce((sum, item) => sum + item.total, 0) || 1;

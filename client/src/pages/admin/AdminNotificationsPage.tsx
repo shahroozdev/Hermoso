@@ -8,6 +8,7 @@ import NotificationDetailModal from "../../components/NotificationDetailModal";
 import GenericModal from "@/components/GenericModal";
 import ActionsMenu from "@/components/ActionsMenu";
 import TABLE from "@/components/table";
+import Pagination from "@/components/table/Pagination";
 import SearchableSelect from "@/components/form/SearchableSelect";
 import { useInvalidate } from "../../hooks/useInvalidate";
 import { useApi } from "../../hooks/useApi";
@@ -39,6 +40,13 @@ const roleLabel = (role: string): string => {
   if (role === "staff") return "Staff";
   return role || "All Users";
 };
+
+const notificationTypeLabel = (type?: string): string =>
+  (type || "system")
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 
 const AUDIENCE_OPTIONS = [
   { value: "all", label: "All Audiences" },
@@ -362,7 +370,7 @@ const AdminNotificationsPage = () => {
                     </span>,
                     roleLabel(item.targetRole),
                     <span className="ha-pill ha-pill-booking">
-                      {(item.type || "system").replace("_", " ")}
+                      {notificationTypeLabel(item.type)}
                     </span>,
                     <p>
                       {formatDateInput(item.createdAt)} <br />
@@ -471,6 +479,8 @@ const RecipientReportModal = ({
   const { showToast } = useToastStore();
   const [search, setSearch] = useState("");
   const [readStatus, setReadStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const recipients: Recipient[] = useMemo(() => data?.data || [], [data]);
   const campaignInfo: { title?: string; message?: string } =
@@ -495,9 +505,16 @@ const RecipientReportModal = ({
   }, [recipients, search, readStatus]);
 
   const hasActiveFilters = Boolean(search || readStatus !== "all");
+  const totalPages = Math.max(1, Math.ceil(filteredRecipients.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visibleRecipients = filteredRecipients.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
   const clearFilters = () => {
     setSearch("");
     setReadStatus("all");
+    setPage(1);
   };
 
   const handleDownloadReport = () => {
@@ -573,12 +590,12 @@ const RecipientReportModal = ({
                 style={{ maxWidth: 260 }}
                 placeholder="Search by name..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
               <span style={{ minWidth: 160, display: "inline-block" }}>
                 <SearchableSelect
                   value={readStatus}
-                  onChange={setReadStatus}
+                  onChange={(value) => { setReadStatus(value); setPage(1); }}
                   options={READ_STATUS_OPTIONS}
                 />
               </span>
@@ -607,7 +624,7 @@ const RecipientReportModal = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRecipients.map((r) => (
+                  {visibleRecipients.map((r) => (
                     <tr key={r._id} className="border-t border-[var(--border)]">
                       <td className="px-3 py-2">
                         {campaignInfo.title || notification.title}
@@ -637,6 +654,16 @@ const RecipientReportModal = ({
                 </p>
               )}
             </div>
+            {filteredRecipients.length > 0 && (
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                pageSize={pageSize}
+                onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+                totalItems={filteredRecipients.length}
+              />
+            )}
           </div>
         </>
       )}

@@ -31,6 +31,7 @@ const AdminDashboardPage = () => {
 
   const activity = data?.data?.activity || {};
   const recentSalons = data?.data?.recentSalons || [];
+  const bookingTrendLabel = `Last ${months.length || 0} month${months.length === 1 ? '' : 's'}`;
 
   return (
     <>
@@ -58,7 +59,7 @@ const AdminDashboardPage = () => {
       </div>
       <div className="ha-row-2">
         <div className="ha-card">
-          <div className="ha-card-title">Monthly Bookings Trend <span>Last 7 months</span></div>
+          <div className="ha-card-title">Monthly Bookings Trend <span>{bookingTrendLabel}</span></div>
           <div className="ha-trend-line" style={{ marginBottom: 8 }}>
             {months.map((m, i) => {
               const h = Math.max(24, Math.round((m?.totalBookings / max) * 80));
@@ -95,7 +96,7 @@ const AdminDashboardPage = () => {
 
       <div className="ha-row-2">
         <div className="ha-card">
-          <div className="ha-card-title">Recently Joined Salons <span>Pending approval</span></div>
+          <div className="ha-card-title">Recently Joined Salons <span>Latest registrations</span></div>
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="text-[10px] uppercase tracking-[1.5px] text-[var(--text-muted)]">
@@ -110,7 +111,7 @@ const AdminDashboardPage = () => {
                   <td className="border-b border-[var(--border-soft)] px-2 py-3 font-semibold">{s.name}</td>
                   <td className="border-b border-[var(--border-soft)] px-2 py-3">{s.location?.city || '-'}</td>
                   <td className="border-b border-[var(--border-soft)] px-2 py-3">
-                    <span className="rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-bold text-amber-300">{s.status}</span>
+                    <span className="rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-bold text-amber-300">{String(s.status || '-').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}</span>
                   </td>
                 </tr>
               ))}

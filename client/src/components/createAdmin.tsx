@@ -7,7 +7,7 @@ import { adminService, type AdminRecord } from "@/services/adminService";
 
 const schema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.union([z.string().email("Invalid email"), z.literal("")]).optional(),
+  email: z.string().email("Enter a valid invitation email"),
   phone: z
     .union([
       z.string().regex(/^\+?[\d\s\-()]{7,20}$/, "Invalid phone number format"),
@@ -58,7 +58,7 @@ const CreateAdminModal = ({ admin, onClose, onCreated }: CreateAdminModalProps) 
         ? await adminService.update(admin!._id, { name: data.name, phone: data.phone || undefined })
         : await adminService.create({
             name: data.name,
-            email: data.email || undefined,
+            email: data.email,
             phone: data.phone || undefined,
           });
 
@@ -117,7 +117,8 @@ const CreateAdminModal = ({ admin, onClose, onCreated }: CreateAdminModalProps) 
               name="email"
               type="email"
               label="Email"
-              placeholder="Optional. Leave blank to auto-generate."
+              placeholder="admin@example.com"
+              required
             />
           )}
 

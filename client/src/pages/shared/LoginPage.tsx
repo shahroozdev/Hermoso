@@ -57,12 +57,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-[var(--surface)] p-6">
+    <div className="ha-auth-page flex-1 flex items-center justify-center bg-[var(--surface)] p-6">
       <Form
         schema={schema}
         defaultValues={defaultValues}
         onSubmit={onSubmit}
-        className="w-full max-w-md shell-panel rounded-2xl p-6"
+        className="ha-auth-card w-full max-w-xl shell-panel rounded-2xl p-6"
       >
         <h2 className="text-xl font-semibold">Login to Hermoso</h2>
         <div className="mt-4 grid gap-3">
@@ -87,7 +87,7 @@ const LoginPage = () => {
           <FormInput name="rememberMe" type="checkbox" label="Remember Me" />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
-        <button type="submit" className="mt-4 w-full rounded bg-primary p-2 text-white" disabled={isLoading}>
+        <button type="submit" className="ha-auth-submit mt-4 rounded bg-primary p-2 text-white" disabled={isLoading}>
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
         <p className="mt-4 text-sm text-slate-500">No account? <Link to="/register" className="text-primary">Register</Link></p>
