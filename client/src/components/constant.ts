@@ -171,6 +171,17 @@ export const ownerNavGroups: NavGroup[] = [
       },
     ],
   },
+  {
+    label: "Account",
+    items: [
+      {
+        key: "notifications",
+        label: "Notifications",
+        to: "/owner/notifications",
+        icon: "Speaker.svg",
+      },
+    ],
+  },
 ];
 
 export const customerNavGroups: NavGroup[] = [

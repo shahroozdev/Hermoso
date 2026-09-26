@@ -59,15 +59,18 @@ export const register = asyncHandler(
       otpExpiresAt: getOtpExpiry()
     });
 
-    try {
-      await sendOtpEmail(email, name, otp);
-    } catch (error) {
-      // The account + OTP are already persisted; a delivery failure here shouldn't
-      // fail the whole signup and orphan the user behind a raw SMTP error. They can
-      // recover via resendOtp once the mail issue is fixed.
-      // eslint-disable-next-line no-console
-      console.error('Failed to send OTP email during registration:', error);
-    }
+    // Send through both registered channels. Delivery providers are configured by
+    // environment, so a failure on one channel must not prevent the other attempt.
+    const deliveries = await Promise.allSettled([
+      sendOtpEmail(email, name, otp),
+      sendOtpPhone(phone || '', otp)
+    ]);
+    deliveries.forEach((delivery, index) => {
+      if (delivery.status === 'rejected') {
+        // eslint-disable-next-line no-console
+        console.error(`Failed to send OTP ${index === 0 ? 'email' : 'phone'} during registration:`, delivery.reason);
+      }
+    });
 
     res.status(201).json({
       success: true,

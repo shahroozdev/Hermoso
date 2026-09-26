@@ -8,7 +8,8 @@ import { formatMoney } from '../../utils/money';
 const donutColors = ['#d4a843', '#7c3aed', '#10b981', '#f43f5e', '#0ea5e9', '#f59e0b'];
 
 const AdminDashboardPage = () => {
-  const dashboard = useApi(() => dashboardService.admin(), ["admin-dashboard"]);
+  const range = new URLSearchParams(window.location.search).get('bookingRange') || 'current_month';
+  const dashboard = useApi(() => dashboardService.admin({ range }), ["admin-dashboard", range]);
   if (dashboard.loading) return <AdminPageSkeleton variant="table" />;
   if (dashboard.error) return <ErrorBlock text={dashboard.error} />;
 
@@ -59,7 +60,7 @@ const AdminDashboardPage = () => {
       </div>
       <div className="ha-row-2">
         <div className="ha-card">
-          <div className="ha-card-title">Monthly Bookings Trend <span>{bookingTrendLabel}</span></div>
+          <div className="ha-card-title">Monthly Bookings Trend <span>{bookingTrendLabel}</span><select aria-label="Booking range" className="ha-input ml-auto w-auto" value={range} onChange={(e) => { const url = new URL(window.location.href); url.searchParams.set('bookingRange', e.target.value); window.location.assign(url.toString()); }}><option value="current_week">Current Week</option><option value="last_week">Last Week</option><option value="current_month">Current Month</option><option value="last_month">Last Month</option><option value="current_year">Current Year</option><option value="last_year">Last Year</option></select></div>
           <div className="ha-trend-line" style={{ marginBottom: 8 }}>
             {months.map((m, i) => {
               const h = Math.max(24, Math.round((m?.totalBookings / max) * 80));

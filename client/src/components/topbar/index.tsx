@@ -12,7 +12,10 @@ interface TopbarProps {
 
 const Topbar = ({ onMenuClick, isAdmin }: TopbarProps) => {
   const key = resolvePageKey(location.pathname);
-  const meta = pageMeta[key] || pageMeta.overview;
+  const isOwnerDashboard = !isAdmin && (location.pathname === "/owner" || location.pathname === "/owner/");
+  const meta = isOwnerDashboard
+    ? { title: "Dashboard", sub: "Salon performance overview", action: "" }
+    : pageMeta[key] || pageMeta.overview;
   return (
     <header className="ha-topbar sticky top-0 z-30">
       <button

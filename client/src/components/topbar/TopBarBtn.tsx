@@ -36,7 +36,7 @@ const clickFirstButtonMatchingText = (texts: string[]) => {
 // These pages already render their own primary action button in-page
 // (Save Profile / Moderate All) — showing it again in the topbar would be
 // a confusing duplicate control doing the same thing.
-const PAGES_WITHOUT_TOPBAR_ACTION = ["profile", "reviews"];
+const PAGES_WITHOUT_TOPBAR_ACTION = ["profile", "reviews", "payouts", "settings", "notifications"];
 
 const TopBarBtn = () => {
   const location = useLocation();

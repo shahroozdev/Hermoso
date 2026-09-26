@@ -22,6 +22,11 @@ export interface IStaffDetails {
 
   shiftEndTime?: string;
 
+  breakStartTime?: string;
+  breakEndTime?: string;
+
+  daySchedules?: Record<string, { start: string; end: string; breakStart?: string; breakEnd?: string }>;
+
   workingDays?: (
     | "monday"
     | "tuesday"
@@ -132,6 +137,11 @@ const userSchema = new Schema<IUser>(
       shiftStartTime: String,
 
       shiftEndTime: String,
+
+      breakStartTime: String,
+      breakEndTime: String,
+
+      daySchedules: { type: Schema.Types.Mixed, default: {} },
 
       workingDays: [String],
 

@@ -20,6 +20,9 @@ interface StaffDetails {
   joiningDate: string;
   shiftStartTime: string;
   shiftEndTime: string;
+  breakStartTime?: string;
+  breakEndTime?: string;
+  daySchedules?: Record<string, { start: string; end: string; breakStart?: string; breakEnd?: string }>;
   commissionPercentage?: number;
   emergencyContact?: string;
   workingDays: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
@@ -55,6 +58,10 @@ export const staffService = {
 
   update: async (id: string, payload: UpdateStaffPayload) => {
     const { data } = await api.put(`/staff/${id}`, payload);
+    return data;
+  },
+  toggleStatus: async (id: string) => {
+    const { data } = await api.patch(`/staff/${id}/status`);
     return data;
   },
 

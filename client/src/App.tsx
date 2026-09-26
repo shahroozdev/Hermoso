@@ -80,6 +80,7 @@ const App = () => (
       <Route element={<ProtectedRoute allowedRoles={['salon_owner']} />}>
         <Route path="/owner" element={<ProtectedLayout item={ownerNavGroups} />}>
           <Route index element={<OwnerDashboardPage />} />
+          <Route path="setup" element={<CreateSalonPage />} />
           <Route path="services" element={<OwnerServicesPage />} />
           <Route path="events" element={<OwnerEventsPage />} />
           <Route path="pos" element={<OwnerPOSPage />} />

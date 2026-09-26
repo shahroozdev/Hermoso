@@ -37,7 +37,7 @@ const OwnerPOSPage = () => {
   const [gstPercent, setGstPercent] = useState(0);
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<{ _id: string; name: string } | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<{ _id: string; name: string; phone?: string; email?: string } | null>(null);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
   const [itemSearch, setItemSearch] = useState('');
@@ -223,7 +223,7 @@ const OwnerPOSPage = () => {
   }, [showItemModal]);
 
   return (
-    <div className="flex h-[calc(100vh-140px)] flex-col gap-3">
+    <div className="flex min-h-[calc(100vh-140px)] flex-col gap-3">
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -241,8 +241,8 @@ const OwnerPOSPage = () => {
           <div className="flex gap-1.5">
             {selectedCustomer ? (
               <div className="flex flex-1 items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-                {selectedCustomer.name}
-                <button onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="leading-1 bg-none border-none p-0 text-base text-green-800 cursor-pointer">x</button>
+                <span>{selectedCustomer.name} <span className="font-normal">· {selectedCustomer.phone || selectedCustomer.email || 'No contact'}</span></span>
+                <button aria-label="Remove selected customer" onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="leading-1 bg-none border-none p-0 text-base text-green-800 cursor-pointer">×</button>
               </div>
             ) : (
               <div className="relative flex-1">
@@ -252,7 +252,7 @@ const OwnerPOSPage = () => {
                     {customers.length === 0 && customerSearch.length > 0 ? (
                       <div className="px-3 py-2 text-sm text-[var(--text-muted)]">No customers found</div>
                     ) : customers.map((c) => (
-                      <div key={c._id} className="cursor-pointer px-3 py-2 text-sm hover:bg-[var(--surface-soft)]" onMouseDown={() => { setSelectedCustomer(c); setShowCustomerDropdown(false); setCustomerSearch(''); }}>{c.name}</div>
+                      <div key={c._id} className="cursor-pointer px-3 py-2 text-sm hover:bg-[var(--surface-soft)]" onMouseDown={() => { setSelectedCustomer(c); setShowCustomerDropdown(false); setCustomerSearch(''); }}><div>{c.name}</div><div className="text-xs text-[var(--text-muted)]">{c.phone || c.email || 'No contact'}</div></div>
                     ))}
                   </div>
                 )}
@@ -297,7 +297,7 @@ const OwnerPOSPage = () => {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <div className="min-h-[240px] flex-1 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b-2 border-[var(--border)] bg-[var(--surface-soft)] text-left text-xs font-semibold uppercase text-[var(--text-muted)]">
@@ -342,7 +342,7 @@ const OwnerPOSPage = () => {
       </div>
 
       {/* Bottom: Summary + GST + Discount + Checkout */}
-      <div className="flex items-end gap-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+      <section aria-label="Order Summary" className="sticky bottom-0 z-10 flex items-end gap-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 shadow-lg">
         <div className="grid flex-1 grid-cols-3 gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">GST (%)</label>
@@ -358,7 +358,7 @@ const OwnerPOSPage = () => {
           </div>
         </div>
 
-        <div className="min-w-[280px] text-right">
+        <div className="min-w-[280px] text-right"><h2 className="mb-2 text-left text-sm font-semibold">Order Summary</h2>
           <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Subtotal</span><span>{formatMoney(subtotalInPaisa)}</span></div>
           <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>Item Discount</span><span>-{formatMoney(totalItemDiscountInPaisa)}</span></div>
           <div className="flex justify-between px-0 py-0.5 text-sm text-[var(--text-muted)]"><span>GST ({gstPercent}%)</span><span>+{formatMoney(gstAmountInPaisa)}</span></div>
@@ -368,7 +368,7 @@ const OwnerPOSPage = () => {
             {checkoutLoading ? 'Processing...' : `${editingBillId ? 'Update' : 'Proceed'} ${formatMoney(grandTotalInPaisa)}`}
           </button>
         </div>
-      </div>
+      </section>
 
       {/* Item Selection Modal */}
       {showItemModal && (
@@ -393,6 +393,7 @@ const OwnerPOSPage = () => {
                       <div className="text-sm font-semibold">{e.name}</div>
                       <div className="mt-1 text-base font-bold text-[var(--accent-2)]">{formatMoney(e.finalPriceInPaisa || e.totalPriceInPaisa)}</div>
                       <div className="text-xs text-[var(--text-muted)]">{e.totalDuration} min</div>
+                      <div className="text-xs text-[var(--text-muted)]">Service: {(e.services || []).map((service) => service.serviceName || service.serviceId?.name).filter(Boolean).join(', ') || 'Not specified'}</div>
                       {e.discount ? <div className="text-xs text-[var(--text-muted)]">{e.discount}% off</div> : null}
                     </div>
                   ))}

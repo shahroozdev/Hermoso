@@ -7,6 +7,7 @@ import RangeFilter from '@/components/form/RangeFilter';
 import Time24Input from '@/components/form/Time24Input';
 import { downloadCsv } from '@/utils';
 import { useToastStore } from '@/store/toastStore';
+import { useInvalidate } from '@/hooks/useInvalidate';
 
 interface StaffItem extends StaffEditRecord {
   name?: string;
@@ -17,6 +18,14 @@ const OwnerStaffPage = () => {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
   const { showToast } = useToastStore();
+  const invalidate = useInvalidate();
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
+  const toggleStatus = async (item: StaffItem) => {
+    setStatusUpdating(item._id);
+    try { const response = await staffService.toggleStatus(item._id); invalidate(['owner-staff']); showToast(`Staff marked ${response.data?.status || (item.status === 'active' ? 'inactive' : 'active')}.`); }
+    catch { showToast('Failed to update staff status.', 'error'); }
+    finally { setStatusUpdating(null); }
+  };
   const set = (key: string, value: string) => setFilters((old) => ({ ...old, [key]: value }));
   const exportStaff = async () => {
     setExporting(true);
@@ -84,9 +93,9 @@ const OwnerStaffPage = () => {
               <div className="ha-actions" key="actions">
                 <StaffModal staff={item} />
                 {item.status === "inactive" ? (
-                  <button className="ha-act-btn">Activate</button>
+                  <button className="ha-act-btn" disabled={statusUpdating === item._id} onClick={() => toggleStatus(item)}>{statusUpdating === item._id ? 'Updating...' : 'Activate'}</button>
                 ) : (
-                  <button className="ha-act-btn danger">Inactivate</button>
+                  <button className="ha-act-btn danger" disabled={statusUpdating === item._id} onClick={() => toggleStatus(item)}>{statusUpdating === item._id ? 'Updating...' : 'Inactivate'}</button>
                 )}
               </div>,
             ];

@@ -242,3 +242,10 @@ export const markNotificationRead = asyncHandler(async (req: AuthRequest, res: R
 
   res.json({ success: true, data: notification });
 });
+
+// Recipient notifications are private copies. Clearing them must never delete an
+// admin campaign or another user's history.
+export const clearMyNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await Notification.deleteMany({ userId: req.user?._id });
+  res.json({ success: true, count: result.deletedCount || 0 });
+});

@@ -7,6 +7,7 @@ import FormInput from "./form/FormInput";
 import z from "zod";
 import GenericModal from "./GenericModal";
 import { useInvalidate } from "../hooks/useInvalidate";
+const SCHEDULE_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 export const staffSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
 
@@ -36,6 +37,10 @@ export const staffSchema = z.object({
     shiftStartTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm from 00:00 to 23:59"),
 
     shiftEndTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm from 00:00 to 23:59"),
+
+    breakStartTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm from 00:00 to 23:59").optional().or(z.literal('')),
+    breakEndTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm from 00:00 to 23:59").optional().or(z.literal('')),
+    daySchedules: z.record(z.string(), z.object({ start: z.string(), end: z.string(), breakStart: z.string().optional(), breakEnd: z.string().optional() })).optional(),
 
     commissionPercentage: z.coerce
       .number()
@@ -83,6 +88,9 @@ export const staffDefaults = {
 
     shiftStartTime: "",
     shiftEndTime: "",
+    breakStartTime: "",
+    breakEndTime: "",
+    daySchedules: Object.fromEntries(SCHEDULE_DAYS.map((day) => [day, { start: '', end: '', breakStart: '', breakEnd: '' }])),
 
     commissionPercentage: 0,
 
@@ -261,6 +269,8 @@ const StaffModal = ({ staff }: { staff?: StaffEditRecord } = {}) => {
                 label="Shift End Time"
                 required
               />
+              <FormInput name="staffDetails.breakStartTime" type="time" label="Break Start Time" />
+              <FormInput name="staffDetails.breakEndTime" type="time" label="Break End Time" />
 
               <FormInput
                 name="staffDetails.commissionPercentage"
@@ -305,6 +315,22 @@ const StaffModal = ({ staff }: { staff?: StaffEditRecord } = {}) => {
                   { label: "Sunday", value: "sunday" },
                 ]}
               />
+            </div>
+
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-semibold">Day-specific schedule</p>
+              <p className="mb-3 text-xs text-muted">Set different working and break times for each applicable day.</p>
+              <div className="grid gap-3">
+                {SCHEDULE_DAYS.map((day) => (
+                  <div key={day} className="grid items-end gap-2 rounded-lg border border-[var(--border)] p-3 md:grid-cols-5">
+                    <p className="mb-2 text-sm font-medium capitalize md:mb-2">{day}</p>
+                    <FormInput name={`staffDetails.daySchedules.${day}.start`} type="time" label="Start" />
+                    <FormInput name={`staffDetails.daySchedules.${day}.end`} type="time" label="End" />
+                    <FormInput name={`staffDetails.daySchedules.${day}.breakStart`} type="time" label="Break start" />
+                    <FormInput name={`staffDetails.daySchedules.${day}.breakEnd`} type="time" label="Break end" />
+                  </div>
+                ))}
+              </div>
             </div>
 
             {formError ? (

@@ -28,13 +28,40 @@ const getMonthlySeries = async (match: Record<string, unknown> = {}, monthCount 
   });
 };
 
-export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest, res: Response) => {
+const bookingTrendRange = (range?: string) => {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(startOfDay); end.setDate(end.getDate() + 1);
+  if (range === 'current_week') { const start = new Date(startOfDay); start.setDate(start.getDate() - start.getDay()); return { start, end, format: '%a %d' }; }
+  if (range === 'last_week') { const endLast = new Date(startOfDay); endLast.setDate(endLast.getDate() - startOfDay.getDay()); const start = new Date(endLast); start.setDate(start.getDate() - 7); return { start, end: endLast, format: '%a %d' }; }
+  if (range === 'current_month') return { start: new Date(now.getFullYear(), now.getMonth(), 1), end, format: '%d' };
+  if (range === 'last_month') return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 1), format: '%d' };
+  if (range === 'current_year') return { start: new Date(now.getFullYear(), 0, 1), end, format: '%b' };
+  if (range === 'last_year') return { start: new Date(now.getFullYear() - 1, 0, 1), end: new Date(now.getFullYear(), 0, 1), format: '%b' };
+  return null;
+};
+
+const getBookingTrend = async (range?: string) => {
+  const period = bookingTrendRange(range);
+  if (!period) return getMonthlySeries();
+  return Booking.aggregate([
+    { $match: { bookingDate: { $gte: period.start, $lt: period.end } } },
+    { $group: { _id: { $dateToString: { format: period.format, date: '$bookingDate' } }, totalBookings: { $sum: 1 } } },
+    { $sort: { _id: 1 } }, { $project: { month: '$_id', totalBookings: 1, _id: 0 } }
+  ]);
+};
+
+export const getAdminDashboardAnalytics = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const requestedYear = String(req.query.year || '');
+  const selectedYear = /^\d{4}$/.test(requestedYear) ? Number(requestedYear) : new Date().getFullYear();
+  const yearStart = new Date(selectedYear, 0, 1);
+  const yearEnd = new Date(selectedYear + 1, 0, 1);
   const [salons, customers, bookings, revenueAgg, bookingsByMonth, categoryAgg, cityAgg, recentSalons, repeatCustomersAgg, weeklyActiveCustomers] = await Promise.all([
     Salon.countDocuments(),
     User.countDocuments({ role: Roles.CUSTOMER }),
     Booking.countDocuments(),
     Payment.aggregate([{ $match: { status: 'paid', paidAt: { $ne: null } } }, { $group: { _id: null, totalRevenue: { $sum: '$platformCommissionInPaisa' }, gross: { $sum: '$amountInPaisa' } } }]),
-    getMonthlySeries(),
+    getBookingTrend(typeof req.query.range === 'string' ? req.query.range : undefined),
     Booking.aggregate([
       {
         $lookup: {
@@ -82,12 +109,12 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
 
   const [bookingStatuses, rawCustomerGrowth, revenueByMonth] = await Promise.all([
     Booking.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
-    User.aggregate([{ $match: { role: Roles.CUSTOMER } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    User.aggregate([{ $match: { role: Roles.CUSTOMER, createdAt: { $gte: yearStart, $lt: yearEnd } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
     Payment.aggregate([{ $match: { status: 'paid', paidAt: { $ne: null } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$paidAt' } }, amountInPaisa: { $sum: '$platformCommissionInPaisa' } } }, { $sort: { _id: -1 } }, { $limit: 12 }, { $sort: { _id: 1 } }]),
   ]);
   const customerCounts = new Map(rawCustomerGrowth.map((item) => [item._id, item.count]));
   const customerGrowth = Array.from({ length: 12 }, (_, index) => {
-    const date = new Date(new Date().getFullYear(), new Date().getMonth() - (11 - index), 1);
+    const date = new Date(selectedYear, index, 1);
     const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     return { _id: month, count: customerCounts.get(month) || 0 };
   });
@@ -148,7 +175,8 @@ export const getAdminDashboardAnalytics = asyncHandler(async (_req: AuthRequest,
         avgSessionMinutes,
         aiEngagement
       },
-      recentSalons
+      recentSalons,
+      filters: { registrationYear: selectedYear }
     }
   });
 });
@@ -174,11 +202,21 @@ export const getOwnerDashboardAnalytics = asyncHandler(async (req: AuthRequest, 
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
 
-  const [dailyBookings, upcomingAppointments, revenueAgg, bookingsByMonth] = await Promise.all([
+  const [dailyBookings, upcomingAppointments, revenueAgg, bookingsByMonth, bookingStatuses, topServices, revenueByMonth, customerTrend] = await Promise.all([
     Booking.countDocuments({ salonId, bookingDate: { $gte: start, $lt: end } }),
     Booking.countDocuments({ salonId, bookingDate: { $gte: start } }),
     Payment.aggregate([{ $match: { salonId } }, { $group: { _id: null, gross: { $sum: '$amountInPaisa' }, net: { $sum: '$salonAmountInPaisa' } } }]),
-    getMonthlySeries({ salonId })
+    getMonthlySeries({ salonId }),
+    Booking.aggregate([{ $match: { salonId } }, { $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    Booking.aggregate([
+      { $match: { salonId } },
+      { $lookup: { from: 'services', localField: 'serviceId', foreignField: '_id', as: 'service' } },
+      { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+      { $group: { _id: { $ifNull: ['$service.name', 'Other'] }, count: { $sum: 1 } } },
+      { $sort: { count: -1 } }, { $limit: 5 }
+    ]),
+    Payment.aggregate([{ $match: { salonId, status: 'paid' } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: { $ifNull: ['$paidAt', '$createdAt'] } } }, gross: { $sum: '$amountInPaisa' }, net: { $sum: '$salonAmountInPaisa' } } }, { $sort: { _id: 1 } }]),
+    Booking.aggregate([{ $match: { salonId } }, { $group: { _id: '$customerId', count: { $sum: 1 } } }, { $group: { _id: null, newCustomers: { $sum: { $cond: [{ $eq: ['$count', 1] }, 1, 0] } }, returningCustomers: { $sum: { $cond: [{ $gt: ['$count', 1] }, 1, 0] } } } }])
   ]);
 
   res.json({
@@ -190,7 +228,13 @@ export const getOwnerDashboardAnalytics = asyncHandler(async (req: AuthRequest, 
         grossRevenueInPaisa: revenueAgg[0]?.gross || 0,
         netRevenueInPaisa: revenueAgg[0]?.net || 0
       },
-      charts: { bookingsByMonth }
+      charts: {
+        bookingsByMonth,
+        bookingStatuses,
+        topServices: topServices.map((item) => ({ _id: item._id, count: item.count })),
+        revenueByMonth: revenueByMonth.map((item) => ({ _id: item._id, gross: item.gross, net: item.net })),
+        customerTrend: customerTrend[0] || { newCustomers: 0, returningCustomers: 0 }
+      }
     }
   });
 });

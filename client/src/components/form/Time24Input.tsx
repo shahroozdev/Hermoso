@@ -36,6 +36,7 @@ const Time24Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputEl
     <input {...props} ref={el => {input.current = el; if(typeof ref === 'function') ref(el); else if(ref) ref.current = el;}} type="text" inputMode="numeric" placeholder="HH:mm" maxLength={5} pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="24-hour time, 00:00 to 23:59" />
     <button type="button" className="ha-time-trigger" aria-label={`Choose time for ${props.name || props['aria-label'] || 'field'}`} disabled={props.disabled} onClick={open}>◷</button>
     {position && createPortal(<div ref={popup} className="ha-time-picker" role="dialog" aria-label="24-hour time picker" style={position}>
+      <p className="mb-2 text-center text-sm font-semibold" aria-live="polite">Selected time: {hour}:{minute}</p>
       <div className="ha-time-columns">
         <label>Hour<select aria-label="Hour" size={6} value={hour} onChange={e=>setHour(e.target.value)}>{Array.from({length:24},(_,i)=>String(i).padStart(2,'0')).map(v=><option key={v} value={v}>{v}</option>)}</select></label>
         <label>Minute<select aria-label="Minute" size={6} value={minute} onChange={e=>setMinute(e.target.value)}>{Array.from({length:60},(_,i)=>String(i).padStart(2,'0')).map(v=><option key={v} value={v}>{v}</option>)}</select></label>

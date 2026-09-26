@@ -68,7 +68,7 @@ const Searchbar = () => {
     goTo(`/admin/customers?search=${encodeURIComponent(customer.email || customer.name)}`);
 
   const handleBookingClick = (booking: SearchBooking) =>
-    goTo(`/admin/bookings?customer=${encodeURIComponent(booking.customer?.name || "")}`);
+    goTo(`/admin/bookings?bookingId=${encodeURIComponent(booking._id)}`);
 
   const handleSalonClick = (salon: SearchSalon) =>
     goTo(`/admin/salons?search=${encodeURIComponent(salon.name)}`);

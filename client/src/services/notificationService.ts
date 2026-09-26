@@ -29,6 +29,10 @@ export const notificationService = {
     const { data } = await api.patch(`/notifications/${id}/read`);
     return data;
   },
+  clearMine: async () => {
+    const { data } = await api.delete('/notifications/clear');
+    return data;
+  },
   announce: async (params: AnnounceParams) => {
     const { data } = await api.post('/notifications/announcement', params);
     return data;

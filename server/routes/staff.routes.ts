@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createStaff, getStaff, updateStaff, deleteStaff } from '../controllers/staff.controller.js';
+import { createStaff, getStaff, updateStaff, deleteStaff, toggleStaffStatus } from '../controllers/staff.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/rbac.middleware.js';
 import { Roles } from '../utils/constants.js';
@@ -119,6 +119,7 @@ router.use(authenticate);
 router.post('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), createStaff);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getStaff);
 router.put('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), updateStaff);
+router.patch('/:id/status', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), toggleStaffStatus);
 router.delete('/:id', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER), deleteStaff);
 
 export default router;

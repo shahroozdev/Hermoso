@@ -6,6 +6,7 @@ import MiniBarChart from '../../components/MiniBarChart';
 import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';
 import { formatMoney } from '../../utils/money';
+import MetricChart from '../../components/MetricChart';
 
 const OwnerDashboardPage = () => {
   const { data, loading, error } = useApi(() => dashboardService.owner(), ["owner-dashboard"]);
@@ -21,7 +22,7 @@ const OwnerDashboardPage = () => {
           Your account isn&apos;t linked to a salon yet. Create your salon profile to start
           accepting bookings and see your dashboard data.
         </p>
-        <Link to="/create-salon" className="mt-4 inline-block rounded-xl bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900">
+        <Link to="/owner/setup" className="mt-4 inline-block rounded-xl bg-[var(--accent-2)] px-5 py-3 text-sm font-semibold text-slate-900">
           Create Your Salon
         </Link>
       </div>
@@ -31,6 +32,8 @@ const OwnerDashboardPage = () => {
   // CR-26: AI Scan referral bookings
   const aiScanBookings = data?.data?.totals?.aiScanBookings || 0;
   const aiScanRevenueInPaisa = data?.data?.totals?.aiScanRevenueInPaisa || 0;
+  const bookingTrend = data?.data?.charts?.bookingsByMonth || [];
+  const hasBookingData = bookingTrend.some((item: { totalBookings?: number }) => (item.totalBookings || 0) > 0);
 
   return (
     <div className="space-y-6">
@@ -72,12 +75,23 @@ const OwnerDashboardPage = () => {
       <div className="shell-panel rounded-2xl p-6">
         <h3 className="font-semibold">Bookings Growth (Monthly)</h3>
         <div className="mt-4">
-          <MiniBarChart items={data?.data?.charts?.bookingsByMonth || []} valueKey="totalBookings" labelKey="month" />
+          {hasBookingData ? (
+            <MiniBarChart items={bookingTrend} valueKey="totalBookings" labelKey="month" />
+          ) : (
+            <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-10 text-center text-sm text-muted">
+              No booking data available yet.
+            </p>
+          )}
         </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <MetricChart title="Revenue Trend" format={formatMoney} points={(data?.data?.charts?.revenueByMonth || []).flatMap((item: { _id: string; gross: number; net: number }) => [{ label: `${item._id} Gross`, value: item.gross }, { label: `${item._id} Net`, value: item.net }])} />
+        <MetricChart title="Booking Status Breakdown" points={(data?.data?.charts?.bookingStatuses || []).map((item: { _id: string; count: number }) => ({ label: item._id, value: item.count }))} />
+        <MetricChart title="Top Services" points={(data?.data?.charts?.topServices || []).map((item: { _id: string; count: number }) => ({ label: item._id, value: item.count }))} />
+        <MetricChart title="Customer Trend" points={[{ label: 'New Customers', value: data?.data?.charts?.customerTrend?.newCustomers || 0 }, { label: 'Returning Customers', value: data?.data?.charts?.customerTrend?.returningCustomers || 0 }]} />
       </div>
     </div>
   );
 };
 
 export default OwnerDashboardPage;
-

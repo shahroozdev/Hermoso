@@ -6,6 +6,7 @@ import {
   getNotifications,
   getSentNotificationsSummary,
   markNotificationRead,
+  clearMyNotifications,
   sendNotificationRecord,
   updateNotificationRecord
 } from '../controllers/notification.controller.js';
@@ -108,6 +109,7 @@ router.patch('/:id', authorize(Roles.SUPER_ADMIN), updateNotificationRecord);
 router.post('/:id/send', authorize(Roles.SUPER_ADMIN), sendNotificationRecord);
 router.get('/reports/summary', authorize(Roles.SUPER_ADMIN), getSentNotificationsSummary);
 router.get('/:id/recipients', authorize(Roles.SUPER_ADMIN), getNotificationRecipients);
+router.delete('/clear', authorize(Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), clearMyNotifications);
 router.get('/', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), getNotifications);
 router.patch('/:id/read', authorize(Roles.SUPER_ADMIN, Roles.SALON_OWNER, Roles.STAFF, Roles.CUSTOMER), markNotificationRead);
 

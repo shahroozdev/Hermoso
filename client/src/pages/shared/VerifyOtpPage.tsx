@@ -1,14 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import Form from '../../components/form/Form';
 import FormInput from '../../components/form/FormInput';
 import { authService } from '../../services/authService';
 
-const schema = z.object({
-  email: z.string().email('Enter a valid email address'),
-  otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits')
-});
+const schema = z.object({ otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits') });
+const RESEND_DELAY_SECONDS = 30;
 
 const VerifyOtpPage = () => {
   const navigate = useNavigate();
@@ -16,14 +14,21 @@ const VerifyOtpPage = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [resending, setResending] = useState(false);
-  const [email, setEmail] = useState(params.get('email') || '');
+  const [secondsRemaining, setSecondsRemaining] = useState(RESEND_DELAY_SECONDS);
   const emailParam = params.get('email') || '';
 
-  const onSubmit = async (form: { email: string; otp: string }) => {
+  useEffect(() => {
+    if (secondsRemaining <= 0) return;
+    const timer = window.setTimeout(() => setSecondsRemaining((seconds) => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [secondsRemaining]);
+
+  const onSubmit = async (form: { otp: string }) => {
     setError('');
     setMessage('');
     try {
-      await authService.verifyOtp(form);
+      if (!emailParam) { setError('Your registration email is missing. Please register again.'); return; }
+      await authService.verifyOtp({ ...form, email: emailParam });
       setMessage('OTP verified successfully. Please log in to continue.');
       navigate('/login');
     } catch (err: unknown) {
@@ -35,10 +40,11 @@ const VerifyOtpPage = () => {
     setError('');
     setMessage('');
     try {
-      if (!z.string().email().safeParse(email).success) { setError('Enter a valid email address first.'); return; }
+      if (!z.string().email().safeParse(emailParam).success) { setError('Your registration email is missing. Please register again.'); return; }
       setResending(true);
-      await authService.resendOtp(email);
+      await authService.resendOtp(emailParam);
       setMessage('OTP resent successfully.');
+      setSecondsRemaining(RESEND_DELAY_SECONDS);
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to resend OTP');
     } finally {
@@ -50,21 +56,20 @@ const VerifyOtpPage = () => {
     <div className="flex-1 flex items-center justify-center bg-[var(--surface)] p-6">
       <Form
         schema={schema}
-        defaultValues={{ email: emailParam, otp: '' }}
+        defaultValues={{ otp: '' }}
         onSubmit={onSubmit}
         className="w-full max-w-md shell-panel rounded-2xl p-6"
       >
         <h2 className="text-xl font-semibold">Verify OTP</h2>
-        <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to your email and phone.</p>
+        <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to {emailParam || 'your registered email'} and your registered phone number.</p>
         <div className="mt-4 grid gap-3">
-          <div onChange={(e) => setEmail((e.target as HTMLInputElement).value)}><FormInput name="email" type="email" label="Email" required /></div>
           <FormInput name="otp" type="text" label="OTP" placeholder="6-digit code" required maxLength={6} inputMode="numeric" />
         </div>
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         {message ? <p className="mt-2 text-sm text-emerald-600">{message}</p> : null}
         <button type="submit" className="mt-4 w-full rounded bg-primary p-2 text-white">Verify OTP</button>
-        <button type="button" className="mt-2 w-full rounded border p-2" onClick={resend} disabled={!email.trim() || resending}>
-          {resending ? 'Sending...' : 'Resend OTP'}
+        <button type="button" className="mt-2 w-full rounded border p-2 disabled:cursor-not-allowed disabled:opacity-60" onClick={resend} disabled={!emailParam || resending || secondsRemaining > 0}>
+          {resending ? 'Sending...' : secondsRemaining > 0 ? `Resend OTP in 00:${String(secondsRemaining).padStart(2, '0')}` : 'Resend OTP'}
         </button>
         <Link
           to="/login"

@@ -10,8 +10,9 @@ export const legalLinks = [
 const LegalLayout = () => (
   <div className="flex min-h-screen flex-col bg-[var(--bg)]">
     <header className="border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
-      <Link to="/login" className="text-lg font-semibold text-[var(--text)]">
-        Hermoso App
+      <Link to="/login" className="flex items-center gap-2 text-lg font-semibold text-[var(--text)]">
+        <img src="/assets/icons/HermosoLogo.svg" alt="Hermoso" className="h-9 w-9" />
+        <span>Hermoso App</span>
       </Link>
     </header>
 

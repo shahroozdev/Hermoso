@@ -363,6 +363,7 @@ const AdminPayoutsPage = () => {
           service={payoutService.list}
           serviceParams={filterParams}
           columns={[
+            { title: "Payout ID" },
             { title: "Salon" },
             { title: "Period" },
             { title: "Net Payout PKR" },
@@ -374,6 +375,7 @@ const AdminPayoutsPage = () => {
             data?.map((item) => {
               const isPending = pendingActionId === item._id;
               return [
+                <code className="text-xs text-[var(--text-muted)]" title={item._id}>{item._id.slice(-8)}</code>,
                 <span className="ha-salon-name" style={{ fontSize: 14 }}>
                   {item.salonId?.name || "Unknown Salon"}
                 </span>,
