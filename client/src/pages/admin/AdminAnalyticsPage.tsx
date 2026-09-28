@@ -48,7 +48,7 @@ const AdminAnalyticsPage = () => {
 
       <div className="ha-row-2">
         <div className="ha-card">
-          <div className="ha-card-title">Booking Trend <span>{bookingTrendLabel}</span><select aria-label="Booking range" className="ha-input ml-auto w-auto" value={range} onChange={(e) => { const url = new URL(window.location.href); url.searchParams.set('bookingRange', e.target.value); window.location.assign(url.toString()); }}><option value="current_week">Current Week</option><option value="last_week">Last Week</option><option value="current_month">Current Month</option><option value="last_month">Last Month</option><option value="current_year">Current Year</option><option value="last_year">Last Year</option></select></div>
+          <div className="ha-card-title">Booking Trend <span>{bookingTrendLabel}</span><select aria-label="Booking range" className="ha-input ml-auto" style={{ width: 132, minHeight: 30, padding: '4px 8px', fontSize: 12 }} value={range} onChange={(e) => { const url = new URL(window.location.href); url.searchParams.set('bookingRange', e.target.value); window.location.assign(url.toString()); }}><option value="current_week">Current Week</option><option value="last_week">Last Week</option><option value="current_month">Current Month</option><option value="last_month">Last Month</option><option value="current_year">Current Year</option><option value="last_year">Last Year</option></select></div>
           <div className="ha-trend-line" style={{ height: 90, marginBottom: 8 }}>
             {months.map((m, i) => {
               const h = Math.max(24, Math.round((m?.totalBookings / max) * 90));
@@ -98,7 +98,7 @@ const AdminAnalyticsPage = () => {
         </div>
       </div>
       <div className="ha-row-2">
-        <section className="ha-card"><div className="ha-card-title">Customer Registrations by Month <select aria-label="Registration year" className="ha-input ml-auto w-auto" value={year} onChange={(e) => { const url = new URL(window.location.href); url.searchParams.set('registrationYear', e.target.value); window.location.assign(url.toString()); }}>{Array.from({ length: 10 }, (_, index) => String(new Date().getFullYear() - index)).map((value) => <option key={value} value={value}>{value}</option>)}</select></div><MetricChart title={`Registrations in ${year}`} points={(data?.data?.charts?.customerGrowth || []).map(item=>({label:item._id,value:item.count}))} /></section>
+        <section className="ha-card"><div className="ha-card-title">Customer Registrations by Month <select aria-label="Registration year" className="ha-input ml-auto" style={{ width: 92, minHeight: 30, padding: '4px 8px', fontSize: 12 }} value={year} onChange={(e) => { const url = new URL(window.location.href); url.searchParams.set('registrationYear', e.target.value); window.location.assign(url.toString()); }}>{Array.from({ length: 10 }, (_, index) => String(new Date().getFullYear() - index)).map((value) => <option key={value} value={value}>{value}</option>)}</select></div><MetricChart title={`Registrations in ${year}`} points={(data?.data?.charts?.customerGrowth || []).map(item=>({label:item._id,value:item.count}))} /></section>
         <MetricChart title="Monthly Paid Revenue" points={(data?.data?.charts?.revenueByMonth || []).map(item=>({label:item._id,value:item.amountInPaisa}))} format={formatMoney} />
       </div>
     </>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import StatCard from '../../components/StatCard';
 import LoadingBlock from '../../components/LoadingBlock';
 import ErrorBlock from '../../components/ErrorBlock';
@@ -9,7 +10,8 @@ import { formatMoney } from '../../utils/money';
 import MetricChart from '../../components/MetricChart';
 
 const OwnerDashboardPage = () => {
-  const { data, loading, error } = useApi(() => dashboardService.owner(), ["owner-dashboard"]);
+  const [range, setRange] = useState('current_month');
+  const { data, loading, error } = useApi(() => dashboardService.owner({ range }), ["owner-dashboard", range]);
 
   if (loading) return <LoadingBlock text="Loading owner dashboard..." />;
   if (error) return <ErrorBlock text={error} />;
@@ -37,7 +39,7 @@ const OwnerDashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Salon Dashboard</h2>
+      <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">{data?.data?.salon?.name || 'Salon'} Dashboard</h2><span className="text-sm text-muted">Managing {data?.data?.salon?.name || 'your salon'}</span></div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Daily Bookings" value={data?.data?.totals?.dailyBookings} />
         <StatCard title="Upcoming Appointments" value={data?.data?.totals?.upcomingAppointments} />
@@ -73,7 +75,7 @@ const OwnerDashboardPage = () => {
       )}
 
       <div className="shell-panel rounded-2xl p-6">
-        <h3 className="font-semibold">Bookings Growth (Monthly)</h3>
+        <div className="flex items-center gap-3"><h3 className="font-semibold">Bookings Growth</h3><select className="ha-input ml-auto w-auto" style={{ width: 132, minHeight: 30, padding: '4px 8px', fontSize: 12 }} value={range} onChange={(e) => setRange(e.target.value)}><option value="current_week">Current Week</option><option value="last_week">Last Week</option><option value="current_month">Current Month</option><option value="last_month">Last Month</option><option value="current_year">Current Year</option></select></div>
         <div className="mt-4">
           {hasBookingData ? (
             <MiniBarChart items={bookingTrend} valueKey="totalBookings" labelKey="month" />

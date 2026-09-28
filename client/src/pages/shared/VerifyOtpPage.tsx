@@ -61,7 +61,7 @@ const VerifyOtpPage = () => {
         className="w-full max-w-md shell-panel rounded-2xl p-6"
       >
         <h2 className="text-xl font-semibold">Verify OTP</h2>
-        <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to {emailParam || 'your registered email'} and your registered phone number.</p>
+        <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to {emailParam || 'your registered email'}.</p>
         <div className="mt-4 grid gap-3">
           <FormInput name="otp" type="text" label="OTP" placeholder="6-digit code" required maxLength={6} inputMode="numeric" />
         </div>

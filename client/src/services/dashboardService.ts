@@ -5,8 +5,8 @@ export const dashboardService = {
     const { data } = await api.get('/analytics/admin/dashboard', { params });
     return data;
   },
-  owner: async () => {
-    const { data } = await api.get('/analytics/owner/dashboard');
+  owner: async (params: { range?: string } = {}) => {
+    const { data } = await api.get('/analytics/owner/dashboard', { params });
     return data;
   }
 };

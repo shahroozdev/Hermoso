@@ -105,7 +105,7 @@ export const MultiSelectInput = ({
         {selectedValues.length > 0 ? (
           // Chip list is capped and scrolls internally so a large selection can never
           // grow the trigger (and therefore the surrounding modal layout) unbounded — BUG-142.
-          <div className="flex min-w-0 max-w-full flex-1 flex-wrap gap-2
+          <div className="flex min-w-0 max-w-full flex-1 flex-wrap gap-2 max-h-20 overflow-y-auto
                          [&::-webkit-scrollbar]:w-1.5
                          [&::-webkit-scrollbar-track]:bg-transparent
                          [&::-webkit-scrollbar-thumb]:bg-gray-400

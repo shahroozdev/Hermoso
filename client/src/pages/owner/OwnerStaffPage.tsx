@@ -74,7 +74,7 @@ const OwnerStaffPage = () => {
           { title: "Joining Date" },
           { title: "Shift Start Time" },
           { title: "Shift End Time" },
-          { title: "Active" },
+          { title: "Status" },
           { title: "Action" },
         ]}
         rows={(data) =>
@@ -89,7 +89,7 @@ const OwnerStaffPage = () => {
               formatDate(d?.joiningDate) || "-",
               d?.shiftStartTime || "-",
               d?.shiftEndTime || "-",
-              item.status === "active" ? "Yes" : "No",
+              item.status === "active" ? "Active" : "Inactive",
               <div className="ha-actions" key="actions">
                 <StaffModal staff={item} />
                 {item.status === "inactive" ? (

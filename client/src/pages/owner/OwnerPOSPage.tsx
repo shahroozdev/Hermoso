@@ -184,6 +184,7 @@ const OwnerPOSPage = () => {
 
   const createCustomer = async () => {
     if (!newCustomer.name.trim()) { setNewCustomerError('Name is required'); return; }
+    if (newCustomer.email.trim() && !/^\S+@\S+\.\S+$/.test(newCustomer.email.trim())) { setNewCustomerError('Please enter a valid email address'); return; }
     setNewCustomerLoading(true);
     setNewCustomerError('');
     try {
@@ -288,9 +289,7 @@ const OwnerPOSPage = () => {
             value={itemSearch}
             onChange={(e) => {
               setItemSearch(e.target.value);
-              if (e.target.value.length > 0) setShowItemModal(true);
             }}
-            onFocus={() => { if (itemSearch.length > 0) setShowItemModal(true); }}
           />
           <button className="rounded-lg border-0 bg-[var(--accent-2)] px-5 py-2 text-sm font-semibold text-slate-900 cursor-pointer" onClick={() => { setItemSearch(''); setShowItemModal(true); }}>Browse</button>
         </div>
@@ -346,11 +345,11 @@ const OwnerPOSPage = () => {
         <div className="grid flex-1 grid-cols-3 gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">GST (%)</label>
-            <input className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" min={0} max={100} step={0.1} value={gstPercent} onChange={(e) => setGstPercent(Number(e.target.value))} placeholder="0" />
+            <input className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" min={0} max={100} step={0.1} value={gstPercent || ''} onChange={(e) => setGstPercent(e.target.value === '' ? 0 : Number(e.target.value))} placeholder="0" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">Discount (%)</label>
-            <input className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" min={0} max={100} step={0.1} value={globalDiscount} onChange={(e) => setGlobalDiscount(Number(e.target.value))} placeholder="0" />
+            <input className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" type="number" min={0} max={100} step={0.1} value={globalDiscount || ''} onChange={(e) => setGlobalDiscount(e.target.value === '' ? 0 : Number(e.target.value))} placeholder="0" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">Items</label>
@@ -451,6 +450,7 @@ const OwnerPOSPage = () => {
               <div>
                 <label className="mb-1 block text-sm font-medium">Email</label>
                 <input className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" value={newCustomer.email} onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })} placeholder="Email (optional)" />
+                {newCustomerError === 'Please enter a valid email address' ? <p className="mt-1 text-xs text-red-500">Please enter a valid email address</p> : null}
               </div>
               {newCustomerError ? <div className="text-sm text-red-500">{newCustomerError}</div> : null}
               <div className="mt-2 flex gap-2">

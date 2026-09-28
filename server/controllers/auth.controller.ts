@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { User, type IUser } from '../models/User.js';
 import { RefreshToken } from '../models/RefreshToken.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../services/auth.service.js';
-import { generateOtp, getOtpExpiry, hashOtp, sendOtpEmail, sendOtpPhone } from '../services/otp.service.js';
+import { generateOtp, getOtpExpiry, hashOtp, sendOtpEmail } from '../services/otp.service.js';
 import { Roles, ErrorCodes } from '../utils/constants.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -59,18 +59,13 @@ export const register = asyncHandler(
       otpExpiresAt: getOtpExpiry()
     });
 
-    // Send through both registered channels. Delivery providers are configured by
-    // environment, so a failure on one channel must not prevent the other attempt.
-    const deliveries = await Promise.allSettled([
-      sendOtpEmail(email, name, otp),
-      sendOtpPhone(phone || '', otp)
-    ]);
-    deliveries.forEach((delivery, index) => {
-      if (delivery.status === 'rejected') {
-        // eslint-disable-next-line no-console
-        console.error(`Failed to send OTP ${index === 0 ? 'email' : 'phone'} during registration:`, delivery.reason);
-      }
-    });
+    try {
+      await sendOtpEmail(email, name, otp);
+    } catch (error) {
+      // The account and OTP remain saved so delivery can be retried safely.
+      // eslint-disable-next-line no-console
+      console.error('Failed to send OTP email during registration:', error);
+    }
 
     res.status(201).json({
       success: true,
@@ -143,8 +138,7 @@ export const resendOtp = asyncHandler(async (req: Request, res: Response, next: 
   await user.save();
 
   await Promise.all([
-    sendOtpEmail(user.email, user.name, otp),
-    sendOtpPhone(user.phone || '', otp)
+    sendOtpEmail(user.email, user.name, otp)
   ]);
 
   res.json({ success: true, message: 'OTP resent successfully' });
