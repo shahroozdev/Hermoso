@@ -44,6 +44,7 @@ const OwnerPOSPage = () => {
   const [itemTab, setItemTab] = useState<'services' | 'events'>('services');
   const [receiptData, setReceiptData] = useState<{ ref: string; items: LineItem[]; subtotalInPaisa: number; gstInPaisa: number; discountInPaisa: number; totalInPaisa: number; customer: string } | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [newCustomerError, setNewCustomerError] = useState('');
@@ -133,6 +134,7 @@ const OwnerPOSPage = () => {
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
+    setCheckoutError('');
     setCheckoutLoading(true);
     try {
       posIdCounter.current += 1;
@@ -172,7 +174,7 @@ const OwnerPOSPage = () => {
       setEditingBillId(null);
     } catch (err) {
       console.error('Checkout failed', err);
-      alert(err.response?.data?.message || 'Checkout failed');
+      setCheckoutError(err.response?.data?.message || 'Checkout could not be completed. Please review the selected items and try again.');
     } finally {
       setCheckoutLoading(false);
     }
@@ -215,6 +217,11 @@ const OwnerPOSPage = () => {
     setSelectedCustomer(null);
     setCustomerSearch('');
     setEditingBillId(null);
+  };
+  const closeNewCustomer = () => {
+    setShowNewCustomer(false);
+    setNewCustomer({ name: '', phone: '', email: '' });
+    setNewCustomerError('');
   };
 
   useEffect(() => {
@@ -293,6 +300,16 @@ const OwnerPOSPage = () => {
           />
           <button className="rounded-lg border-0 bg-[var(--accent-2)] px-5 py-2 text-sm font-semibold text-slate-900 cursor-pointer" onClick={() => { setItemSearch(''); setShowItemModal(true); }}>Browse</button>
         </div>
+        {itemSearch.trim() && (
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {[...filteredServices.map((item) => ({ ...item, type: 'service' as const })), ...filteredEvents.map((item) => ({ ...item, type: 'event' as const }))].slice(0, 8).map((item) => (
+              <button key={`${item.type}-${item._id}`} type="button" className="rounded-lg border border-[var(--border)] p-2 text-left text-sm hover:border-[var(--accent-2)]" onClick={() => { addItem(item, item.type); setItemSearch(''); }}>
+                <span className="font-semibold">{item.name}</span><span className="ml-2 text-xs capitalize text-muted">{item.type}</span>
+              </button>
+            ))}
+            {!filteredServices.length && !filteredEvents.length && <p className="text-sm text-muted">No matching services or events.</p>}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -435,7 +452,7 @@ const OwnerPOSPage = () => {
 
       {/* New Customer Modal */}
       {showNewCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewCustomer(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={closeNewCustomer}>
           <div className="flex w-[400px] flex-col rounded-2xl bg-[var(--surface)] p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="m-0 mb-4 text-lg font-bold">New Customer</h3>
             <div className="flex flex-col gap-3">
@@ -452,12 +469,12 @@ const OwnerPOSPage = () => {
                 <input className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent-2)]" value={newCustomer.email} onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })} placeholder="Email (optional)" />
                 {newCustomerError === 'Please enter a valid email address' ? <p className="mt-1 text-xs text-red-500">Please enter a valid email address</p> : null}
               </div>
-              {newCustomerError ? <div className="text-sm text-red-500">{newCustomerError}</div> : null}
+              {newCustomerError && newCustomerError !== 'Please enter a valid email address' ? <div className="text-sm text-red-500">{newCustomerError}</div> : null}
               <div className="mt-2 flex gap-2">
                 <button className="flex-1 cursor-pointer rounded-lg border-0 bg-[var(--accent-2)] px-5 py-2.5 text-sm font-semibold text-slate-900 disabled:opacity-50" disabled={newCustomerLoading} onClick={createCustomer}>
                   {newCustomerLoading ? 'Creating...' : 'Create & Select'}
                 </button>
-                <button className="flex-1 cursor-pointer rounded-lg border border-[var(--border)] bg-transparent px-5 py-2.5 text-sm text-[var(--text)]" onClick={() => { setShowNewCustomer(false); setNewCustomerError(''); }}>Cancel</button>
+                <button className="flex-1 cursor-pointer rounded-lg border border-[var(--border)] bg-transparent px-5 py-2.5 text-sm text-[var(--text)]" onClick={closeNewCustomer}>Cancel</button>
               </div>
             </div>
           </div>
@@ -506,6 +523,14 @@ const OwnerPOSPage = () => {
               <button onClick={handlePrint} className="flex-1 cursor-pointer rounded-md border-0 bg-slate-900 px-4 py-2.5 text-sm text-white">Print Receipt</button>
               <button onClick={() => setReceiptData(null)} className="flex-1 cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700">Close</button>
             </div>
+          </div>
+        </div>
+      )}
+      {checkoutError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setCheckoutError('')}>
+          <div className="w-full max-w-md rounded-2xl bg-[var(--surface)] p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold">Unable to proceed</h3><p className="mt-2 text-sm text-muted">{checkoutError}</p>
+            <button type="button" className="mt-5 w-full rounded-lg bg-[var(--accent-2)] px-4 py-2 font-semibold text-slate-900" onClick={() => setCheckoutError('')}>OK</button>
           </div>
         </div>
       )}

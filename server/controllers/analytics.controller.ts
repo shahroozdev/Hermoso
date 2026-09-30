@@ -32,8 +32,10 @@ const bookingTrendRange = (range?: string) => {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const end = new Date(startOfDay); end.setDate(end.getDate() + 1);
-  if (range === 'current_week') { const start = new Date(startOfDay); start.setDate(start.getDate() - start.getDay()); return { start, end, format: '%a %d' }; }
-  if (range === 'last_week') { const endLast = new Date(startOfDay); endLast.setDate(endLast.getDate() - startOfDay.getDay()); const start = new Date(endLast); start.setDate(start.getDate() - 7); return { start, end: endLast, format: '%a %d' }; }
+  // MongoDB $dateToString does not support strftime's %a token. Use an
+  // unambiguous ISO day label for weekly series instead.
+  if (range === 'current_week') { const start = new Date(startOfDay); start.setDate(start.getDate() - start.getDay()); return { start, end, format: '%Y-%m-%d' }; }
+  if (range === 'last_week') { const endLast = new Date(startOfDay); endLast.setDate(endLast.getDate() - startOfDay.getDay()); const start = new Date(endLast); start.setDate(start.getDate() - 7); return { start, end: endLast, format: '%Y-%m-%d' }; }
   if (range === 'current_month') return { start: new Date(now.getFullYear(), now.getMonth(), 1), end, format: '%d' };
   if (range === 'last_month') return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 1), format: '%d' };
   if (range === 'current_year') return { start: new Date(now.getFullYear(), 0, 1), end, format: '%b' };

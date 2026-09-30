@@ -6,7 +6,7 @@ interface User {
   name: string;
   email: string;
   role: string;
-  salonId?: string;
+  salonId?: string | { _id?: string; name?: string };
   status: string;
   phone?: string;
   location?: {

@@ -83,7 +83,7 @@ export const login = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password') as IUser | null;
+    const user = await User.findOne({ email }).select('+password').populate('salonId', 'name') as IUser | null;
     if (!user) return next(new ApiError(422, 'Invalid credentials'));
 
     const match = await user.comparePassword(password);
