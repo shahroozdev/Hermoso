@@ -61,7 +61,11 @@ const VerifyOtpPage = () => {
         className="w-full max-w-md shell-panel rounded-2xl p-6"
       >
         <h2 className="text-xl font-semibold">Verify OTP</h2>
-        <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to {emailParam || 'your registered email'}. The code expires in 10 minutes; you can resend it after 30 seconds.</p>
+        <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to {emailParam || 'your registered email'}.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-[var(--text-muted)]"><strong className="block text-[var(--text)]">Code validity</strong>Expires in 10 minutes</p>
+          <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-[var(--text-muted)]"><strong className="block text-[var(--text)]">Resend wait</strong>{secondsRemaining > 0 ? `Available in 00:${String(secondsRemaining).padStart(2, '0')}` : 'Available now'}</p>
+        </div>
         <div className="mt-4 grid gap-3">
           <FormInput name="otp" type="text" label="OTP" placeholder="6-digit code" required maxLength={6} inputMode="numeric" />
         </div>
@@ -69,7 +73,7 @@ const VerifyOtpPage = () => {
         {message ? <p className="mt-2 text-sm text-emerald-600">{message}</p> : null}
         <button type="submit" className="mt-4 w-full rounded bg-primary p-2 text-white">Verify OTP</button>
         <button type="button" className="mt-2 w-full rounded border p-2 disabled:cursor-not-allowed disabled:opacity-60" onClick={resend} disabled={!emailParam || resending || secondsRemaining > 0}>
-          {resending ? 'Sending...' : secondsRemaining > 0 ? `Resend OTP in 00:${String(secondsRemaining).padStart(2, '0')}` : 'Resend OTP'}
+          {resending ? 'Sending...' : secondsRemaining > 0 ? 'Resend OTP (wait for timer)' : 'Resend OTP'}
         </button>
         <Link
           to="/login"

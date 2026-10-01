@@ -9,6 +9,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendEmail } from '../services/email.service.js';
 import { AuthRequest } from '../middleware/auth.middleware.js';
+import { normalizePakistanPhone } from '../utils/phone.js';
 import {
   registerSchema,
   loginSchema,
@@ -42,6 +43,8 @@ const buildAuthPayload = async (user: IUser) => {
 export const register = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { name, email, password, role, phone, location } = req.body;
+    const normalizedPhone = normalizePakistanPhone(phone);
+    if (phone && !normalizedPhone) return next(new ApiError(400, 'Enter a valid Pakistan mobile number'));
 
     const exists = await User.findOne({ email });
     if (exists) return next(new ApiError(409, 'Email already registered'));
@@ -52,7 +55,7 @@ export const register = asyncHandler(
       email,
       password,
       role: role || Roles.CUSTOMER,
-      phone,
+      phone: normalizedPhone,
       location,
       isVerified: false,
       otpCodeHash: hashOtp(otp),

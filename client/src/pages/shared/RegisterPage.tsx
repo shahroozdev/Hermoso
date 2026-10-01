@@ -4,11 +4,12 @@ import { z } from "zod";
 import Form from "../../components/form/Form";
 import FormInput from "../../components/form/FormInput";
 import { authService } from "../../services/authService";
+import { normalizePakistanPhone } from '../../utils/phone';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
   email: z.string().email('Enter a valid email address'),
-  phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number format'),
+  phone: z.string().refine((value) => Boolean(normalizePakistanPhone(value)), 'Enter a valid Pakistan mobile number'),
   country: z.string().min(1, 'Country is required'),
   city: z.string().min(1, 'City is required'),
   password: z.string()
@@ -44,7 +45,9 @@ const RegisterPage = () => {
     setError("");
     try {
       const { country, city, ...rest } = form;
-      const result = await authService.register({ ...rest, location: { country, city } });
+      const phone = normalizePakistanPhone(rest.phone);
+      if (!phone) throw new Error('Enter a valid Pakistan mobile number');
+      const result = await authService.register({ ...rest, phone, location: { country, city } });
       sessionStorage.setItem('pendingSalonEmail', form.email);
       sessionStorage.setItem('pendingSalonPassword', form.password);
       navigate(`/verify-otp?email=${encodeURIComponent(result?.data?.email || form.email)}`);
@@ -53,7 +56,7 @@ const RegisterPage = () => {
       const detail = Array.isArray(apiErrors) && apiErrors.length
         ? apiErrors.map((e) => e.message).join(' ')
         : err.response?.data?.message;
-      setError(detail || "Registration failed");
+      setError(detail || (err as Error).message || "Registration failed");
     } finally {
       setIsLoading(false);
     }

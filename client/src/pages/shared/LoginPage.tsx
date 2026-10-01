@@ -64,7 +64,11 @@ const LoginPage = () => {
         onSubmit={onSubmit}
         className="ha-auth-card w-full max-w-xl shell-panel rounded-2xl p-6"
       >
-        <h2 className="text-xl font-semibold">Login to Hermoso</h2>
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img src="/assets/icons/HermosoLogo.svg" alt="Hermoso" className="h-12 w-12" />
+          <span className="mt-2 text-lg font-semibold text-[var(--text)]">Hermoso App</span>
+          <h2 className="mt-4 text-xl font-semibold">Login to Hermoso</h2>
+        </div>
         <div className="mt-4 grid gap-3">
           <FormInput
             name="email"

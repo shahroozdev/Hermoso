@@ -18,7 +18,7 @@ const Topbar = ({ onMenuClick, isAdmin }: TopbarProps) => {
   const meta = isOwnerDashboard
     ? { title: "Dashboard", sub: "Salon performance overview", action: "" }
     : pageMeta[key] || pageMeta.overview;
-  const salonName = !isAdmin && typeof user?.salonId === 'object' ? user.salonId.name : undefined;
+  const salonName = !isAdmin && user?.salonId && typeof user.salonId === 'object' ? user.salonId.name : undefined;
   return (
     <header className="ha-topbar sticky top-0 z-30">
       <button
