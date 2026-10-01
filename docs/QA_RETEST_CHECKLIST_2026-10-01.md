@@ -1,22 +1,27 @@
-# Hermoso Manual QA Checklist — 1 October 2026
+# Hermoso QA Retest Checklist — 1 October 2026
 
-Use this checklist for the next manual retest. Leave an item unchecked if it fails and add screenshots, steps, and the tested environment beneath it.
+Source: `Latest Hermoso_Retest_Bug_Report_Updated - Copy (3).docx` (30 September 2026). The report is QA evidence, not implementation instruction.
 
-- [x] 01 — Login branding: logo is centred inside the form card with consistent responsive spacing.
-- [x] Phone validation — Registration validates Pakistan numbers with `libphonenumber-js` and stores normalized E.164 values.
-- [x] First-login stability — Guard the owner header when no salon is linked, preventing a null salon-name crash.
-- [x] Owner branding — Sidebar shows the salon name after setup and falls back to “Salon Owner” beforehand.
-- [x] Auth visual consistency — Login, Registration, and OTP use the same responsive Hermoso App / AI Aesthetic Care brand header and heading scale.
-- [x] 02 — Email OTP: show separate 10-minute code-validity and 30-second resend-wait indicators to prevent timer confusion.
-- [ ] 03 — Admin Overview: every booking-period option, especially Last Week, loads the chart without an error.
-- [ ] 04 — Analytics: booking-period filters and registration-year selector are compact and return data without an error.
-- [ ] 05 — Salon Owner header: the active salon name remains visible throughout all owner modules.
-- [ ] 06 — Salon Owner dashboard: all chart period filters load correct scoped data and display an appropriate empty state.
-- [ ] 07 — POS customer and add-item search: selected customer shows name/contact; typing finds matching services and events without opening Browse automatically.
-- [ ] 08 — POS checkout: GST/Discount fields can be fully replaced; valid checkout succeeds; invalid checkout shows an in-app message, never a browser alert.
-- [ ] 09 — Events and Staff: event final price retains decimals; staff time picker preserves selected hour/minute; staff status and schedules save correctly.
-- [ ] 10 — Notifications: owner can Clear All after confirmation; the notification list updates and no other user’s history is affected.
+This supersedes the earlier mixed checklist. The latest report has 10 bugs: Bugs 04–08 are POS issues, not Admin-panel issues.
 
-## Test notes
+## QA report reconciliation
 
-Add failed-item evidence here: browser/device, role, steps to reproduce, actual result, expected result, screenshot/video, and API error if applicable.
+- [x] 01 — Login: place the Hermoso App logo inside the form card with consistent responsive spacing.
+- [x] 02 — Verify OTP: show the 10-minute OTP validity separately from the 30-second resend cooldown.
+- [x] 03 — Salon Owner branding: show the active salon name persistently in the sidebar/top header, without inserting it into page subtitles.
+- [x] 04 — POS GST / Discount: numeric fields can be cleared and overwritten without retaining a leading `0`.
+- [x] 05 — POS Customer: show the selected customer’s name and phone/email with a separate remove button.
+- [x] 06 — POS Customer Search: query and display matching existing customers by name.
+- [x] 07 — POS Proceed / Checkout: generate a non-conflicting receipt reference for new bills; retain the Retrieve flow and provide an in-app route to past bills if a legacy receipt-reference conflict is returned.
+- [x] 08 — POS Add Item Search: selecting an inline search result replaces the table with the selected item only. Browse remains available for building a multi-item sale.
+- [x] 09 — Events: calculate and display final price with paisa/decimal precision (e.g. Rs 70 less 5% = Rs 66.50).
+- [x] 10 — New Salon Owner login: safely handle an account with no linked salon, preventing the dashboard error page after registration/login.
+
+## Additional completed improvements
+
+- [x] Registration validates Pakistan phone numbers with `libphonenumber-js` and stores normalized E.164 values.
+- [x] Login, Registration, and OTP use the same responsive Hermoso App / AI Aesthetic Care brand header and heading scale.
+
+## Retest notes
+
+For a failed item, add the browser/device, role, reproduction steps, actual versus expected result, and screenshot/video or API error below.

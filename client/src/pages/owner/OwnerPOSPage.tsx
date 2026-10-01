@@ -86,8 +86,24 @@ const OwnerPOSPage = () => {
   const globalDiscountAmountInPaisa = Math.round(netAfterItemDiscountInPaisa * (globalDiscount / 100));
   const grandTotalInPaisa = netAfterItemDiscountInPaisa + gstAmountInPaisa - globalDiscountAmountInPaisa;
 
-  const addItem = (s: { _id: string; name: string; priceInPaisa: number; totalDuration?: number; finalPriceInPaisa?: number; totalPriceInPaisa?: number }, type: 'service' | 'event') => {
+  const addItem = (
+    s: { _id: string; name: string; priceInPaisa: number; totalDuration?: number; finalPriceInPaisa?: number; totalPriceInPaisa?: number },
+    type: 'service' | 'event',
+    replaceCart = false
+  ) => {
     const priceInPaisa = type === 'event' ? (s.finalPriceInPaisa || s.totalPriceInPaisa || s.priceInPaisa) : s.priceInPaisa;
+    const newItem: LineItem = { id: s._id, type, name: s.name, priceInPaisa, qty: 1, discountInPaisa: 0, totalInPaisa: priceInPaisa };
+
+    // The inline search is a focused lookup: QA expects the table to show the
+    // selected result only. The Browse modal still adds to the existing cart.
+    if (replaceCart) {
+      setItems([newItem]);
+      setShowItemModal(false);
+      setItemSearch('');
+      searchInputRef.current?.focus();
+      return;
+    }
+
     const existing = items.findIndex((i) => i.id === s._id && i.type === type);
     if (existing >= 0) {
       setItems((prev) =>
@@ -98,7 +114,7 @@ const OwnerPOSPage = () => {
     } else {
       setItems((prev) => [
         ...prev,
-        { id: s._id, type, name: s.name, priceInPaisa, qty: 1, discountInPaisa: 0, totalInPaisa: priceInPaisa },
+        newItem,
       ]);
     }
     setShowItemModal(false);
@@ -138,7 +154,10 @@ const OwnerPOSPage = () => {
     setCheckoutLoading(true);
     try {
       posIdCounter.current += 1;
-      const ref: string = editingBillId ?? `POS-${String(posIdCounter.current).padStart(6, '0')}`;
+      // A counter alone restarts after a browser refresh and can recreate a
+      // receipt reference that already exists. Keep the reference readable
+      // while making every new bill unique.
+      const ref: string = editingBillId ?? `POS-${Date.now().toString(36).toUpperCase()}-${String(posIdCounter.current).padStart(3, '0')}`;
       const payload = {
         customerId: selectedCustomer?._id || undefined,
         customerName: selectedCustomer?.name || 'Walk-in',
@@ -303,7 +322,7 @@ const OwnerPOSPage = () => {
         {itemSearch.trim() && (
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {[...filteredServices.map((item) => ({ ...item, type: 'service' as const })), ...filteredEvents.map((item) => ({ ...item, type: 'event' as const }))].slice(0, 8).map((item) => (
-              <button key={`${item.type}-${item._id}`} type="button" className="rounded-lg border border-[var(--border)] p-2 text-left text-sm hover:border-[var(--accent-2)]" onClick={() => { addItem(item, item.type); setItemSearch(''); }}>
+              <button key={`${item.type}-${item._id}`} type="button" className="rounded-lg border border-[var(--border)] p-2 text-left text-sm hover:border-[var(--accent-2)]" onClick={() => { addItem(item, item.type, true); setItemSearch(''); }}>
                 <span className="font-semibold">{item.name}</span><span className="ml-2 text-xs capitalize text-muted">{item.type}</span>
               </button>
             ))}
@@ -530,7 +549,12 @@ const OwnerPOSPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setCheckoutError('')}>
           <div className="w-full max-w-md rounded-2xl bg-[var(--surface)] p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold">Unable to proceed</h3><p className="mt-2 text-sm text-muted">{checkoutError}</p>
-            <button type="button" className="mt-5 w-full rounded-lg bg-[var(--accent-2)] px-4 py-2 font-semibold text-slate-900" onClick={() => setCheckoutError('')}>OK</button>
+            <div className="mt-5 flex gap-3">
+              {checkoutError.toLowerCase().includes('receiptref') && (
+                <button type="button" className="flex-1 rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 font-semibold text-[var(--text)]" onClick={() => { setCheckoutError(''); setShowRetrieve(true); }}>View past bills</button>
+              )}
+              <button type="button" className="flex-1 rounded-lg bg-[var(--accent-2)] px-4 py-2 font-semibold text-slate-900" onClick={() => setCheckoutError('')}>OK</button>
+            </div>
           </div>
         </div>
       )}
