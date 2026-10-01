@@ -56,7 +56,7 @@ export const getMyProfile = asyncHandler(async (req: AuthRequest, res: Response)
     throw new ApiError(401, 'Unauthorized');
   }
 
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).populate('salonId', 'name');
   if (!user) {
     throw new ApiError(404, 'User not found');
   }

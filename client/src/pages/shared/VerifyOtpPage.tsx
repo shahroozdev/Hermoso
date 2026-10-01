@@ -4,6 +4,7 @@ import { z } from 'zod';
 import Form from '../../components/form/Form';
 import FormInput from '../../components/form/FormInput';
 import { authService } from '../../services/authService';
+import AuthBrand from '../../components/AuthBrand';
 
 const schema = z.object({ otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits') });
 const RESEND_DELAY_SECONDS = 30;
@@ -60,7 +61,8 @@ const VerifyOtpPage = () => {
         onSubmit={onSubmit}
         className="w-full max-w-md shell-panel rounded-2xl p-6"
       >
-        <h2 className="text-xl font-semibold">Verify OTP</h2>
+        <AuthBrand />
+        <h2 className="text-2xl font-semibold">Verify OTP</h2>
         <p className="mt-1 text-sm text-slate-500">Enter the OTP sent to {emailParam || 'your registered email'}.</p>
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
           <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-[var(--text-muted)]"><strong className="block text-[var(--text)]">Code validity</strong>Expires in 10 minutes</p>

@@ -102,6 +102,11 @@ const CreateSalonPage = () => {
         imageFile: imageFile || null,
       });
 
+      // Refresh the authenticated owner so the sidebar can immediately show
+      // the salon name without requiring a logout/login cycle.
+      const profile = await authService.getProfile();
+      if (profile?.data) setAuth({ user: profile.data });
+
       sessionStorage.removeItem("pendingSalonEmail");
       sessionStorage.removeItem("pendingSalonPassword");
       navigate("/owner");

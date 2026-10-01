@@ -5,6 +5,7 @@ import Form from "../../components/form/Form";
 import FormInput from "../../components/form/FormInput";
 import { authService } from "../../services/authService";
 import { normalizePakistanPhone } from '../../utils/phone';
+import AuthBrand from '../../components/AuthBrand';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
@@ -70,7 +71,8 @@ const RegisterPage = () => {
         onSubmit={onSubmit}
         className="ha-auth-card ha-register-card w-full max-w-3xl shell-panel rounded-2xl p-6"
       >
-        <h2 className="text-xl font-semibold">Register as Salon Owner</h2>
+        <AuthBrand />
+        <h2 className="text-2xl font-semibold">Register as Salon Owner</h2>
         <div className="ha-register-fields mt-4 grid gap-3">
           <FormInput
             name="name"
@@ -91,7 +93,7 @@ const RegisterPage = () => {
             name="phone"
             type="tel"
             label="Phone"
-            placeholder="Enter your Whatsapp number"
+            placeholder="e.g. 0300 1234567"
             required
             autoComplete="tel"
           />

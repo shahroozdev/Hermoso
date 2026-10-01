@@ -5,6 +5,8 @@ Use this checklist for the next manual retest. Leave an item unchecked if it fai
 - [x] 01 — Login branding: logo is centred inside the form card with consistent responsive spacing.
 - [x] Phone validation — Registration validates Pakistan numbers with `libphonenumber-js` and stores normalized E.164 values.
 - [x] First-login stability — Guard the owner header when no salon is linked, preventing a null salon-name crash.
+- [x] Owner branding — Sidebar shows the salon name after setup and falls back to “Salon Owner” beforehand.
+- [x] Auth visual consistency — Login, Registration, and OTP use the same responsive Hermoso App / AI Aesthetic Care brand header and heading scale.
 - [x] 02 — Email OTP: show separate 10-minute code-validity and 30-second resend-wait indicators to prevent timer confusion.
 - [ ] 03 — Admin Overview: every booking-period option, especially Last Week, loads the chart without an error.
 - [ ] 04 — Analytics: booking-period filters and registration-year selector are compact and return data without an error.

@@ -13,6 +13,9 @@ const Sidebar = ({
 }) => {
   const location = useLocation();
   const { user } = useAuthStore();
+  const salonName = user?.role === 'salon_owner' && user.salonId && typeof user.salonId === 'object'
+    ? user.salonId.name
+    : undefined;
   return (
     <aside className={`ha-sidebar ${mobileOpen ? "open" : ""}`}>
       <div className="ha-sidebar-brand">
@@ -79,7 +82,9 @@ const Sidebar = ({
         </svg>
         <div className="ha-brand-text">
           <div className="ha-brand-name">Hermoso</div>
-          <div className="ha-brand-tag uppercase"> {(user?.role || "super_admin").replace(/_/g, " ")}</div>
+          <div className={`ha-brand-tag ${salonName ? '' : 'uppercase'} truncate`} title={salonName || undefined}>
+            {salonName || (user?.role || "super_admin").replace(/_/g, " ")}
+          </div>
         </div>
       </div>
       <div className="ha-sidebar-menu" >

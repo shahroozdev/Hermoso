@@ -5,6 +5,7 @@ import Form from '../../components/form/Form';
 import FormInput from '../../components/form/FormInput';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
+import AuthBrand from '../../components/AuthBrand';
 
 const REMEMBERED_EMAIL_KEY = 'hermoso_remembered_email';
 
@@ -64,11 +65,8 @@ const LoginPage = () => {
         onSubmit={onSubmit}
         className="ha-auth-card w-full max-w-xl shell-panel rounded-2xl p-6"
       >
-        <div className="mb-6 flex flex-col items-center text-center">
-          <img src="/assets/icons/HermosoLogo.svg" alt="Hermoso" className="h-12 w-12" />
-          <span className="mt-2 text-lg font-semibold text-[var(--text)]">Hermoso App</span>
-          <h2 className="mt-4 text-xl font-semibold">Login to Hermoso</h2>
-        </div>
+        <AuthBrand />
+        <h2 className="text-2xl font-semibold">Login to Hermoso</h2>
         <div className="mt-4 grid gap-3">
           <FormInput
             name="email"

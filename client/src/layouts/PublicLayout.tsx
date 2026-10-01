@@ -67,7 +67,7 @@ const PublicLayout = () => {
           </svg>
         )}
       </button>
-      {location.pathname !== "/login" && <span className="fixed inset-x-0 top-8 z-50 flex items-center justify-center gap-2 px-6 py-4 sm:top-10">
+      {!['/login', '/register', '/verify-otp'].includes(location.pathname) && <span className="fixed inset-x-0 top-8 z-50 flex items-center justify-center gap-2 px-6 py-4 sm:top-10">
         <Link to="/login" className="flex items-center gap-2">
           <img
             src="/assets/icons/HermosoLogo.svg"
